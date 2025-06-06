@@ -646,14 +646,23 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
     tryCatch({
       # Calculate Cohen's D for effect sizes
       cohens_d_result <- calculate_cohens_d(data, var, group_column)
-      
+
+      # Determine unique groups for pairwise comparisons
+      groups <- unique(data[[group_column]])
+      groups <- groups[!is.na(groups)]
+      pairwise_comparisons <- combn(groups, 2, simplify = FALSE)
+
+      # Choose overall test based on number of groups
+      overall_method <- if (length(groups) > 2) "anova" else "t.test"
+
       # Create enhanced boxplot with statistical tests
-      p <- ggboxplot(data, x = group_column, y = var, 
+      p <- ggboxplot(data, x = group_column, y = var,
                      color = group_column, palette = "jco",
                      add = "jitter", add.params = list(alpha = 0.3)) +
-        stat_compare_means(method = "anova", label.y = max(data[[var]], na.rm = TRUE) * 1.1) +
-        stat_compare_means(comparisons = list(c("CHOR1", "CHOR2"), c("CHOR1", "KONTROLA"), c("CHOR2", "KONTROLA")),
-                          method = "t.test", label = "p.signif") +
+        stat_compare_means(method = overall_method,
+                           label.y = max(data[[var]], na.rm = TRUE) * 1.1) +
+        stat_compare_means(comparisons = pairwise_comparisons,
+                           method = "t.test", label = "p.signif") +
         labs(title = paste("Enhanced Comparison of", var, "across groups"),
              subtitle = "With statistical significance tests and effect sizes",
              x = group_column, y = var) +
