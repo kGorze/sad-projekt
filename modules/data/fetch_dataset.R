@@ -1,6 +1,6 @@
 # Data Fetching Module
-# Functions for loading and initial validation of CSV datasets
-# Handles file reading and basic data structure validation
+# Functions for loading CSV datasets with Polish format support
+# Handles file reading, encoding detection, and basic data type conversion
 
 # Main function to load dataset from CSV file
 fetch_dataset <- function(file_path, encoding = "UTF-8") {
@@ -25,28 +25,10 @@ fetch_dataset <- function(file_path, encoding = "UTF-8") {
                      encoding = encoding,
                      na.strings = c("", "NA", "N/A", " "))
     
-    # Convert numeric columns (handle Polish decimal format)
-    numeric_cols <- c("wiek", "hsCRP", "ERY", "PLT", "HGB", "HCT", "MCHC", "MON", "LEU")
-    
-    for (col in numeric_cols) {
-      if (col %in% names(data)) {
-        # Replace comma with dot and convert to numeric
-        data[[col]] <- as.numeric(gsub(",", ".", data[[col]]))
-      }
-    }
-    
-    # Convert categorical columns to factors
-    if ("grupa" %in% names(data)) {
-      data$grupa <- as.factor(data$grupa)
-    }
-    if ("plec" %in% names(data)) {
-      data$plec <- as.factor(data$plec)
-    }
+    # Convert data types appropriately
+    data <- convert_data_types(data)
     
     cat("Successfully loaded dataset with", nrow(data), "rows and", ncol(data), "columns\n")
-    
-    # Perform initial data structure inspection
-    inspect_data_structure(data)
     
     return(data)
     
@@ -126,67 +108,49 @@ detect_encoding <- function(file_path) {
   })
 }
 
-# Initial data structure inspection
-inspect_data_structure <- function(data) {
-  cat("\n=== DATA STRUCTURE INSPECTION ===\n")
+# Convert data types for medical data
+convert_data_types <- function(data) {
   
-  # Check column names
-  cat("Column names:\n")
-  print(names(data))
+  # Convert numeric columns (handle Polish decimal format)
+  numeric_cols <- c("wiek", "hsCRP", "ERY", "PLT", "HGB", "HCT", "MCHC", "MON", "LEU")
   
-  # Count rows and columns
-  cat("\nDataset dimensions:\n")
-  cat("Rows:", nrow(data), "\n")
-  cat("Columns:", ncol(data), "\n")
-  
-  # Identify data types
-  cat("\nColumn types:\n")
-  for (col in names(data)) {
-    cat(sprintf("%-10s: %s\n", col, class(data[[col]])[1]))
-  }
-  
-  # Check for missing values
-  cat("\nMissing values per column:\n")
-  missing_counts <- sapply(data, function(x) sum(is.na(x)))
-  for (col in names(missing_counts)) {
-    if (missing_counts[col] > 0) {
-      cat(sprintf("%-10s: %d missing (%.1f%%)\n", 
-                  col, missing_counts[col], 
-                  100 * missing_counts[col] / nrow(data)))
+  for (col in numeric_cols) {
+    if (col %in% names(data)) {
+      # Replace comma with dot and convert to numeric
+      data[[col]] <- as.numeric(gsub(",", ".", data[[col]]))
     }
   }
   
-  # Check group distribution if grupa column exists
+  # Convert categorical columns to factors
   if ("grupa" %in% names(data)) {
-    cat("\nGroup distribution:\n")
-    print(table(data$grupa))
+    data$grupa <- as.factor(data$grupa)
+  }
+  if ("plec" %in% names(data)) {
+    data$plec <- as.factor(data$plec)
   }
   
-  # Check for potential data quality issues
-  cat("\nPotential issues detected:\n")
+  return(data)
+}
+
+# Get basic dataset information (for logging/reporting)
+get_dataset_info <- function(data) {
   
-  # Check for outliers in numeric columns
-  numeric_cols <- sapply(data, is.numeric)
-  for (col in names(data)[numeric_cols]) {
-    if (sum(!is.na(data[[col]])) > 0) {
-      q1 <- quantile(data[[col]], 0.25, na.rm = TRUE)
-      q3 <- quantile(data[[col]], 0.75, na.rm = TRUE)
-      iqr <- q3 - q1
-      outliers <- sum(data[[col]] < (q1 - 1.5 * iqr) | 
-                      data[[col]] > (q3 + 1.5 * iqr), na.rm = TRUE)
-      if (outliers > 0) {
-        cat(sprintf("- %s: %d potential outliers\n", col, outliers))
-      }
-    }
+  if (is.null(data) || nrow(data) == 0) {
+    return(list(
+      valid = FALSE,
+      dimensions = c(0, 0),
+      column_types = NULL,
+      message = "Dataset is empty or null"
+    ))
   }
   
-  cat("\n=== END INSPECTION ===\n\n")
-  
-  # Return summary for further use
   return(list(
+    valid = TRUE,
     dimensions = c(nrow(data), ncol(data)),
+    column_names = names(data),
     column_types = sapply(data, class),
-    missing_values = missing_counts,
-    group_counts = if("grupa" %in% names(data)) table(data$grupa) else NULL
+    numeric_columns = sum(sapply(data, is.numeric)),
+    factor_columns = sum(sapply(data, is.factor)),
+    total_cells = nrow(data) * ncol(data)
   ))
 }

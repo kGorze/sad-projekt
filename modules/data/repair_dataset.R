@@ -47,7 +47,8 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
   repair_log$missing_analysis <- missing_analysis
   
   # Step 2: Intelligent missing data handling
-  if (any(missing_analysis$missing_percentages > missing_threshold * 100)) {
+  if (any(missing_analysis$missing_percentages > missing_threshold * 100) || 
+      (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0)) {
     cat("\n2. INTELLIGENT MISSING DATA HANDLING\n")
     cat("====================================\n")
     
