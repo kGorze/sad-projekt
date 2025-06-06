@@ -177,18 +177,26 @@ analyze_group_structure <- function(data) {
     cat("\nGroup distribution:\n")
     group_table <- table(data$grupa, useNA = "ifany")
     print(group_table)
-    
+
     group_info$group_counts <- group_table
     group_info$group_proportions <- prop.table(group_table)
-    group_info$n_groups <- length(levels(data$grupa))
-    
-    # Check group balance
+
+    # Use only groups with at least one observation
     group_sizes <- as.numeric(group_table)
-    group_info$balance_ratio <- max(group_sizes) / min(group_sizes)
-    group_info$is_balanced <- group_info$balance_ratio <= 1.5
-    
-    if (group_info$balance_ratio > 2) {
-      cat(sprintf("⚠ Unbalanced groups detected (ratio: %.2f)\n", group_info$balance_ratio))
+    nonzero_sizes <- group_sizes[group_sizes > 0]
+
+    group_info$n_groups <- length(nonzero_sizes)
+
+    if (length(nonzero_sizes) > 1) {
+      group_info$balance_ratio <- max(nonzero_sizes) / min(nonzero_sizes)
+      group_info$is_balanced <- group_info$balance_ratio <= 1.5
+
+      if (group_info$balance_ratio > 2) {
+        cat(sprintf("⚠ Unbalanced groups detected (ratio: %.2f)\n", group_info$balance_ratio))
+      }
+    } else {
+      group_info$balance_ratio <- NA
+      group_info$is_balanced <- TRUE
     }
   }
   
