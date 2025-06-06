@@ -85,14 +85,6 @@ generate_descriptive_stats <- function(data, group_column = NULL, include_plots 
   summary_table <- create_summary_table(data, group_column)
   result$data_summary <- summary_table
   
-  # Step 2: Correlation analysis for numeric variables
-  if (length(numeric_vars) >= 2) {
-    cat("\n=== STEP 2: CORRELATION ANALYSIS ===\n")
-    correlation_results <- perform_correlation_analysis(data, numeric_vars, group_column)
-    result$correlation_analysis <- correlation_results
-    cat("- Correlation matrix calculated for", length(numeric_vars), "variables\n")
-  }
-  
   # Step 3: Normality testing for numeric variables
   if (length(numeric_vars) > 0) {
     cat("\n=== STEP 3: NORMALITY TESTING ===\n")
@@ -757,78 +749,6 @@ quick_descriptive_analysis <- function(data, group_column = NULL, generate_repor
   }
   
   return(result)
-}
-
-# Perform correlation analysis for numeric variables
-perform_correlation_analysis <- function(data, variables, group_column = NULL) {
-  
-  if (length(variables) < 2) {
-    return(NULL)
-  }
-  
-  # Select only numeric variables for correlation
-  cor_data <- data[, variables, drop = FALSE]
-  
-  # Overall correlation matrix
-  cor_matrix <- cor(cor_data, use = "complete.obs", method = "pearson")
-  cor_spearman <- cor(cor_data, use = "complete.obs", method = "spearman")
-  
-  # Correlation significance tests
-  cor_test_results <- list()
-  for (i in 1:(length(variables)-1)) {
-    for (j in (i+1):length(variables)) {
-      var1 <- variables[i]
-      var2 <- variables[j]
-      
-      # Pearson correlation test
-      pearson_test <- cor.test(data[[var1]], data[[var2]], method = "pearson")
-      
-      # Spearman correlation test
-      spearman_test <- cor.test(data[[var1]], data[[var2]], method = "spearman")
-      
-      cor_test_results[[paste(var1, "vs", var2)]] <- list(
-        variables = c(var1, var2),
-        pearson_r = pearson_test$estimate,
-        pearson_p = pearson_test$p.value,
-        pearson_ci = pearson_test$conf.int,
-        spearman_rho = spearman_test$estimate,
-        spearman_p = spearman_test$p.value,
-        interpretation = interpret_correlation(pearson_test$estimate)
-      )
-    }
-  }
-  
-  # Group-wise correlations if group column specified
-  group_correlations <- NULL
-  if (!is.null(group_column)) {
-    groups <- unique(data[[group_column]])
-    groups <- groups[!is.na(groups)]
-    
-    group_correlations <- list()
-    for (group in groups) {
-      group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables, drop = FALSE]
-      if (nrow(group_data) > 3) {  # Need at least 4 observations for correlation
-        group_correlations[[as.character(group)]] <- cor(group_data, use = "complete.obs", method = "pearson")
-      }
-    }
-  }
-  
-  return(list(
-    correlation_matrix = cor_matrix,
-    spearman_matrix = cor_spearman,
-    correlation_tests = cor_test_results,
-    group_correlations = group_correlations
-  ))
-}
-
-# Interpret correlation strength
-interpret_correlation <- function(r) {
-  abs_r <- abs(r)
-  if (abs_r < 0.1) return("negligible")
-  else if (abs_r < 0.3) return("weak")
-  else if (abs_r < 0.5) return("moderate")
-  else if (abs_r < 0.7) return("strong")
-  else return("very strong")
 }
 
 # Perform normality tests for numeric variables

@@ -29,6 +29,7 @@ source("modules/analysis/statistical_tests.R")
 
 source("modules/visualization/create_plots.R")
 source("modules/visualization/plot_utils.R")
+# source("modules/visualization/plot_generator.R")      # File doesn't exist
 
 source("modules/reporting/generate_report.R")
 source("modules/reporting/export_results.R")
@@ -103,22 +104,13 @@ run_analysis_with_args <- function(args) {
   if (args$correlation_analysis) {
     cat("Running correlation analysis...\n")
     analysis_type <- "correlation_analysis"
-    # Placeholder for future correlation analysis implementation
-    numeric_vars <- sapply(medical_data, is.numeric)
-    if (sum(numeric_vars) > 1) {
-      correlation_matrix <- cor(medical_data[, numeric_vars], use = "complete.obs")
-    } else {
-      correlation_matrix <- NULL
-    }
     
-    analysis_results <- list(
-      analysis_type = "correlation_analysis",
-      message = "Correlation analysis module ready for implementation",
-      correlation_matrix = correlation_matrix,
-      data_summary = list(
-        n_observations = nrow(medical_data),
-        n_numeric_variables = sum(numeric_vars)
-      )
+    # Use the implemented correlation analysis function
+    analysis_results <- perform_correlation_analysis(
+      data = medical_data, 
+      group_column = "grupa",
+      variables = NULL,  # Will auto-detect numeric variables
+      include_plots = TRUE
     )
   }
   

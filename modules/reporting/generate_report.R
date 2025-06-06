@@ -522,20 +522,156 @@ create_comparative_analysis_content <- function(results, include_plots) {
 create_correlation_analysis_content <- function(results, include_plots) {
   content <- '<div class="row"><div class="col-12">'
   
+  # Summary section
   content <- paste0(content, '
     <div class="result-section">
         <h2>Correlation Analysis Summary</h2>
-        <p>This analysis examined relationships between variables using correlation coefficients.</p>')
+        <p>This analysis examines the strength and direction of linear relationships between continuous variables, 
+           using Pearson or Spearman correlation coefficients based on data characteristics.</p>')
   
-  if (!is.null(results$correlation_matrix)) {
+  # Metadata overview
+  if (!is.null(results$metadata)) {
     content <- paste0(content, '
-        <h3>Correlation Matrix</h3>
-        <div class="table-responsive">
-            ', create_correlation_table_html(results$correlation_matrix), '
-        </div>')
+        <h3>Analysis Overview</h3>
+        <div class="interpretation">
+            <strong>Total Variables:</strong> ', results$metadata$total_variables, '<br>
+            <strong>Total Observations:</strong> ', results$metadata$total_observations, '<br>')
+    
+    if (!is.null(results$metadata$group_column)) {
+      content <- paste0(content, 
+                       '<strong>Group Column:</strong> ', results$metadata$group_column, '<br>
+                        <strong>Groups:</strong> ', paste(results$metadata$groups, collapse = ", "), '<br>')
+    }
+    
+    content <- paste0(content, '</div>')
   }
   
+  # Overall Correlation Results
+  if (!is.null(results$overall_correlations) && !is.null(results$overall_correlations$pearson_matrix)) {
+    content <- paste0(content, '
+        <h3>Overall Correlation Matrix</h3>
+        <p>Correlation coefficients between all pairs of variables:</p>')
+    
+    # Create correlation matrix table
+    cor_matrix <- results$overall_correlations$pearson_matrix
+    p_matrix <- results$overall_correlations$pearson_p_values
+    
+    content <- paste0(content, '<div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable 1</th>
+                    <th>Variable 2</th>
+                    <th>Pearson r</th>
+                    <th>p-value</th>
+                    <th>Strength</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>')
+    
+    # Fill correlation table
+    variables <- rownames(cor_matrix)
+    for (i in 1:(length(variables)-1)) {
+      for (j in (i+1):length(variables)) {
+        var1 <- variables[i]
+        var2 <- variables[j]
+        r_val <- cor_matrix[i, j]
+        p_val <- p_matrix[i, j]
+        
+        # Determine strength and significance
+        abs_r <- abs(r_val)
+        if (abs_r < 0.1) strength <- "negligible"
+        else if (abs_r < 0.3) strength <- "weak"
+        else if (abs_r < 0.5) strength <- "moderate"
+        else if (abs_r < 0.7) strength <- "strong"
+        else strength <- "very strong"
+        
+        significance <- ifelse(p_val < 0.05, "significant", "not significant")
+        row_class <- ifelse(p_val < 0.05, "table-success", "table-light")
+        
+        content <- paste0(content, '
+                <tr class="', row_class, '">
+                    <td>', var1, '</td>
+                    <td>', var2, '</td>
+                    <td>', round(r_val, 3), '</td>
+                    <td>', format.pval(p_val, digits = 4), '</td>
+                    <td>', strength, '</td>
+                    <td>', significance, '</td>
+                </tr>')
+      }
+    }
+    
+    content <- paste0(content, '</tbody></table></div>')
+  }
+  
+  # Significant Correlations Summary
+  if (!is.null(results$correlation_summary$significant_correlations)) {
+    sig_cors <- results$correlation_summary$significant_correlations
+    
+    if (nrow(sig_cors) > 0) {
+      content <- paste0(content, '
+          <h3>Significant Correlations Summary</h3>
+          <p>Variables with statistically significant correlations (p < 0.05):</p>')
+      
+      for (i in 1:nrow(sig_cors)) {
+        cor_row <- sig_cors[i, ]
+        
+        content <- paste0(content, '
+          <div class="test-result significant">
+              <strong>', cor_row$variable1, ' ↔ ', cor_row$variable2, '</strong><br>
+              <strong>Correlation:</strong> r = ', round(cor_row$pearson_r, 3), 
+              ' (', cor_row$strength, ' ', cor_row$direction, ')<br>
+              <strong>p-value:</strong> ', format.pval(cor_row$pearson_p, digits = 4), '
+          </div>')
+      }
+    } else {
+      content <- paste0(content, '
+          <h3>Significant Correlations</h3>
+          <div class="interpretation">
+              <strong>No significant correlations found</strong> at α = 0.05 level.
+          </div>')
+    }
+  }
+  
+  # Include plots if requested
+  if (include_plots && !is.null(results$plot_files)) {
+    content <- paste0(content, '
+        <h3>Correlation Visualizations</h3>
+        <p>Visual representations of correlation patterns:</p>')
+    
+    for (plot_name in names(results$plot_files)) {
+      plot_file <- results$plot_files[[plot_name]]
+      relative_plot_path <- file.path("..", "plots", "correlation_analysis", basename(plot_file))
+      
+      content <- paste0(content, '
+        <div class="plot-container">
+            <h4>', stringr::str_to_title(gsub("_", " ", plot_name)), '</h4>
+            <img src="', relative_plot_path, '" alt="', plot_name, '" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>')
+    }
+  }
+  
+  # Interpretation guidelines
+  content <- paste0(content, '
+      <h3>Interpretation Guidelines</h3>
+      <div class="interpretation">
+          <h4>Correlation Strength Classification:</h4>
+          <strong>Negligible:</strong> |r| < 0.1 - Very weak or no linear relationship<br>
+          <strong>Weak:</strong> 0.1 ≤ |r| < 0.3 - Weak linear relationship<br>
+          <strong>Moderate:</strong> 0.3 ≤ |r| < 0.5 - Moderate linear relationship<br>
+          <strong>Strong:</strong> 0.5 ≤ |r| < 0.7 - Strong linear relationship<br>
+          <strong>Very Strong:</strong> |r| ≥ 0.7 - Very strong linear relationship<br><br>
+          
+          <h4>Important Notes:</h4>
+          • Correlation does not imply causation<br>
+          • Pearson correlation measures linear relationships only<br>
+          • Statistical significance (p < 0.05) indicates the correlation is unlikely due to chance<br>
+          • Effect size (correlation strength) is often more important than statistical significance
+      </div>')
+  
   content <- paste0(content, '</div></div></div>')
+  
   return(content)
 }
 
