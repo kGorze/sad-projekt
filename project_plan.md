@@ -49,6 +49,9 @@ Musze odpowiedzieć na te pytania i później do nich dobrać testy statystyczne
 - Jak policzyć 
 
 
+# Hipotezy zerowe
+
+
 ## Uruchamianie skryptu w trybie wsadowym
 z argumentem wejściowym w formie .csv
 
