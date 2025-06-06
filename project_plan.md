@@ -8,6 +8,13 @@ skrypt
 badane grupy są niezależne(więcej niż dwie grupy)
 
 
+#Zdefiniowanie problemu badawczego
+Musimy określić cel oraz przedstawić hipoteze badawczą.
+Jakie mamy badane parametry?
+Jaka jest skala pomiarowa?
+Czy próba jest odpowiednio duża?
+
+
 ## Uruchamianie skryptu w trybie wsadowym
 z argumentem wejściowym w formie .csv
 
