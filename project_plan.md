@@ -8,11 +8,45 @@ skrypt
 badane grupy są niezależne(więcej niż dwie grupy)
 
 
-#Zdefiniowanie problemu badawczego
+# Zdefiniowanie problemu badawczego
 Musimy określić cel oraz przedstawić hipoteze badawczą.
-Jakie mamy badane parametry?
-Jaka jest skala pomiarowa?
-Czy próba jest odpowiednio duża?
+- Jakie mamy badane parametry?
+- Jaka jest skala pomiarowa?
+- Czy próba jest odpowiednio duża?
+    - Jak możemy zwiększyć odpowiednio próbe? Czy jeżeli generujemy próby to również zmniejszamy błąd? 
+- Czym jest niska moc testu?
+    - Czy da się i tak jakoś znaleść istotne efekty?
+- Czy możemy jakoś zweryfikować dane?
+
+
+# Charakterystyka zmiennych
+Musze odpowiedzieć na te pytania i później do nich dobrać testy statystyczne.
+- Czy nasze zmienne wszystkie są danymi ilościowymi?
+- Czy nasze zmienne mają tylko i wyłącznie charakter ciągły?
+- Czy mamy jakieś skale nominalne? 
+- Czy są jakieś skale porządkowe?
+- Czy jest jakaś skala interwałowa?
+- Czy jest jakaś skala ilorazowa?
+
+# Ocena danych wejściowych
+- Lepiej usunąć niepełne dane czy jednak wstawić sztuczny pomiar?
+- Użyć srednią, mediane czy może zrobić regresje liniową?
+
+# Ocena zgodności danych z rozkładem normalnym
+- Czym jest test Kołogomorowa-Smirnowa?
+- Czym jest test Shapiro-Wilka?
+- Plots quantiles of data vs. expected quantiles of rnomal distribution with same mi and sigma.
+- Graficzna oceny zgodności z rozkładem normalnym.
+- Ocena homogeniczności(jedrorodności) wariancji - test FIshera, test Levne'a
+- porównywanie grup niezależnych i zależnych
+- Jakie są testy nieparametryczne?
+- Czym ją testy post hoc?
+
+# Ocena zależności pomiędzy parametrami
+- Ocena istnienia siły i korelacji pomiędzy wybranami parametrami
+- Ocena kształtu i kierunku tej zależności
+- Zależność nie zawsze oznacza ciąg przyczynowo-skutkowy
+- Jak policzyć 
 
 
 ## Uruchamianie skryptu w trybie wsadowym
