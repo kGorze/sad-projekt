@@ -18,6 +18,10 @@ if (!require(htmltools, quietly = TRUE)) {
   library(htmltools)
 }
 
+if (!exists("%||%")) {
+  `%||%` <- function(a, b) if (!is.null(a)) a else b
+}
+
 # Optional libraries - load if available, but don't require
 tryCatch({
   library(DT)

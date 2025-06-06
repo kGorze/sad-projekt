@@ -14,6 +14,15 @@ if (!require(readr, quietly = TRUE)) {
   library(readr)
 }
 
+if (!require(ggplot2, quietly = TRUE)) {
+  install.packages("ggplot2", repos = "https://cran.r-project.org")
+  library(ggplot2)
+}
+
+if (!exists("%||%")) {
+  `%||%` <- function(a, b) if (!is.null(a)) a else b
+}
+
 # Create standardized result structure for reporting
 create_analysis_result <- function(analysis_type, test_results = NULL, summary_data = NULL, 
                                   plots = NULL, metadata = NULL) {
