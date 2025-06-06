@@ -1,0 +1,48 @@
+skrypt .r
+sprawozdanie w formacie .pdf - jako dokumentacja produktu czyli tej analizy, sprawozdanie ma byc napisane jak manual do zaproponowanego narzędzie.
+- trzeba opisać jakie testy użyliśmy
+- jak intepretować przykładowe wyniki
+- jak interpretować generowane wykresy
+podstawowa analiza statystyczna dla danych medycznych
+skrypt
+badane grupy są niezależne(więcej niż dwie grupy)
+
+
+## Uruchamianie skryptu w trybie wsadowym
+z argumentem wejściowym w formie .csv
+
+
+## Co to znaczy, że grupy są niezależne?
+W kontekście tego zadania „grupy niezależne” oznaczają, że każda z badanych grup składa się z różnych, niepowiązanych ze sobą obserwacji (np. różnych osób). Innymi słowy:
+- Każdy „próba” (obserwacja, pacjent) należy dokładnie do jednej grupy i nie występuje w żadnej innej.
+- Nie ma parowania ani powtarzanych pomiarów na tych samych obiektach między grupami (np. nie porównujemy wyników tego samego pacjenta przed/po zabiegu – bo to byłyby grupy zależne/parami sparowane).
+- Wyniki w jednej grupie nie wpływają bezpośrednio na wyniki w drugiej grupie.
+Dzięki temu możemy założyć, że obserwacje pomiędzy grupami są losowo od siebie niezależne. Przykładowo:
+1. Grupa A = pacjenci leczeni lekiem X.
+2. Grupa B = pacjenci leczeni lekiem Y.
+3. Grupa C = pacjenci placebo.
+    
+Każdy pacjent jest przypisany tylko do jednej z tych trzech grup (nie ma takiej samej osoby w Grupie A i jednocześnie w Grupie B itd.). Jeżeli chcemy porównać średnie, odsetki czy inny parametr pomiędzy tymi grupami, używamy testów dla prób niezależnych (np. **testu t-Studenta** dla dwóch grup lub **analizy wariancji ANOVA/Kruskal-Wallisa** dla więcej niż dwóch).
+
+Jeśli założenie niezależności jest spełnione, wyniki testów są poprawne (nie dochodzi do „podwójnego liczenia” czy korelacji między pomiarami tych samych osób).
+
+# Rodzaj danych jakie mamy
+
+
+# Elementy analizy statystycznej
+### 1.Przygotowanie danych wejściowych przez poradzenie sobie z brakami danych. 
+Zaraportowanie wszystkich wprowadzonych zmian. Dodatkowo zaraportowanie informacji o wartościach odstających dla wybranych parame trów.
+
+### 2.Wykonanie charakterystyki dla badanych grup, zapisanie wyników w czytelnej formie.
+Polecana struktura tabelaryczna
+
+### 3. Wykonanie analizy porównawczej pomiędzy grupami, określenie czy istenija istotne statystyczne różnice. 
+Jeśli istnieją istotne statystyczne różnice pomiędzy grupami to zaraportowanie pomiędzy którymi grupami wystę pują i jak istotne są to różnice.
+
+### 4. Wykonanie analizy korelacji. 
+Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują istotne statystycznie korelacje oraz określenie siły i kierunku korelacji.
+
+# Wizaualizacja danych
+
+# Generowanie raportu podsumowującego
+
