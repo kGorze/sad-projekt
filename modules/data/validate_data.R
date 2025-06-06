@@ -150,10 +150,10 @@ validate_group_independence <- function(data, group_column) {
   
   # Check group factor levels
   if (is.factor(data[[group_column]])) {
-    groups <- levels(data[[group_column]])
-    actual_groups <- unique(data[[group_column]][!is.na(data[[group_column]])])
-    unused_levels <- setdiff(groups, actual_groups)
-    
+    all_levels <- levels(data[[group_column]])
+    groups <- unique(data[[group_column]][!is.na(data[[group_column]])])
+    unused_levels <- setdiff(all_levels, groups)
+
     if (length(unused_levels) > 0) {
       cat(sprintf("⚠ Unused factor levels detected: %s\n", paste(unused_levels, collapse = ", ")))
     }
@@ -416,8 +416,9 @@ validate_statistical_power <- function(data, group_column) {
   
   # Calculate group sizes
   group_sizes <- table(data[[group_column]], useNA = "no")
-  min_group_size <- min(group_sizes)
-  max_group_size <- max(group_sizes)
+  nonzero_sizes <- group_sizes[group_sizes > 0]
+  min_group_size <- if (length(nonzero_sizes) > 0) min(nonzero_sizes) else 0
+  max_group_size <- if (length(nonzero_sizes) > 0) max(nonzero_sizes) else 0
   total_n <- sum(group_sizes)
   
   cat(sprintf("Total sample size: %d\n", total_n))
@@ -437,16 +438,17 @@ validate_statistical_power <- function(data, group_column) {
     cat("✓ Adequate power for detecting medium to large effect sizes\n")
   }
   
-  # Check for balanced design
-  if (max_group_size / min_group_size > 2) {
+  # Check for balanced design using non-zero group sizes
+  balance_ratio <- if (length(nonzero_sizes) > 1) max(nonzero_sizes) / min(nonzero_sizes) else NA
+  if (!is.na(balance_ratio) && balance_ratio > 2) {
     warnings <- c(warnings, "Unbalanced design may reduce power")
-    cat(sprintf("⚠ Unbalanced design detected (ratio=%.2f)\n", max_group_size / min_group_size))
+    cat(sprintf("⚠ Unbalanced design detected (ratio=%.2f)\n", balance_ratio))
   } else {
     cat("✓ Reasonably balanced design\n")
   }
-  
+
   power_results$group_sizes <- group_sizes
-  power_results$balance_ratio <- max_group_size / min_group_size
+  power_results$balance_ratio <- balance_ratio
   power_results$total_n <- total_n
   
   return(list(
