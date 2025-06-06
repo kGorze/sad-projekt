@@ -2,14 +2,37 @@
 # Functions for creating comprehensive statistical analysis reports
 # Generates HTML reports with results, plots, and interpretations
 
-library(rmarkdown)
-library(knitr)
-library(htmltools)
-library(DT)
-library(plotly)
+# Load required libraries with error handling
+if (!require(rmarkdown, quietly = TRUE)) {
+  install.packages("rmarkdown", repos = "https://cran.r-project.org")
+  library(rmarkdown)
+}
+
+if (!require(knitr, quietly = TRUE)) {
+  install.packages("knitr", repos = "https://cran.r-project.org")
+  library(knitr)
+}
+
+if (!require(htmltools, quietly = TRUE)) {
+  install.packages("htmltools", repos = "https://cran.r-project.org")
+  library(htmltools)
+}
+
+# Optional libraries - load if available, but don't require
+tryCatch({
+  library(DT)
+}, error = function(e) {
+  # DT not available, skip
+})
+
+tryCatch({
+  library(plotly)
+}, error = function(e) {
+  # plotly not available, skip
+})
 
 # Generate HTML report for any analysis module
-generate_html_report <- function(analysis_results, analysis_type, output_path = "output/", 
+generate_html_report <- function(analysis_results, analysis_type, output_path = "output/reports", 
                                  title = NULL, include_plots = TRUE) {
   
   if (is.null(title)) {
@@ -104,33 +127,172 @@ create_comparative_analysis_content <- function(results, include_plots) {
   content <- paste0(content, '
     <div class="result-section">
         <h2>Comparative Analysis Summary</h2>
-        <p>This analysis compared groups across multiple variables using appropriate statistical tests.</p>')
+        <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>')
   
-  # Process each test result
-  if (!is.null(results$test_results)) {
-    content <- paste0(content, '<h3>Statistical Test Results</h3>')
+  # Metadata overview
+  if (!is.null(results$metadata)) {
+    content <- paste0(content, '
+        <h3>Analysis Overview</h3>
+        <div class="interpretation">
+            <strong>Groups Analyzed:</strong> ', paste(results$metadata$groups, collapse = ", "), '<br>
+            <strong>Group Sizes:</strong> ', paste(names(results$metadata$group_sizes), "=", results$metadata$group_sizes, collapse = ", "), '<br>
+            <strong>Continuous Variables:</strong> ', results$metadata$numeric_variables, '<br>
+            <strong>Categorical Variables:</strong> ', results$metadata$categorical_variables, '<br>
+            <strong>Total Observations:</strong> ', results$metadata$total_observations, '
+        </div>')
+  }
+  
+  # Distribution Analysis Results
+  if (!is.null(results$distribution_analysis)) {
+    content <- paste0(content, '
+        <h3>Distribution Analysis</h3>
+        <p>Assessment of normality for each variable overall and by group:</p>')
     
-    for (i in seq_along(results$test_results)) {
-      test <- results$test_results[[i]]
-      significance_class <- if (test$p_value < 0.05) "significant" else "not-significant"
+    for (var_name in names(results$distribution_analysis)) {
+      var_data <- results$distribution_analysis[[var_name]]
+      content <- paste0(content, '
+        <h4>', var_name, '</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> ', var_data$overall_normality$interpretation, '<br>')
+      
+      # Group-wise normality
+      if (!is.null(var_data$group_normality)) {
+        content <- paste0(content, '<strong>Group-wise Normality:</strong><br>')
+        for (group_name in names(var_data$group_normality)) {
+          group_result <- var_data$group_normality[[group_name]]
+          content <- paste0(content, '&nbsp;&nbsp;• ', group_name, ': ', group_result$interpretation, '<br>')
+        }
+      }
+      
+      content <- paste0(content, '</div>')
+    }
+  }
+  
+  # Homogeneity Analysis Results
+  if (!is.null(results$homogeneity_analysis)) {
+    content <- paste0(content, '
+        <h3>Homogeneity of Variances</h3>
+        <p>Assessment of variance homogeneity across groups:</p>')
+    
+    for (var_name in names(results$homogeneity_analysis)) {
+      var_data <- results$homogeneity_analysis[[var_name]]
+      homo_class <- if (!is.na(var_data$homogeneous) && var_data$homogeneous) "significant" else "not-significant"
+      
+      content <- paste0(content, '
+        <div class="test-result ', homo_class, '">
+            <h4>', var_name, '</h4>
+            <strong>Test:</strong> ', var_data$test, '<br>
+            <strong>Result:</strong> ', var_data$interpretation, '
+        </div>')
+    }
+  }
+  
+  # Test Recommendations
+  if (!is.null(results$test_recommendations)) {
+    content <- paste0(content, '
+        <h3>Statistical Test Recommendations</h3>
+        <p>Based on distribution and homogeneity analysis, the following tests were selected:</p>')
+    
+    for (var_name in names(results$test_recommendations)) {
+      recommendation <- results$test_recommendations[[var_name]]
+      content <- paste0(content, '
+        <div class="interpretation">
+            <strong>', var_name, ':</strong> ', recommendation$test_type, '<br>
+            <em>Reasoning:</em> ', recommendation$reasoning, '
+        </div>')
+    }
+  }
+  
+  # Statistical Test Results
+  if (!is.null(results$test_results)) {
+    content <- paste0(content, '
+        <h3>Statistical Test Results</h3>
+        <p>Results of group comparisons:</p>')
+    
+    for (var_name in names(results$test_results)) {
+      test <- results$test_results[[var_name]]
+      significance_class <- if (!is.na(test$p_value) && test$p_value < 0.05) "significant" else "not-significant"
       
       content <- paste0(content, '
         <div class="test-result ', significance_class, '">
-            <h4>', test$variable, ' - ', test$test_name, '</h4>
+            <h4>', var_name, ' - ', test$test_name, '</h4>
             <div class="row">
                 <div class="col-md-6">
-                    <strong>Test Statistic:</strong> ', round(test$statistic, 4), '<br>
-                    <strong>p-value:</strong> ', format.pval(test$p_value, digits = 4), '<br>
-                    <strong>Effect Size:</strong> ', ifelse(is.null(test$effect_size), "Not calculated", round(test$effect_size, 3)), '
+                    <strong>Test Statistic:</strong> ', 
+                    ifelse(is.null(test$statistic), "Not available", round(test$statistic, 4)), '<br>
+                    <strong>p-value:</strong> ', 
+                    ifelse(is.null(test$p_value), "Not available", format.pval(test$p_value, digits = 4)), '<br>
+                    <strong>Effect Size:</strong> ', 
+                    ifelse(is.null(test$effect_size), "Not calculated", round(test$effect_size, 3)), '
                 </div>
                 <div class="col-md-6">
-                    <strong>Interpretation:</strong> ', 
-                    ifelse(test$p_value < 0.05, 
-                           "Statistically significant difference between groups", 
-                           "No statistically significant difference between groups"), '
+                    <strong>Interpretation:</strong> ', test$interpretation, '
                 </div>
-            </div>
+            </div>')
+      
+      # Post-hoc results if available
+      if (!is.null(test$posthoc) && !is.null(test$posthoc$significant_pairs)) {
+        if (length(test$posthoc$significant_pairs) > 0) {
+          content <- paste0(content, '
+            <div class="mt-2">
+                <strong>Post-hoc Analysis (', test$posthoc$test_name, '):</strong><br>
+                <em>Significant pairwise differences:</em> ', paste(test$posthoc$significant_pairs, collapse = ", "), '
+            </div>')
+        } else {
+          content <- paste0(content, '
+            <div class="mt-2">
+                <strong>Post-hoc Analysis:</strong> No significant pairwise differences found
+            </div>')
+        }
+      }
+      
+      # Additional notes if available
+      if (!is.null(test$note)) {
+        content <- paste0(content, '
+            <div class="mt-2">
+                <em>Note:</em> ', test$note, '
+            </div>')
+      }
+      
+      content <- paste0(content, '</div>')
+    }
+  }
+  
+  # Analysis metadata
+  if (!is.null(results$metadata)) {
+    content <- paste0(content, '
+        <h3>Analysis Metadata</h3>
+        <div class="interpretation">
+            <strong>Analysis Date:</strong> ', format(results$metadata$analysis_date, "%Y-%m-%d %H:%M:%S"), '<br>
+            <strong>Group Column:</strong> ', results$metadata$group_column, '<br>
+            <strong>Statistical Approach:</strong> Comprehensive assumption testing followed by appropriate test selection
         </div>')
+  }
+  
+  # Include plots if available
+  if (include_plots && !is.null(results$plot_files) && length(results$plot_files) > 0) {
+    content <- paste0(content, '
+        <h3>Visualizations</h3>
+        <p>The following plots illustrate the group comparisons:</p>')
+    
+    for (plot_name in names(results$plot_files)) {
+      plot_file <- results$plot_files[[plot_name]]
+      
+      # Convert absolute path to relative path for HTML
+      if (file.exists(plot_file)) {
+        # Get relative path from the report location
+        relative_plot_path <- file.path("..", "plots", "comparative_analysis", basename(plot_file))
+        
+        # Create a nice title for the plot
+        plot_title <- gsub("_", " ", gsub("boxplot_|barplot_", "", plot_name))
+        plot_title <- stringr::str_to_title(plot_title)
+        
+        content <- paste0(content, '
+        <div class="plot-container">
+            <h4>', plot_title, '</h4>
+            <img src="', relative_plot_path, '" alt="', plot_title, '" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>')
+      }
     }
   }
   
@@ -166,14 +328,111 @@ create_descriptive_stats_content <- function(results, include_plots) {
   content <- paste0(content, '
     <div class="result-section">
         <h2>Descriptive Statistics Summary</h2>
-        <p>This section provides summary statistics for all variables in the dataset.</p>')
+        <p>This section provides comprehensive summary statistics for all variables in the dataset.</p>')
   
-  if (!is.null(results$summary_stats)) {
+  # Dataset overview
+  if (!is.null(results$data_summary) && !is.null(results$data_summary$dataset_overview)) {
     content <- paste0(content, '
-        <h3>Summary Statistics</h3>
+        <h3>Dataset Overview</h3>
         <div class="table-responsive">
-            ', create_descriptive_table_html(results$summary_stats), '
+            ', create_overview_table_html(results$data_summary$dataset_overview), '
         </div>')
+  }
+  
+  # Variable types summary
+  if (!is.null(results$data_summary) && !is.null(results$data_summary$variable_types)) {
+    content <- paste0(content, '
+        <h3>Variable Types</h3>
+        <div class="table-responsive">
+            ', create_variable_types_table_html(results$data_summary$variable_types), '
+        </div>')
+  }
+  
+  # Group summary if available
+  if (!is.null(results$data_summary) && !is.null(results$data_summary$group_summary)) {
+    content <- paste0(content, '
+        <h3>Group Distribution</h3>
+        <div class="table-responsive">
+            ', create_group_summary_table_html(results$data_summary$group_summary), '
+        </div>')
+  }
+  
+  # Continuous variables statistics
+  if (!is.null(results$summary_data)) {
+    content <- paste0(content, '
+        <h3>Continuous Variables Statistics</h3>
+        <div class="table-responsive">
+            ', create_descriptive_table_html(results$summary_data), '
+        </div>')
+  }
+  
+  # Categorical variables statistics
+  if (!is.null(results$categorical_data)) {
+    content <- paste0(content, '
+        <h3>Categorical Variables Statistics</h3>')
+    
+    for (var_name in names(results$categorical_data)) {
+      var_data <- results$categorical_data[[var_name]]
+      content <- paste0(content, '
+        <h4>', var_name, '</h4>
+        <div class="table-responsive">
+            ', create_categorical_table_html(var_data), '
+        </div>')
+    }
+  }
+  
+  # Missing data summary if available
+  if (!is.null(results$data_summary) && !is.null(results$data_summary$missing_data)) {
+    content <- paste0(content, '
+        <h3>Missing Data Summary</h3>
+        <div class="table-responsive">
+            ', create_missing_data_table_html(results$data_summary$missing_data), '
+        </div>')
+  }
+  
+  # Metadata information
+  if (!is.null(results$metadata)) {
+    content <- paste0(content, '
+        <h3>Analysis Metadata</h3>
+        <div class="interpretation">
+            <strong>Analysis Date:</strong> ', format(results$metadata$analysis_date, "%Y-%m-%d %H:%M:%S"), '<br>
+            <strong>Total Observations:</strong> ', results$metadata$total_observations, '<br>
+            <strong>Total Variables:</strong> ', results$metadata$total_variables, '<br>
+            <strong>Numeric Variables:</strong> ', results$metadata$numeric_variables, '<br>
+            <strong>Categorical Variables:</strong> ', results$metadata$categorical_variables, '<br>
+            <strong>Group Column:</strong> ', ifelse(is.null(results$metadata$group_column), "None", results$metadata$group_column), '<br>
+            <strong>Missing Data Present:</strong> ', ifelse(results$metadata$missing_data_present, "Yes", "No"), '
+        </div>')
+  }
+  
+  # Include plots if available
+  if (include_plots && !is.null(results$plot_files) && length(results$plot_files) > 0) {
+    content <- paste0(content, '
+        <h3>Visualizations</h3>
+        <p>The following plots illustrate the data distributions and patterns:</p>')
+    
+    for (plot_name in names(results$plot_files)) {
+      plot_file <- results$plot_files[[plot_name]]
+      
+      # Convert absolute path to relative path for HTML
+      if (file.exists(plot_file)) {
+        # Get relative path from the report location
+        relative_plot_path <- file.path("..", "plots", "descriptive_stats", basename(plot_file))
+        
+        # Create a nice title for the plot
+        plot_title <- gsub("_", " ", gsub("histogram_|boxplot_|barplot_", "", plot_name))
+        plot_title <- stringr::str_to_title(plot_title)
+        if (plot_name == "missing_data_summary") {
+          plot_title <- "Missing Data Summary"
+        }
+        
+        content <- paste0(content, '
+        <div class="plot-container">
+            <h4>', plot_title, '</h4>
+            <img src="', relative_plot_path, '" alt="', plot_title, '" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>')
+      }
+    }
   }
   
   content <- paste0(content, '</div></div></div>')
@@ -276,32 +535,243 @@ create_correlation_table_html <- function(corr_matrix) {
 create_descriptive_table_html <- function(stats_data) {
   if (is.null(stats_data)) return("")
   
+  # Check if it's grouped data
+  if ("group" %in% names(stats_data)) {
+    # Grouped data table
+    html <- '<table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Variable</th>
+                      <th>Group</th>
+                      <th>N</th>
+                      <th>Missing</th>
+                      <th>Mean</th>
+                      <th>SD</th>
+                      <th>Median</th>
+                      <th>Q25</th>
+                      <th>Q75</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                  </tr>
+              </thead>
+              <tbody>'
+    
+    for (i in 1:nrow(stats_data)) {
+      html <- paste0(html, '<tr>
+                          <td><strong>', stats_data$variable[i], '</strong></td>
+                          <td>', stats_data$group[i], '</td>
+                          <td>', ifelse(is.na(stats_data$n[i]), "-", stats_data$n[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$missing[i]), "-", stats_data$missing[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$mean[i]), "-", stats_data$mean[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$sd[i]), "-", stats_data$sd[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$median[i]), "-", stats_data$median[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$q25[i]), "-", stats_data$q25[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$q75[i]), "-", stats_data$q75[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$min[i]), "-", stats_data$min[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$max[i]), "-", stats_data$max[i]), '</td>
+                        </tr>')
+    }
+  } else {
+    # Overall data table with more comprehensive statistics
+    html <- '<table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Variable</th>
+                      <th>N</th>
+                      <th>Missing</th>
+                      <th>Mean</th>
+                      <th>SD</th>
+                      <th>Median</th>
+                      <th>Q25</th>
+                      <th>Q75</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                      <th>Range</th>
+                      <th>IQR</th>
+                      <th>CV%</th>
+                      <th>Skewness</th>
+                      <th>Kurtosis</th>
+                  </tr>
+              </thead>
+              <tbody>'
+    
+    for (i in 1:nrow(stats_data)) {
+      html <- paste0(html, '<tr>
+                          <td><strong>', stats_data$variable[i], '</strong></td>
+                          <td>', ifelse(is.na(stats_data$n[i]), "-", stats_data$n[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$missing[i]), "-", stats_data$missing[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$mean[i]), "-", stats_data$mean[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$sd[i]), "-", stats_data$sd[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$median[i]), "-", stats_data$median[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$q25[i]), "-", stats_data$q25[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$q75[i]), "-", stats_data$q75[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$min[i]), "-", stats_data$min[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$max[i]), "-", stats_data$max[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$range[i]), "-", stats_data$range[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$iqr[i]), "-", stats_data$iqr[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$cv[i]), "-", paste0(stats_data$cv[i], "%")), '</td>
+                          <td>', ifelse(is.na(stats_data$skewness[i]), "-", stats_data$skewness[i]), '</td>
+                          <td>', ifelse(is.na(stats_data$kurtosis[i]), "-", stats_data$kurtosis[i]), '</td>
+                        </tr>')
+    }
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create overview table HTML
+create_overview_table_html <- function(overview_data) {
+  if (is.null(overview_data)) return("")
+  
   html <- '<table class="table table-striped stats-table">
             <thead>
                 <tr>
-                    <th>Variable</th>
-                    <th>N</th>
-                    <th>Mean</th>
-                    <th>SD</th>
-                    <th>Min</th>
-                    <th>Max</th>
-                    <th>Missing</th>
+                    <th>Metric</th>
+                    <th>Value</th>
                 </tr>
             </thead>
             <tbody>'
   
-  if (is.data.frame(stats_data)) {
-    for (i in 1:nrow(stats_data)) {
-      html <- paste0(html, '<tr>
-                        <td><strong>', rownames(stats_data)[i], '</strong></td>
-                        <td>', ifelse(is.na(stats_data$n[i]), "-", stats_data$n[i]), '</td>
-                        <td>', ifelse(is.na(stats_data$mean[i]), "-", round(stats_data$mean[i], 2)), '</td>
-                        <td>', ifelse(is.na(stats_data$sd[i]), "-", round(stats_data$sd[i], 2)), '</td>
-                        <td>', ifelse(is.na(stats_data$min[i]), "-", round(stats_data$min[i], 2)), '</td>
-                        <td>', ifelse(is.na(stats_data$max[i]), "-", round(stats_data$max[i], 2)), '</td>
-                        <td>', ifelse(is.na(stats_data$missing[i]), "-", stats_data$missing[i]), '</td>
+  for (i in 1:nrow(overview_data)) {
+    html <- paste0(html, '<tr>
+                        <td><strong>', overview_data$metric[i], '</strong></td>
+                        <td>', overview_data$value[i], '</td>
                       </tr>')
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create variable types table HTML
+create_variable_types_table_html <- function(var_types_data) {
+  if (is.null(var_types_data)) return("")
+  
+  html <- '<table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable Type</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody>'
+  
+  for (i in 1:nrow(var_types_data)) {
+    html <- paste0(html, '<tr>
+                        <td><strong>', var_types_data$type[i], '</strong></td>
+                        <td>', var_types_data$count[i], '</td>
+                      </tr>')
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create group summary table HTML
+create_group_summary_table_html <- function(group_data) {
+  if (is.null(group_data)) return("")
+  
+  html <- '<table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Group</th>
+                    <th>N</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody>'
+  
+  for (i in 1:nrow(group_data)) {
+    html <- paste0(html, '<tr>
+                        <td><strong>', group_data$group[i], '</strong></td>
+                        <td>', group_data$n[i], '</td>
+                        <td>', group_data$percentage[i], '%</td>
+                      </tr>')
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create categorical table HTML
+create_categorical_table_html <- function(cat_data) {
+  if (is.null(cat_data)) return("")
+  
+  if ("group" %in% names(cat_data)) {
+    # Grouped categorical data
+    html <- '<table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Category</th>
+                      <th>Group</th>
+                      <th>Frequency</th>
+                      <th>Percentage</th>
+                  </tr>
+              </thead>
+              <tbody>'
+    
+    for (i in 1:nrow(cat_data)) {
+      html <- paste0(html, '<tr>
+                          <td>', cat_data$category[i], '</td>
+                          <td>', cat_data$group[i], '</td>
+                          <td>', cat_data$frequency[i], '</td>
+                          <td>', cat_data$percentage[i], '%</td>
+                        </tr>')
     }
+  } else {
+    # Overall categorical data
+    html <- '<table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Category</th>
+                      <th>Frequency</th>
+                      <th>Percentage</th>
+                  </tr>
+              </thead>
+              <tbody>'
+    
+    for (i in 1:nrow(cat_data)) {
+      html <- paste0(html, '<tr>
+                          <td>', cat_data$category[i], '</td>
+                          <td>', cat_data$frequency[i], '</td>
+                          <td>', cat_data$percentage[i], '%</td>
+                        </tr>')
+    }
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create missing data table HTML
+create_missing_data_table_html <- function(missing_data) {
+  if (is.null(missing_data)) return("")
+  
+  html <- '<table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Missing Count</th>
+                    <th>Missing Percentage</th>
+                </tr>
+            </thead>
+            <tbody>'
+  
+  for (i in 1:nrow(missing_data)) {
+    # Color code based on missing percentage
+    row_class <- ""
+    if (missing_data$missing_percentage[i] > 20) {
+      row_class <- "table-danger"
+    } else if (missing_data$missing_percentage[i] > 10) {
+      row_class <- "table-warning"
+    }
+    
+    html <- paste0(html, '<tr class="', row_class, '">
+                        <td><strong>', missing_data$variable[i], '</strong></td>
+                        <td>', missing_data$missing_count[i], '</td>
+                        <td>', missing_data$missing_percentage[i], '%</td>
+                      </tr>')
   }
   
   html <- paste0(html, '</tbody></table>')

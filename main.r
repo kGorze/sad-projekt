@@ -6,8 +6,11 @@
 # Usage: Rscript main.R --correlation_analysis --report
 # Usage: Rscript main.R --descriptive_stats --report
 
-# Load required libraries for command line parsing
-library(optparse)
+# Load required libraries for command line parsing with error handling
+if (!require(optparse, quietly = TRUE)) {
+  install.packages("optparse", repos = "https://cran.r-project.org")
+  library(optparse)
+}
 
 # Source all required modules
 source("modules/utils/config.R")
@@ -50,8 +53,6 @@ parse_arguments <- function() {
                 help="Run statistical tests"),
     make_option(c("--report"), action="store_true", default=FALSE,
                 help="Generate HTML report for the analysis"),
-    make_option(c("--output"), type="character", default="output/",
-                help="Output directory for reports [default: %default]"),
     make_option(c("--input"), type="character", default="dane.csv",
                 help="Input data file [default: %default]"),
     make_option(c("--repair_data"), action="store_true", default=TRUE,
@@ -90,24 +91,12 @@ run_analysis_with_args <- function(args) {
   if (args$comparative_analysis) {
     cat("Running comparative analysis...\n")
     analysis_type <- "comparative_analysis"
-    # Placeholder for future comparative analysis implementation
-    analysis_results <- list(
-      analysis_type = "comparative_analysis",
-      message = "Comparative analysis module ready for implementation",
-      data_summary = list(
-        n_observations = nrow(medical_data),
-        n_variables = ncol(medical_data),
-        group_column = "grupa"
-      ),
-      test_results = list(
-        list(
-          variable = "Example Variable",
-          test_name = "Example Test",
-          statistic = 2.5,
-          p_value = 0.03,
-          effect_size = 0.4
-        )
-      )
+    
+    # Use the implemented comparative analysis function
+    analysis_results <- perform_group_comparisons(
+      data = medical_data, 
+      group_column = "grupa", 
+      include_plots = TRUE
     )
   }
   
@@ -136,30 +125,12 @@ run_analysis_with_args <- function(args) {
   if (args$descriptive_stats) {
     cat("Running descriptive statistics...\n")
     analysis_type <- "descriptive_stats"
-    # Placeholder for future descriptive statistics implementation
-    numeric_vars <- sapply(medical_data, is.numeric)
     
-    if (sum(numeric_vars) > 0) {
-      summary_stats <- data.frame(
-        n = sapply(medical_data[, numeric_vars, drop=FALSE], function(x) sum(!is.na(x))),
-        mean = sapply(medical_data[, numeric_vars, drop=FALSE], mean, na.rm = TRUE),
-        sd = sapply(medical_data[, numeric_vars, drop=FALSE], sd, na.rm = TRUE),
-        min = sapply(medical_data[, numeric_vars, drop=FALSE], min, na.rm = TRUE),
-        max = sapply(medical_data[, numeric_vars, drop=FALSE], max, na.rm = TRUE),
-        missing = sapply(medical_data[, numeric_vars, drop=FALSE], function(x) sum(is.na(x)))
-      )
-    } else {
-      summary_stats <- NULL
-    }
-    
-    analysis_results <- list(
-      analysis_type = "descriptive_stats",
-      message = "Descriptive statistics module ready for implementation",
-      summary_stats = summary_stats,
-      data_summary = list(
-        n_observations = nrow(medical_data),
-        n_variables = ncol(medical_data)
-      )
+    # Use the implemented descriptive statistics function
+    analysis_results <- generate_descriptive_stats(
+      data = medical_data, 
+      group_column = "grupa", 
+      include_plots = TRUE
     )
   }
   
@@ -182,15 +153,15 @@ run_analysis_with_args <- function(args) {
     cat("Generating HTML report...\n")
     
     # Create output directory if it doesn't exist
-    if (!dir.exists(args$output)) {
-      dir.create(args$output, recursive = TRUE)
+    if (!dir.exists("output")) {
+      dir.create("output", recursive = TRUE)
     }
     
     # Generate the HTML report
     report_file <- generate_html_report(
       analysis_results = analysis_results,
       analysis_type = analysis_type,
-      output_path = args$output,
+      output_path = "output/reports",
       title = paste("Statistical Analysis Report -", stringr::str_to_title(gsub("_", " ", analysis_type))),
       include_plots = TRUE
     )

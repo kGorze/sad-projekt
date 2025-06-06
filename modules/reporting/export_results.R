@@ -3,9 +3,16 @@
 # Supports CSV, Excel, PDF, and other output formats
 # Updated to work with HTML reporting system
 
-# Load required libraries
-library(writexl)
-library(readr)
+# Load required libraries with error handling
+if (!require(writexl, quietly = TRUE)) {
+  install.packages("writexl", repos = "https://cran.r-project.org")
+  library(writexl)
+}
+
+if (!require(readr, quietly = TRUE)) {
+  install.packages("readr", repos = "https://cran.r-project.org")
+  library(readr)
+}
 
 # Create standardized result structure for reporting
 create_analysis_result <- function(analysis_type, test_results = NULL, summary_data = NULL, 
@@ -50,7 +57,7 @@ add_test_result <- function(analysis_result, variable_name, test_name, statistic
 }
 
 # Generate quick report for any analysis result
-quick_report <- function(analysis_result, output_path = "output/", open_report = FALSE) {
+quick_report <- function(analysis_result, open_report = FALSE) {
   
   if (!inherits(analysis_result, "analysis_result")) {
     stop("Input must be an analysis_result object created with create_analysis_result()")
@@ -61,11 +68,11 @@ quick_report <- function(analysis_result, output_path = "output/", open_report =
     source("modules/reporting/generate_report.R")
   }
   
-  # Generate the report
+  # Generate the report using fixed output path
   report_file <- generate_html_report(
     analysis_results = analysis_result,
     analysis_type = analysis_result$analysis_type,
-    output_path = output_path,
+    output_path = "output/reports",
     include_plots = !is.null(analysis_result$plots)
   )
   
@@ -78,7 +85,9 @@ quick_report <- function(analysis_result, output_path = "output/", open_report =
 }
 
 # Export statistical results to CSV
-export_results_to_csv <- function(analysis_result, output_path = "output/results.csv") {
+export_results_to_csv <- function(analysis_result, filename = "results.csv") {
+  
+  output_path <- file.path("output", "tables", filename)
   
   if (is.null(analysis_result$test_results)) {
     warning("No test results to export")
@@ -110,7 +119,9 @@ export_results_to_csv <- function(analysis_result, output_path = "output/results
 }
 
 # Export results to Excel with multiple sheets
-export_results_to_excel <- function(analysis_result, output_path = "output/results.xlsx") {
+export_results_to_excel <- function(analysis_result, filename = "results.xlsx") {
+  
+  output_path <- file.path("output", "tables", filename)
   
   # Create output directory if needed
   output_dir <- dirname(output_path)
@@ -160,7 +171,9 @@ export_results_to_excel <- function(analysis_result, output_path = "output/resul
 }
 
 # Export plots to various formats
-export_plots <- function(plots, output_directory = "output/plots/") {
+export_plots <- function(plots, subdirectory = "general") {
+  
+  output_directory <- file.path("output", "plots", subdirectory)
   
   if (is.null(plots) || length(plots) == 0) {
     warning("No plots to export")
@@ -193,7 +206,9 @@ export_plots <- function(plots, output_directory = "output/plots/") {
 }
 
 # Create data dictionary
-create_data_dictionary <- function(data, output_path = "output/data_dictionary.csv") {
+create_data_dictionary <- function(data, filename = "data_dictionary.csv") {
+  
+  output_path <- file.path("output", "tables", filename)
   
   # Create data dictionary data frame
   dict_df <- data.frame(
@@ -240,7 +255,9 @@ create_data_dictionary <- function(data, output_path = "output/data_dictionary.c
 }
 
 # Export summary tables
-export_summary_tables <- function(tables, output_path = "output/summary_tables.xlsx") {
+export_summary_tables <- function(tables, filename = "summary_tables.xlsx") {
+  
+  output_path <- file.path("output", "tables", filename)
   
   if (is.null(tables) || length(tables) == 0) {
     warning("No tables to export")
@@ -266,7 +283,9 @@ export_summary_tables <- function(tables, output_path = "output/summary_tables.x
 }
 
 # Create analysis log
-create_analysis_log <- function(analysis_steps, output_path = "output/analysis_log.txt") {
+create_analysis_log <- function(analysis_steps, filename = "analysis_log.txt") {
+  
+  output_path <- file.path("output", "logs", filename)
   
   # Create output directory if needed
   output_dir <- dirname(output_path)
