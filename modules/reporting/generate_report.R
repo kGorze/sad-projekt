@@ -258,6 +258,131 @@ create_comparative_analysis_content <- function(results, include_plots) {
     }
   }
   
+  # Cohen's D Effect Size Analysis
+  if (!is.null(results$effect_sizes)) {
+    content <- paste0(content, '
+        <h3>Effect Size Analysis (Cohen\'s D)</h3>
+        <p>Cohen\'s D measures the standardized difference between group means:</p>')
+    
+    for (var_name in names(results$effect_sizes)) {
+      effect_data <- results$effect_sizes[[var_name]]
+      
+      if (!is.null(effect_data$effect_sizes) && length(effect_data$effect_sizes) > 0) {
+        content <- paste0(content, '
+        <h4>', var_name, '</h4>
+        <div class="test-result">
+            <div class="row">')
+        
+        for (comparison_name in names(effect_data$effect_sizes)) {
+          comparison <- effect_data$effect_sizes[[comparison_name]]
+          
+          # Determine effect size class for styling
+          effect_class <- "not-significant"
+          if (!is.na(comparison$cohens_d)) {
+            if (abs(comparison$cohens_d) >= 0.8) effect_class <- "significant"
+            else if (abs(comparison$cohens_d) >= 0.5) effect_class <- "warning"
+          }
+          
+          content <- paste0(content, '
+                <div class="col-md-6">
+                    <div class="', effect_class, '" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>', comparison_name, ':</strong><br>
+                        <strong>Cohen\'s D:</strong> ', 
+                        ifelse(is.na(comparison$cohens_d), "Not calculated", round(comparison$cohens_d, 3)), '<br>
+                        <strong>Effect Size:</strong> ', comparison$magnitude, '<br>
+                        <strong>Sample Sizes:</strong> n₁=', comparison$n1, ', n₂=', comparison$n2, '
+                    </div>
+                </div>')
+        }
+        
+        content <- paste0(content, '
+            </div>
+        </div>')
+      }
+    }
+    
+    content <- paste0(content, '
+        <div class="interpretation">
+            <strong>Cohen\'s D Interpretation:</strong><br>
+            • |d| < 0.2: Negligible effect<br>
+            • 0.2 ≤ |d| < 0.5: Small effect<br>
+            • 0.5 ≤ |d| < 0.8: Medium effect<br>
+            • |d| ≥ 0.8: Large effect
+        </div>')
+  }
+  
+  # Linear Regression Analysis
+  if (!is.null(results$regression_analysis)) {
+    content <- paste0(content, '
+        <h3>Linear Regression Analysis</h3>
+        <p>Linear models examining the relationship between group membership and continuous variables:</p>')
+    
+    for (var_name in names(results$regression_analysis)) {
+      reg_data <- results$regression_analysis[[var_name]]
+      
+      if (!is.null(reg_data$model)) {
+        significance_class <- if (!is.na(reg_data$f_p_value) && reg_data$f_p_value < 0.05) "significant" else "not-significant"
+        
+        content <- paste0(content, '
+        <div class="test-result ', significance_class, '">
+            <h4>', var_name, ' ~ ', results$metadata$group_column, '</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>R-squared:</strong> ', round(reg_data$r_squared, 4), '<br>
+                    <strong>Adjusted R-squared:</strong> ', round(reg_data$adj_r_squared, 4), '<br>
+                    <strong>F-statistic:</strong> ', round(reg_data$f_statistic, 3), '<br>
+                    <strong>p-value:</strong> ', format.pval(reg_data$f_p_value, digits = 4), '
+                </div>
+                <div class="col-md-6">
+                    <strong>Model Interpretation:</strong> ', reg_data$interpretation, '<br>
+                    <strong>Residuals Normality:</strong> ', 
+                    ifelse(reg_data$normality_test$p.value > 0.05, 
+                           paste("Normal (p =", round(reg_data$normality_test$p.value, 4), ")"),
+                           paste("Non-normal (p =", round(reg_data$normality_test$p.value, 4), ")")), '
+                </div>
+            </div>')
+        
+        # Add coefficients table if available
+        if (!is.null(reg_data$coefficients)) {
+          content <- paste0(content, '
+            <div class="mt-2">
+                <strong>Model Coefficients:</strong>
+                <table class="table table-sm table-striped">
+                    <thead>
+                        <tr><th>Term</th><th>Estimate</th><th>Std.Error</th><th>t-value</th><th>p-value</th><th>95% CI</th></tr>
+                    </thead>
+                    <tbody>')
+          
+          for (i in 1:nrow(reg_data$coefficients)) {
+            coef_row <- reg_data$coefficients[i, ]
+            content <- paste0(content, '
+                        <tr>
+                            <td>', coef_row$term, '</td>
+                            <td>', round(coef_row$estimate, 4), '</td>
+                            <td>', round(coef_row$std.error, 4), '</td>
+                            <td>', round(coef_row$statistic, 3), '</td>
+                            <td>', format.pval(coef_row$p.value, digits = 4), '</td>
+                            <td>[', round(coef_row$conf.low, 3), ', ', round(coef_row$conf.high, 3), ']</td>
+                        </tr>')
+          }
+          
+          content <- paste0(content, '
+                    </tbody>
+                </table>
+            </div>')
+        }
+        
+        content <- paste0(content, '</div>')
+      } else {
+        content <- paste0(content, '
+        <div class="test-result not-significant">
+            <h4>', var_name, '</h4>
+            <p>', reg_data$interpretation, '</p>
+        </div>')
+      }
+    }
+  }
+  
   # Analysis metadata
   if (!is.null(results$metadata)) {
     content <- paste0(content, '
@@ -267,6 +392,95 @@ create_comparative_analysis_content <- function(results, include_plots) {
             <strong>Group Column:</strong> ', results$metadata$group_column, '<br>
             <strong>Statistical Approach:</strong> Comprehensive assumption testing followed by appropriate test selection
         </div>')
+  }
+  
+  # Variable Properties Analysis - Comprehensive table for each group
+  if (!is.null(results$variable_properties)) {
+    content <- paste0(content, '
+        <h3>Variable Properties Analysis</h3>
+        <p>Comprehensive analysis of variable characteristics for each group - essential for statistical test selection:</p>')
+    
+    if (!is.null(results$variable_properties$properties_table)) {
+      content <- paste0(content, '
+        <div class="table-responsive">
+            ', create_variable_properties_table_html(results$variable_properties$properties_table), '
+        </div>')
+      
+      # Add interpretation guide
+      content <- paste0(content, '
+        <div class="interpretation">
+            <h4>Interpretation Guide:</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Normal Distribution:</strong><br>
+                    • <span style="color: green;">Normal</span>: Data follows normal distribution (parametric tests suitable)<br>
+                    • <span style="color: red;">Non-normal</span>: Data deviates from normality (consider non-parametric tests)<br><br>
+                    <strong>Homogeneity Status:</strong><br>
+                    • <span style="color: green;">Homogeneous</span>: Equal variances across groups<br>
+                    • <span style="color: red;">Heterogeneous</span>: Unequal variances (use Welch corrections)<br><br>
+                    <strong>Data Quality:</strong><br>
+                    • <span style="color: green;">Good</span>: No major issues detected<br>
+                    • <span style="color: orange;">Fair</span>: Minor issues present<br>
+                    • <span style="color: red;">Poor</span>: Multiple quality issues
+                </div>
+                <div class="col-md-6">
+                    <strong>CV% (Coefficient of Variation):</strong><br>
+                    • <15%: Low variability<br>
+                    • 15-35%: Moderate variability<br>
+                    • >35%: High variability<br><br>
+                    <strong>Outliers:</strong><br>
+                    • <5%: Acceptable level<br>
+                    • 5-10%: Moderate concern<br>
+                    • >10%: High concern<br><br>
+                    <strong>Recommended Tests:</strong><br>
+                    Based on normality, homogeneity, and data quality assessment
+                </div>
+            </div>
+        </div>')
+    }
+    
+    # Homogeneity test summary
+    if (!is.null(results$variable_properties$homogeneity_p_values)) {
+      content <- paste0(content, '
+        <h4>Homogeneity Test Summary (Levene\'s Test)</h4>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Levene\'s Test p-value</th>
+                        <th>Homogeneity Status</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>')
+      
+      for (var_name in names(results$variable_properties$homogeneity_p_values)) {
+        p_val <- results$variable_properties$homogeneity_p_values[[var_name]]
+        homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
+        row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
+        interpretation <- if(is.na(p_val)) {
+          "Insufficient data for testing"
+        } else if(p_val > 0.05) {
+          "Variances are equal across groups"
+        } else {
+          "Variances differ significantly between groups"
+        }
+        
+        content <- paste0(content, '
+                    <tr class="', row_class, '">
+                        <td><strong>', var_name, '</strong></td>
+                        <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
+                        <td>', homog_status, '</td>
+                        <td>', interpretation, '</td>
+                    </tr>')
+      }
+      
+      content <- paste0(content, '
+                </tbody>
+            </table>
+        </div>')
+    }
   }
   
   # Include plots if available
@@ -405,6 +619,271 @@ create_descriptive_stats_content <- function(results, include_plots) {
         </div>')
   }
   
+  # Variable Properties Analysis - Comprehensive table for each group
+  if (!is.null(results$variable_properties)) {
+    content <- paste0(content, '
+        <h3>Variable Properties Analysis</h3>
+        <p>Comprehensive analysis of variable characteristics for each group - essential for statistical test selection:</p>')
+    
+    if (!is.null(results$variable_properties$properties_table)) {
+      content <- paste0(content, '
+        <div class="table-responsive">
+            ', create_variable_properties_table_html(results$variable_properties$properties_table), '
+        </div>')
+      
+      # Add interpretation guide
+      content <- paste0(content, '
+        <div class="interpretation">
+            <h4>Interpretation Guide:</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Normal Distribution:</strong><br>
+                    • <span style="color: green;">Normal</span>: Data follows normal distribution (parametric tests suitable)<br>
+                    • <span style="color: red;">Non-normal</span>: Data deviates from normality (consider non-parametric tests)<br><br>
+                    <strong>Homogeneity Status:</strong><br>
+                    • <span style="color: green;">Homogeneous</span>: Equal variances across groups<br>
+                    • <span style="color: red;">Heterogeneous</span>: Unequal variances (use Welch corrections)<br><br>
+                    <strong>Data Quality:</strong><br>
+                    • <span style="color: green;">Good</span>: No major issues detected<br>
+                    • <span style="color: orange;">Fair</span>: Minor issues present<br>
+                    • <span style="color: red;">Poor</span>: Multiple quality issues
+                </div>
+                <div class="col-md-6">
+                    <strong>CV% (Coefficient of Variation):</strong><br>
+                    • <15%: Low variability<br>
+                    • 15-35%: Moderate variability<br>
+                    • >35%: High variability<br><br>
+                    <strong>Outliers:</strong><br>
+                    • <5%: Acceptable level<br>
+                    • 5-10%: Moderate concern<br>
+                    • >10%: High concern<br><br>
+                    <strong>Recommended Tests:</strong><br>
+                    Based on normality, homogeneity, and data quality assessment
+                </div>
+            </div>
+        </div>')
+    }
+    
+    # Homogeneity test summary
+    if (!is.null(results$variable_properties$homogeneity_p_values)) {
+      content <- paste0(content, '
+        <h4>Homogeneity Test Summary (Levene\'s Test)</h4>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Levene\'s Test p-value</th>
+                        <th>Homogeneity Status</th>
+                        <th>Interpretation</th>
+                    </tr>
+                </thead>
+                <tbody>')
+      
+      for (var_name in names(results$variable_properties$homogeneity_p_values)) {
+        p_val <- results$variable_properties$homogeneity_p_values[[var_name]]
+        homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
+        row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
+        interpretation <- if(is.na(p_val)) {
+          "Insufficient data for testing"
+        } else if(p_val > 0.05) {
+          "Variances are equal across groups"
+        } else {
+          "Variances differ significantly between groups"
+        }
+        
+        content <- paste0(content, '
+                    <tr class="', row_class, '">
+                        <td><strong>', var_name, '</strong></td>
+                        <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
+                        <td>', homog_status, '</td>
+                        <td>', interpretation, '</td>
+                    </tr>')
+      }
+      
+      content <- paste0(content, '
+                </tbody>
+            </table>
+        </div>')
+    }
+  }
+  
+  # Correlation Analysis Results
+  if (!is.null(results$correlation_analysis)) {
+    content <- paste0(content, '
+        <h3>Correlation Analysis</h3>
+        <p>Comprehensive correlation analysis between numeric variables:</p>')
+    
+    # Correlation matrix heatmap description
+    if (!is.null(results$correlation_analysis$correlation_matrix)) {
+      content <- paste0(content, '
+        <h4>Correlation Matrix</h4>
+        <div class="table-responsive">
+            ', create_correlation_table_html(results$correlation_analysis$correlation_matrix), '
+        </div>')
+    }
+    
+    # Significant correlations
+    if (!is.null(results$correlation_analysis$correlation_tests)) {
+      content <- paste0(content, '
+        <h4>Significant Correlations</h4>')
+      
+      significant_cors <- list()
+      for (test_name in names(results$correlation_analysis$correlation_tests)) {
+        test <- results$correlation_analysis$correlation_tests[[test_name]]
+        if (!is.na(test$pearson_p) && test$pearson_p < 0.05) {
+          significant_cors[[test_name]] <- test
+        }
+      }
+      
+      if (length(significant_cors) > 0) {
+        for (test_name in names(significant_cors)) {
+          test <- significant_cors[[test_name]]
+          significance_class <- if (abs(test$pearson_r) >= 0.5) "significant" else "warning"
+          
+          content <- paste0(content, '
+        <div class="test-result ', significance_class, '">
+            <h5>', test_name, '</h5>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Pearson r:</strong> ', round(test$pearson_r, 3), '<br>
+                    <strong>p-value:</strong> ', format.pval(test$pearson_p, digits = 4), '<br>
+                    <strong>95% CI:</strong> [', round(test$pearson_ci[1], 3), ', ', round(test$pearson_ci[2], 3), ']
+                </div>
+                <div class="col-md-6">
+                    <strong>Spearman ρ:</strong> ', round(test$spearman_rho, 3), '<br>
+                    <strong>Spearman p:</strong> ', format.pval(test$spearman_p, digits = 4), '<br>
+                    <strong>Strength:</strong> ', test$interpretation, '
+                </div>
+            </div>
+        </div>')
+        }
+      } else {
+        content <- paste0(content, '
+        <div class="interpretation">
+            <p>No statistically significant correlations found (p < 0.05).</p>
+        </div>')
+      }
+    }
+  }
+  
+  # Normality Testing Results
+  if (!is.null(results$normality_analysis)) {
+    content <- paste0(content, '
+        <h3>Normality Testing</h3>
+        <p>Assessment of normal distribution for each numeric variable:</p>')
+    
+    for (var_name in names(results$normality_analysis)) {
+      var_data <- results$normality_analysis[[var_name]]
+      normality_class <- if (!is.na(var_data$normal) && var_data$normal) "significant" else "not-significant"
+      
+      content <- paste0(content, '
+        <div class="test-result ', normality_class, '">
+            <h4>', var_name, ' - ', var_data$test, '</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> ', 
+                    ifelse(is.null(var_data$statistic), "Not available", round(var_data$statistic, 4)), '<br>
+                    <strong>p-value:</strong> ', 
+                    ifelse(is.null(var_data$p_value), "Not available", format.pval(var_data$p_value, digits = 4)), '<br>
+                    <strong>Normal Distribution:</strong> ', 
+                    ifelse(var_data$normal, "Yes", "No"), '
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> ', 
+                    ifelse(is.null(var_data$skewness), "Not calculated", round(var_data$skewness, 3)), '<br>
+                    <strong>Kurtosis:</strong> ', 
+                    ifelse(is.null(var_data$kurtosis), "Not calculated", round(var_data$kurtosis, 3)), '<br>
+                    <strong>Interpretation:</strong> ', var_data$interpretation, '
+                </div>
+            </div>')
+      
+      # Group-wise normality if available
+      if (!is.null(var_data$group_normality)) {
+        content <- paste0(content, '
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>')
+        for (group_name in names(var_data$group_normality)) {
+          group_result <- var_data$group_normality[[group_name]]
+          content <- paste0(content, '
+                &nbsp;&nbsp;• ', group_name, ': ', 
+                ifelse(group_result$normal, "Normal", "Non-normal"), 
+                ' (', group_result$test, ' p = ', round(group_result$p_value, 4), ')<br>')
+        }
+        content <- paste0(content, '
+            </div>')
+      }
+      
+      content <- paste0(content, '</div>')
+    }
+    
+    content <- paste0(content, '
+        <div class="interpretation">
+            <strong>Normality Interpretation:</strong><br>
+            • p > 0.05: Data appears normally distributed<br>
+            • p ≤ 0.05: Data deviates from normal distribution<br>
+            • Skewness close to 0: Symmetric distribution<br>
+            • Kurtosis close to 0: Normal tail behavior
+        </div>')
+  }
+  
+  # Outlier Analysis Results
+  if (!is.null(results$outlier_analysis)) {
+    content <- paste0(content, '
+        <h3>Outlier Analysis</h3>
+        <p>Detection of outliers using multiple methods:</p>')
+    
+    for (var_name in names(results$outlier_analysis)) {
+      var_data <- results$outlier_analysis[[var_name]]
+      
+      if (!is.null(var_data$iqr_outliers)) {
+        outlier_class <- if (var_data$outlier_percentage > 10) "warning" else if (var_data$outlier_percentage > 5) "not-significant" else "significant"
+        
+        content <- paste0(content, '
+        <div class="test-result ', outlier_class, '">
+            <h4>', var_name, ' - Outlier Detection</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>IQR Method:</strong> ', length(var_data$iqr_outliers), ' outliers<br>
+                    <strong>Percentage:</strong> ', var_data$outlier_percentage, '%<br>
+                    <strong>IQR Bounds:</strong> [', round(var_data$iqr_bounds[1], 3), ', ', round(var_data$iqr_bounds[2], 3), ']
+                </div>
+                <div class="col-md-6">
+                    <strong>Z-score Method:</strong> ', length(var_data$z_outliers), ' outliers<br>
+                    <strong>Modified Z-score:</strong> ', length(var_data$modified_z_outliers), ' outliers<br>
+                    <strong>Interpretation:</strong> ', var_data$interpretation, '
+                </div>
+            </div>')
+        
+        # Group-wise outliers if available
+        if (!is.null(var_data$group_outliers)) {
+          content <- paste0(content, '
+            <div class="mt-2">
+                <strong>Group-wise Outliers:</strong><br>')
+          for (group_name in names(var_data$group_outliers)) {
+            group_result <- var_data$group_outliers[[group_name]]
+            content <- paste0(content, '
+                &nbsp;&nbsp;• ', group_name, ': ', group_result$outlier_count, 
+                ' outliers (', group_result$outlier_percentage, '%)<br>')
+          }
+          content <- paste0(content, '
+            </div>')
+        }
+        
+        content <- paste0(content, '</div>')
+      }
+    }
+    
+    content <- paste0(content, '
+        <div class="interpretation">
+            <strong>Outlier Detection Methods:</strong><br>
+            • <strong>IQR Method:</strong> Values beyond Q1 - 1.5×IQR or Q3 + 1.5×IQR<br>
+            • <strong>Z-score Method:</strong> |Z| > 3 (assuming normal distribution)<br>
+            • <strong>Modified Z-score:</strong> Uses median and MAD, more robust to outliers<br>
+            • <strong>Interpretation:</strong> >10% outliers may indicate data quality issues
+        </div>')
+  }
+  
   # Include plots if available
   if (include_plots && !is.null(results$plot_files) && length(results$plot_files) > 0) {
     content <- paste0(content, '
@@ -434,6 +913,95 @@ create_descriptive_stats_content <- function(results, include_plots) {
       }
     }
   }
+  
+  # Laboratory Guide - Decision Menu
+  content <- paste0(content, '
+    <div class="interpretation" style="margin-top: 20px;">
+        <h4>Laboratory Guide - Statistical Test Decision Menu:</h4>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Situation</th>
+                        <th>Main Test</th>
+                        <th>Post-hoc/Follow-up</th>
+                        <th>When to Use</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr class="table-success">
+                        <td><strong>>2 groups</strong><br>• Normal + Homogeneous</td>
+                        <td><strong>One-way ANOVA</strong></td>
+                        <td>• Tukey HSD (if p < 0.05)<br>• Shapiro-Wilk/KS normality check</td>
+                        <td>Always run Tukey if ANOVA significant</td>
+                    </tr>
+                    <tr class="table-warning">
+                        <td><strong>>2 groups</strong><br>• Non-normal OR unequal variances</td>
+                        <td><strong>Kruskal-Wallis</strong></td>
+                        <td>• Dunn test (Bonferroni/Holm)<br>• Try log/sqrt transformation</td>
+                        <td>Identifies specific group differences</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>Exactly 2 groups</strong><br>• Normal + Homogeneous</td>
+                        <td><strong>Student\'s t-test</strong></td>
+                        <td>• Cohen\'s d effect size</td>
+                        <td>Lighter alternative for 2 groups</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>2 groups</strong><br>• Normal + Unequal variances</td>
+                        <td><strong>Welch\'s t-test</strong></td>
+                        <td>• Cohen\'s d effect size</td>
+                        <td>Handles heteroscedasticity</td>
+                    </tr>
+                    <tr class="table-info">
+                        <td><strong>2 groups</strong><br>• Non-normal</td>
+                        <td><strong>Mann-Whitney U</strong></td>
+                        <td>• Rank-biserial correlation</td>
+                        <td>Non-parametric alternative</td>
+                    </tr>
+                    <tr class="table-secondary">
+                        <td><strong>Categorical variables</strong></td>
+                        <td><strong>χ² test</strong></td>
+                        <td>• Fisher\'s exact (low frequencies)</td>
+                        <td>For nominal data analysis</td>
+                    </tr>
+                    <tr class="table-light">
+                        <td><strong>Relationships</strong></td>
+                        <td><strong>Pearson/Spearman</strong></td>
+                        <td>• Pearson (both normal)<br>• Spearman (≥1 non-normal)</td>
+                        <td>Exploring correlations</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <h5>Key Implementation Notes:</h5>
+        <div class="row">
+            <div class="col-md-6">
+                <strong>🔍 Borderline Cases (p ≈ 0.04-0.06):</strong><br>
+                • Run both parametric and non-parametric tests<br>
+                • Report both results if conclusions differ<br>
+                • Document assumption violations<br><br>
+                <strong>📊 Effect Sizes (not just p-values):</strong><br>
+                • t-tests: Cohen\'s d<br>
+                • ANOVA: η² (eta-squared)<br>
+                • Mann-Whitney: rank-biserial r<br>
+                • Makes practical relevance clearer
+            </div>
+            <div class="col-md-6">
+                <strong>🔄 Data Transformations:</strong><br>
+                • Log transformation (right-skewed data)<br>
+                • Square root (count data)<br>
+                • Re-test normality after transformation<br>
+                • Use parametric tests if transformation succeeds<br><br>
+                <strong>⚠️ Assumption Checks:</strong><br>
+                • Always check before main test<br>
+                • Shapiro-Wilk/KS (normality)<br>
+                • Levene/Fisher (homogeneity)<br>
+                • Document all assumption violations
+            </div>
+        </div>
+    </div>')
   
   content <- paste0(content, '</div></div></div>')
   return(content)
@@ -772,6 +1340,123 @@ create_missing_data_table_html <- function(missing_data) {
                         <td>', missing_data$missing_count[i], '</td>
                         <td>', missing_data$missing_percentage[i], '%</td>
                       </tr>')
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create variable properties table HTML
+create_variable_properties_table_html <- function(properties_data) {
+  if (is.null(properties_data) || nrow(properties_data) == 0) return("")
+  
+  html <- '<table class="table table-striped stats-table" style="font-size: 0.85em;">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>Group</th>
+                    <th>N</th>
+                    <th>Missing</th>
+                    <th>Mean</th>
+                    <th>SD</th>
+                    <th>Median</th>
+                    <th>IQR</th>
+                    <th>CV%</th>
+                    <th>Skewness</th>
+                    <th>Kurtosis</th>
+                    <th>Normal Distribution</th>
+                    <th>Normality p-value</th>
+                    <th>Outliers</th>
+                    <th>Outliers %</th>
+                    <th>Homogeneity</th>
+                    <th>Data Quality</th>
+                    <th>Recommended Test</th>
+                    <th>Post-hoc Needed</th>
+                    <th>Alternative Tests</th>
+                    <th>Effect Size</th>
+                    <th>Borderline Cases</th>
+                </tr>
+            </thead>
+            <tbody>'
+  
+  for (i in 1:nrow(properties_data)) {
+    row <- properties_data[i, ]
+    
+    # Color coding for normal distribution
+    normal_class <- ""
+    if (row$Normal_Distribution == "Normal") {
+      normal_class <- "table-success"
+    } else if (row$Normal_Distribution == "Non-normal") {
+      normal_class <- "table-danger"
+    }
+    
+    # Color coding for homogeneity
+    homog_class <- ""
+    if (row$Homogeneity_Status == "Homogeneous") {
+      homog_class <- "table-success"
+    } else if (row$Homogeneity_Status == "Heterogeneous") {
+      homog_class <- "table-warning"
+    }
+    
+    # Color coding for data quality
+    quality_class <- ""
+    if (row$Data_Quality == "Good") {
+      quality_class <- "table-success"
+    } else if (row$Data_Quality == "Fair") {
+      quality_class <- "table-warning"
+    } else if (row$Data_Quality == "Poor") {
+      quality_class <- "table-danger"
+    }
+    
+    # Color coding for outliers
+    outlier_class <- ""
+    if (!is.na(row$Outliers_Percent)) {
+      if (row$Outliers_Percent <= 5) {
+        outlier_class <- "table-success"
+      } else if (row$Outliers_Percent <= 10) {
+        outlier_class <- "table-warning"
+      } else {
+        outlier_class <- "table-danger"
+      }
+    }
+    
+    # Color coding for post-hoc needs
+    posthoc_class <- ""
+    if (grepl("Tukey|Dunn", row$Post_Hoc_Needed)) {
+      posthoc_class <- "table-info"
+    }
+    
+    # Color coding for borderline cases
+    borderline_class <- ""
+    if (grepl("Borderline|transformation", row$Borderline_Cases)) {
+      borderline_class <- "table-warning"
+    }
+    
+    html <- paste0(html, '
+                <tr>
+                    <td><strong>', row$Variable, '</strong></td>
+                    <td>', row$Group, '</td>
+                    <td>', ifelse(is.na(row$N), "-", row$N), '</td>
+                    <td>', ifelse(is.na(row$Missing) || row$Missing == 0, "-", row$Missing), '</td>
+                    <td>', ifelse(is.na(row$Mean), "-", row$Mean), '</td>
+                    <td>', ifelse(is.na(row$SD), "-", row$SD), '</td>
+                    <td>', ifelse(is.na(row$Median), "-", row$Median), '</td>
+                    <td>', ifelse(is.na(row$IQR), "-", row$IQR), '</td>
+                    <td>', ifelse(is.na(row$CV_Percent), "-", paste0(row$CV_Percent, "%")), '</td>
+                    <td>', ifelse(is.na(row$Skewness), "-", row$Skewness), '</td>
+                    <td>', ifelse(is.na(row$Kurtosis), "-", row$Kurtosis), '</td>
+                    <td class="', normal_class, '"><strong>', row$Normal_Distribution, '</strong></td>
+                    <td>', ifelse(is.na(row$Normality_P_Value), "-", format.pval(row$Normality_P_Value, digits = 4)), '</td>
+                    <td class="', outlier_class, '">', ifelse(is.na(row$Outliers_Count), "-", row$Outliers_Count), '</td>
+                    <td class="', outlier_class, '">', ifelse(is.na(row$Outliers_Percent), "-", paste0(row$Outliers_Percent, "%")), '</td>
+                    <td class="', homog_class, '"><strong>', row$Homogeneity_Status, '</strong></td>
+                    <td class="', quality_class, '"><strong>', row$Data_Quality, '</strong></td>
+                    <td><em>', row$Recommended_Test, '</em></td>
+                    <td class="', posthoc_class, '"><small>', row$Post_Hoc_Needed, '</small></td>
+                    <td><small>', row$Alternative_Tests, '</small></td>
+                    <td><small>', row$Effect_Size_Measure, '</small></td>
+                    <td class="', borderline_class, '"><small>', row$Borderline_Cases, '</small></td>
+                </tr>')
   }
   
   html <- paste0(html, '</tbody></table>')
