@@ -323,31 +323,31 @@ run_analysis_with_args <- function(args) {
     
     # Generate button HTML for each analysis
     desc_button <- if(!is.null(report_files$descriptive_stats)) {
-      sprintf('<a href="%s" class="btn btn-primary btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$descriptive_stats)
     } else {
-      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     corr_button <- if(!is.null(report_files$correlation_analysis)) {
-      sprintf('<a href="%s" class="btn btn-success btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$correlation_analysis)
     } else {
-      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     comp_button <- if(!is.null(report_files$comparative_analysis)) {
-      sprintf('<a href="%s" class="btn btn-warning btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$comparative_analysis)
     } else {
-      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     infer_button <- if(!is.null(report_files$enhanced_inferential)) {
-      sprintf('<a href="%s" class="btn btn-info btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$enhanced_inferential)
     } else {
-      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     index_html <- sprintf('
@@ -357,87 +357,242 @@ run_analysis_with_args <- function(args) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Statistical Analysis Dashboard</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); min-height: 100vh; }
-        .card { box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: none; transition: transform 0.3s; }
-        .card:hover { transform: translateY(-5px); }
-        .analysis-card { margin-bottom: 30px; }
-        .btn-analysis { width: 100%%; padding: 15px; font-size: 1.1em; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+            color: #1d1d1f;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+        
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+            letter-spacing: -0.05em;
+        }
+        
+        .header .subtitle {
+            font-size: 1.5rem;
+            font-weight: 400;
+            color: #6e6e73;
+            margin-bottom: 12px;
+        }
+        
+        .header .meta {
+            font-size: 1rem;
+            color: #86868b;
+            font-weight: 400;
+        }
+        
+        .analysis-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 32px;
+            margin-bottom: 60px;
+        }
+        
+        .analysis-card {
+            background: white;
+            border-radius: 18px;
+            padding: 0;
+            border: 1px solid #e5e5e7;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .analysis-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+            border-color: #d2d2d7;
+        }
+        
+        .card-icon {
+            padding: 40px 32px 24px;
+            text-align: center;
+            border-bottom: 1px solid #f5f5f7;
+        }
+        
+        .card-icon i {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+            display: block;
+        }
+        
+        .card-icon.primary i { color: #007aff; }
+        .card-icon.success i { color: #34c759; }
+        .card-icon.warning i { color: #ff9500; }
+        .card-icon.info i { color: #5856d6; }
+        
+        .card-icon h3 {
+            font-size: 1.375rem;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 8px;
+        }
+        
+        .card-content {
+            padding: 24px 32px 32px;
+            text-align: center;
+        }
+        
+        .card-content p {
+            font-size: 1rem;
+            color: #6e6e73;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+        
+        .btn-analysis {
+            display: inline-block;
+            background: #1d1d1f;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 50px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            border: none;
+            cursor: pointer;
+            min-width: 140px;
+        }
+        
+        .btn-analysis:hover {
+            background: #424245;
+            color: white;
+            text-decoration: none;
+            transform: scale(1.02);
+        }
+        
+        .btn-analysis:disabled {
+            background: #d2d2d7;
+            color: #86868b;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .btn-analysis i {
+            margin-right: 8px;
+        }
+        
+        .footer-note {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .footer-note p {
+            font-size: 1rem;
+            color: #86868b;
+            font-weight: 400;
+        }
+        
+        .footer-note i {
+            margin-right: 8px;
+            color: #007aff;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 40px 16px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header .subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .analysis-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container-fluid py-5">
-        <div class="row justify-content-center">
-            <div class="col-md-10">
-                <div class="text-center text-white mb-5">
-                    <h1 class="display-4 fw-bold"><i class="fas fa-chart-line me-3"></i>Statistical Analysis Dashboard</h1>
-                    <p class="lead">Complete Medical Data Analysis Suite</p>
-                    <p class="text-light">Generated: %s | Dataset: %d observations, %d variables</p>
+    <div class="container">
+        <div class="header">
+            <h1>Statistical Analysis Dashboard</h1>
+            <p class="subtitle">Complete Medical Data Analysis Suite</p>
+            <p class="meta">Generated: %s | Dataset: %d observations, %d variables</p>
+        </div>
+        
+        <div class="analysis-grid">
+            <div class="analysis-card">
+                <div class="card-icon primary">
+                    <i class="fas fa-table"></i>
+                    <h3>Descriptive Statistics</h3>
                 </div>
-                
-                <div class="row">
-                    <div class="col-md-6 col-lg-3 analysis-card">
-                        <div class="card h-100">
-                            <div class="card-header bg-primary text-white text-center">
-                                <i class="fas fa-table fa-2x mb-2"></i>
-                                <h5>Descriptive Statistics</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <p>Summary statistics, distributions, and data quality assessment</p>
-                                %s
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3 analysis-card">
-                        <div class="card h-100">
-                            <div class="card-header bg-success text-white text-center">
-                                <i class="fas fa-project-diagram fa-2x mb-2"></i>
-                                <h5>Correlation Analysis</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <p>Variable relationships and correlation matrices</p>
-                                %s
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3 analysis-card">
-                        <div class="card h-100">
-                            <div class="card-header bg-warning text-white text-center">
-                                <i class="fas fa-balance-scale fa-2x mb-2"></i>
-                                <h5>Comparative Analysis</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <p>Group comparisons and statistical tests</p>
-                                %s
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="col-md-6 col-lg-3 analysis-card">
-                        <div class="card h-100">
-                            <div class="card-header bg-info text-white text-center">
-                                <i class="fas fa-brain fa-2x mb-2"></i>
-                                <h5>Enhanced Inferential</h5>
-                            </div>
-                            <div class="card-body text-center">
-                                <p>Advanced modeling with covariates and interactions</p>
-                                %s
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="text-center mt-4">
-                    <p class="text-white">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Click on any analysis button to view the detailed report
-                    </p>
+                <div class="card-content">
+                    <p>Summary statistics, distributions, and data quality assessment</p>
+                    %s
                 </div>
             </div>
+            
+            <div class="analysis-card">
+                <div class="card-icon success">
+                    <i class="fas fa-project-diagram"></i>
+                    <h3>Correlation Analysis</h3>
+                </div>
+                <div class="card-content">
+                    <p>Variable relationships and correlation matrices</p>
+                    %s
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="card-icon warning">
+                    <i class="fas fa-balance-scale"></i>
+                    <h3>Comparative Analysis</h3>
+                </div>
+                <div class="card-content">
+                    <p>Group comparisons and statistical tests</p>
+                    %s
+                </div>
+            </div>
+            
+            <div class="analysis-card">
+                <div class="card-icon info">
+                    <i class="fas fa-brain"></i>
+                    <h3>Enhanced Inferential</h3>
+                </div>
+                <div class="card-content">
+                    <p>Advanced modeling with covariates and interactions</p>
+                    %s
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer-note">
+            <p>
+                <i class="fas fa-info-circle"></i>
+                Click on any analysis button to view the detailed report
+            </p>
         </div>
     </div>
 </body>
@@ -575,12 +730,15 @@ run_analysis_with_args <- function(args) {
   cat("  --statistical_tests: Run statistical tests\n")
   cat("  --report: Generate HTML report (use with any analysis option)\n")
   cat("  --export: Export analysis results to CSV files (use with any analysis option)\n")
+  cat("  --input <file>: Specify input data file (default: dane.csv)\n")
   cat("\nExample usage:\n")
   cat("  Rscript main.R --comparative_analysis --report\n")
   cat("  Rscript main.R --unified_dashboard\n")
+  cat("  Rscript main.R --unified_dashboard --input data.csv\n")
   cat("  Rscript main.R --correlation_analysis --report --export\n")
   cat("  Rscript main.R --input dane2.csv --descriptive_stats --export\n")
   cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
+  cat("  Rscript main.R --unified_dashboard --input clinical_data.xlsx\n")
   
   return(NULL)
 }

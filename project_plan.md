@@ -158,9 +158,3 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 * [X] Insert footnotes explaining each test/effect-size choice (per decision matrix)
 * [X] Explicitly describe the chosen multiple-testing correction in the methods section
 
-
-**L. Quality Assurance**
-
-* [ ] Unit-test every analysis step with representative data slices
-* [ ] Cross-check that table totals and *N*'s match the raw dataset counts
-
