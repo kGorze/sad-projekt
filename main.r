@@ -1,6 +1,6 @@
 # Medical Data Statistical Analysis Tool
 # Main entry point for command-line execution
-# Author: SAD Project Team
+#
 # Usage: Rscript main.R --comparative_analysis --report
 # Usage: Rscript main.R --correlation_analysis --report
 # Usage: Rscript main.R --descriptive_stats --report

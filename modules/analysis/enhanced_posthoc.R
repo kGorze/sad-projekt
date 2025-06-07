@@ -64,7 +64,7 @@ enhanced_anova_posthoc <- function(data, variable, group_column) {
   # 2. Bonferroni correction
   posthoc_results$bonferroni <- perform_bonferroni_posthoc(clean_data, variable, group_column)
   
-  # 3. Holm correction (from config)
+  # 3. Holm correction
   posthoc_results$holm <- perform_holm_posthoc(clean_data, variable, group_column)
   
   # 4. False Discovery Rate (FDR/Benjamini-Hochberg)
@@ -78,6 +78,7 @@ enhanced_anova_posthoc <- function(data, variable, group_column) {
   
   # 7. Create summary comparison table
   posthoc_results$summary <- create_posthoc_summary_table(posthoc_results)
+  posthoc_results$adjustment_comparison <- compare_adjustment_methods(posthoc_results)
   
   return(posthoc_results)
 }
@@ -95,13 +96,14 @@ enhanced_kruskal_posthoc <- function(data, variable, group_column) {
   posthoc_results$dunn_fdr <- perform_dunn_test_enhanced(clean_data, variable, group_column, "fdr")
   
   # 2. Pairwise Wilcoxon tests with corrections
-  posthoc_results$wilcoxon <- perform_pairwise_wilcoxon(clean_data, variable, group_column)
+  posthoc_results$wilcoxon <- perform_pairwise_wilcoxon_with_adjustments(clean_data, variable, group_column)
   
   # 3. Effect sizes for non-parametric comparisons
   posthoc_results$effect_sizes <- compute_nonparametric_effect_sizes(clean_data, variable, group_column)
   
   # 4. Create summary comparison table
   posthoc_results$summary <- create_nonparametric_summary_table(posthoc_results)
+  posthoc_results$adjustment_comparison <- compare_nonparametric_adjustment_methods(posthoc_results)
   
   return(posthoc_results)
 }
@@ -714,4 +716,199 @@ calculate_method_agreement <- function(var_results) {
   agreement <- intersection_size / union_size
   
   return(round(agreement, 3))
+}
+
+# TASK 6: Compare adjustment methods across post-hoc tests
+compare_adjustment_methods <- function(posthoc_results) {
+  
+  # Extract significant comparisons from each method
+  tukey_sig <- if (!is.null(posthoc_results$tukey)) posthoc_results$tukey$significant_pairs else c()
+  bonferroni_sig <- if (!is.null(posthoc_results$bonferroni)) posthoc_results$bonferroni$significant_pairs else c()
+  holm_sig <- if (!is.null(posthoc_results$holm)) posthoc_results$holm$significant_pairs else c()
+  fdr_sig <- if (!is.null(posthoc_results$fdr)) posthoc_results$fdr$significant_pairs else c()
+  
+  # Create comparison summary
+  all_comparisons <- unique(c(tukey_sig, bonferroni_sig, holm_sig, fdr_sig))
+  
+  if (length(all_comparisons) == 0) {
+    return(list(
+      message = "No significant pairwise comparisons found across any adjustment method",
+      total_comparisons = 0
+    ))
+  }
+  
+  comparison_table <- data.frame(
+    comparison = all_comparisons,
+    tukey = all_comparisons %in% tukey_sig,
+    bonferroni = all_comparisons %in% bonferroni_sig,
+    holm = all_comparisons %in% holm_sig,
+    fdr = all_comparisons %in% fdr_sig,
+    stringsAsFactors = FALSE
+  )
+  
+  # Count agreements
+  comparison_table$total_significant <- rowSums(comparison_table[, c("tukey", "bonferroni", "holm", "fdr")])
+  
+  # Summary statistics
+  adjustment_summary <- data.frame(
+    method = c("Tukey HSD", "Bonferroni", "Holm", "FDR (BH)"),
+    significant_pairs = c(length(tukey_sig), length(bonferroni_sig), length(holm_sig), length(fdr_sig)),
+    type = c("FWER", "FWER", "FWER", "FDR"),
+    description = c("Simultaneous confidence intervals", 
+                   "Conservative FWER control", 
+                   "Step-down FWER control", 
+                   "False discovery rate control"),
+    stringsAsFactors = FALSE
+  )
+  
+  return(list(
+    comparison_table = comparison_table,
+    adjustment_summary = adjustment_summary,
+    consensus_significant = all_comparisons[comparison_table$total_significant >= 3],
+    interpretation = paste0("Found ", nrow(comparison_table), " significant comparisons across methods. ",
+                           "Consensus (≥3 methods agree): ", 
+                           length(all_comparisons[comparison_table$total_significant >= 3]), " comparisons.")
+  ))
+}
+
+# TASK 6: Compare non-parametric adjustment methods
+compare_nonparametric_adjustment_methods <- function(posthoc_results) {
+  
+  # Extract significant comparisons from each Dunn's test method
+  dunn_bonf_sig <- if (!is.null(posthoc_results$dunn_bonferroni)) posthoc_results$dunn_bonferroni$significant_pairs else c()
+  dunn_holm_sig <- if (!is.null(posthoc_results$dunn_holm)) posthoc_results$dunn_holm$significant_pairs else c()
+  dunn_fdr_sig <- if (!is.null(posthoc_results$dunn_fdr)) posthoc_results$dunn_fdr$significant_pairs else c()
+  wilcox_sig <- if (!is.null(posthoc_results$wilcoxon) && !is.null(posthoc_results$wilcoxon$significant_pairs)) {
+    posthoc_results$wilcoxon$significant_pairs 
+  } else { c() }
+  
+  # Create comparison summary
+  all_comparisons <- unique(c(dunn_bonf_sig, dunn_holm_sig, dunn_fdr_sig, wilcox_sig))
+  
+  if (length(all_comparisons) == 0) {
+    return(list(
+      message = "No significant pairwise comparisons found across any non-parametric adjustment method",
+      total_comparisons = 0
+    ))
+  }
+  
+  comparison_table <- data.frame(
+    comparison = all_comparisons,
+    dunn_bonferroni = all_comparisons %in% dunn_bonf_sig,
+    dunn_holm = all_comparisons %in% dunn_holm_sig,
+    dunn_fdr = all_comparisons %in% dunn_fdr_sig,
+    wilcoxon = all_comparisons %in% wilcox_sig,
+    stringsAsFactors = FALSE
+  )
+  
+  # Count agreements
+  comparison_table$total_significant <- rowSums(comparison_table[, c("dunn_bonferroni", "dunn_holm", "dunn_fdr", "wilcoxon")])
+  
+  # Summary statistics
+  adjustment_summary <- data.frame(
+    method = c("Dunn + Bonferroni", "Dunn + Holm", "Dunn + FDR", "Pairwise Wilcoxon"),
+    significant_pairs = c(length(dunn_bonf_sig), length(dunn_holm_sig), length(dunn_fdr_sig), length(wilcox_sig)),
+    type = c("FWER", "FWER", "FDR", "Multiple"),
+    description = c("Conservative FWER control", 
+                   "Step-down FWER control", 
+                   "False discovery rate control",
+                   "Individual Mann-Whitney tests"),
+    stringsAsFactors = FALSE
+  )
+  
+  return(list(
+    comparison_table = comparison_table,
+    adjustment_summary = adjustment_summary,
+    consensus_significant = all_comparisons[comparison_table$total_significant >= 3],
+    interpretation = paste0("Found ", nrow(comparison_table), " significant comparisons across non-parametric methods. ",
+                           "Consensus (≥3 methods agree): ", 
+                           length(all_comparisons[comparison_table$total_significant >= 3]), " comparisons.")
+  ))
+}
+
+# TASK 6: Enhanced pairwise Wilcoxon tests with multiple adjustments
+perform_pairwise_wilcoxon_with_adjustments <- function(data, variable, group_column) {
+  
+  groups <- unique(data[[group_column]])
+  groups <- groups[!is.na(groups)]
+  comparisons <- combn(groups, 2, simplify = FALSE)
+  
+  results_list <- list()
+  raw_p_values <- numeric()
+  comparison_names <- character()
+  
+  # Perform all pairwise Wilcoxon tests
+  for (i in seq_along(comparisons)) {
+    group1 <- comparisons[[i]][1]
+    group2 <- comparisons[[i]][2]
+    
+    data1 <- data[data[[group_column]] == group1, variable]
+    data2 <- data[data[[group_column]] == group2, variable]
+    
+    data1 <- data1[!is.na(data1)]
+    data2 <- data2[!is.na(data2)]
+    
+    comparison_name <- paste(group1, "vs", group2)
+    comparison_names[i] <- comparison_name
+    
+    if (length(data1) > 1 && length(data2) > 1) {
+      wilcox_test <- wilcox.test(data1, data2, exact = FALSE)
+      
+      raw_p_values[i] <- wilcox_test$p.value
+      
+      results_list[[comparison_name]] <- list(
+        comparison = comparison_name,
+        statistic = wilcox_test$statistic,
+        p_value_raw = wilcox_test$p.value,
+        n1 = length(data1),
+        n2 = length(data2)
+      )
+    } else {
+      raw_p_values[i] <- NA
+      results_list[[comparison_name]] <- list(
+        comparison = comparison_name,
+        error = "Insufficient data for comparison",
+        n1 = length(data1),
+        n2 = length(data2)
+      )
+    }
+  }
+  
+  # Apply multiple adjustment methods - TASK 6
+  p_bonferroni <- p.adjust(raw_p_values, method = "bonferroni")
+  p_holm <- p.adjust(raw_p_values, method = "holm")
+  p_fdr <- p.adjust(raw_p_values, method = "BH")
+  
+  # Create comprehensive results table
+  results_table <- data.frame(
+    comparison = comparison_names,
+    p_raw = raw_p_values,
+    p_bonferroni = p_bonferroni,
+    p_holm = p_holm,
+    p_fdr = p_fdr,
+    sig_raw = raw_p_values < 0.05,
+    sig_bonferroni = p_bonferroni < 0.05,
+    sig_holm = p_holm < 0.05,
+    sig_fdr = p_fdr < 0.05,
+    stringsAsFactors = FALSE
+  )
+  
+  # Remove rows with missing p-values
+  results_table <- results_table[!is.na(results_table$p_raw), ]
+  
+  return(list(
+    test_name = "Pairwise Wilcoxon tests",
+    method = "Multiple adjustment methods applied",
+    results_table = results_table,
+    significant_pairs = results_table$comparison[results_table$sig_fdr], # Use FDR as default
+    bonferroni_significant = results_table$comparison[results_table$sig_bonferroni],
+    holm_significant = results_table$comparison[results_table$sig_holm],
+    fdr_significant = results_table$comparison[results_table$sig_fdr],
+    summary = list(
+      total_comparisons = nrow(results_table),
+      significant_bonferroni = sum(results_table$sig_bonferroni, na.rm = TRUE),
+      significant_holm = sum(results_table$sig_holm, na.rm = TRUE),
+      significant_fdr = sum(results_table$sig_fdr, na.rm = TRUE)
+    )
+  ))
 } 

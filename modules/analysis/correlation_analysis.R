@@ -64,7 +64,21 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
     cat("\n=== STEP 2: GROUP-WISE CORRELATION ANALYSIS ===\n")
     group_correlations <- calculate_group_correlations(data, numeric_vars, group_column)
     result$group_correlations <- group_correlations
+    
+    # TASK 5a: Full by-group correlation tables with FDR-adjusted p-values
+    cat("- Calculating detailed by-group correlation tables with FDR adjustment...\n")
+    detailed_group_tables <- calculate_detailed_group_correlation_tables(data, numeric_vars, group_column)
+    result$detailed_group_tables <- detailed_group_tables
+    
     cat("- Group-wise correlations calculated for", length(unique(data[[group_column]])), "groups\n")
+  }
+  
+  # TASK 5b: Partial correlations controlling for group
+  if (!is.null(group_column)) {
+    cat("\n=== STEP 2.5: PARTIAL CORRELATIONS CONTROLLING FOR GROUP ===\n")
+    partial_correlations <- calculate_partial_correlations_for_group(data, numeric_vars, group_column)
+    result$partial_correlations <- partial_correlations
+    cat("- Partial correlations calculated controlling for", group_column, "\n")
   }
   
   # Step 3: Correlation significance testing
@@ -1089,5 +1103,268 @@ demonstrate_correlation_calculation <- function(x, y, var1_name, var2_name) {
       "This is NOT the arithmetic average of the values!\n",
       "It measures how much the variables vary together relative to their individual variations."
     )
+  ))
+}
+
+# TASK 5a: Calculate detailed by-group correlation tables with FDR-adjusted p-values
+calculate_detailed_group_correlation_tables <- function(data, variables, group_column) {
+  
+  groups <- unique(data[[group_column]])
+  groups <- groups[!is.na(groups)]
+  
+  detailed_tables <- list()
+  
+  for (group in groups) {
+    cat("  Processing group:", group, "\n")
+    
+    # Extract group data
+    group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables]
+    group_data <- group_data[complete.cases(group_data), ]
+    
+    if (nrow(group_data) < 3) {
+      detailed_tables[[as.character(group)]] <- list(
+        error = "Insufficient data for correlation analysis",
+        n = nrow(group_data)
+      )
+      next
+    }
+    
+    # Calculate correlation matrix and p-values
+    n_vars <- length(variables)
+    correlation_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+    p_value_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+    ci_lower_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+    ci_upper_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+    
+    rownames(correlation_matrix) <- colnames(correlation_matrix) <- variables
+    rownames(p_value_matrix) <- colnames(p_value_matrix) <- variables
+    rownames(ci_lower_matrix) <- colnames(ci_lower_matrix) <- variables
+    rownames(ci_upper_matrix) <- colnames(ci_upper_matrix) <- variables
+    
+    # Collect all p-values for FDR correction
+    all_p_values <- c()
+    p_value_indices <- list()
+    
+    for (i in 1:n_vars) {
+      for (j in 1:n_vars) {
+        if (i != j) {
+          cor_test <- cor.test(group_data[[variables[i]]], group_data[[variables[j]]], 
+                              method = "pearson")
+          
+          correlation_matrix[i, j] <- cor_test$estimate
+          p_value_matrix[i, j] <- cor_test$p.value
+          ci_lower_matrix[i, j] <- cor_test$conf.int[1]
+          ci_upper_matrix[i, j] <- cor_test$conf.int[2]
+          
+          # Store for FDR correction
+          all_p_values <- c(all_p_values, cor_test$p.value)
+          p_value_indices[[length(p_value_indices) + 1]] <- c(i, j)
+        } else {
+          correlation_matrix[i, j] <- 1.0
+          p_value_matrix[i, j] <- NA
+          ci_lower_matrix[i, j] <- NA
+          ci_upper_matrix[i, j] <- NA
+        }
+      }
+    }
+    
+    # Apply FDR correction
+    if (length(all_p_values) > 0) {
+      p_values_fdr <- p.adjust(all_p_values, method = "BH")
+      
+      # Create FDR-adjusted p-value matrix
+      p_value_matrix_fdr <- matrix(NA, nrow = n_vars, ncol = n_vars)
+      rownames(p_value_matrix_fdr) <- colnames(p_value_matrix_fdr) <- variables
+      
+      for (k in 1:length(p_value_indices)) {
+        i <- p_value_indices[[k]][1]
+        j <- p_value_indices[[k]][2]
+        p_value_matrix_fdr[i, j] <- p_values_fdr[k]
+      }
+    } else {
+      p_value_matrix_fdr <- p_value_matrix
+    }
+    
+    # Create formatted table
+    formatted_table <- data.frame(
+      Variable1 = character(),
+      Variable2 = character(),
+      r = numeric(),
+      r_95CI_lower = numeric(),
+      r_95CI_upper = numeric(),
+      p_raw = numeric(),
+      p_FDR = numeric(),
+      significant_raw = logical(),
+      significant_FDR = logical(),
+      stringsAsFactors = FALSE
+    )
+    
+    for (i in 1:(n_vars-1)) {
+      for (j in (i+1):n_vars) {
+        formatted_table <- rbind(formatted_table, data.frame(
+          Variable1 = variables[i],
+          Variable2 = variables[j],
+          r = correlation_matrix[i, j],
+          r_95CI_lower = ci_lower_matrix[i, j],
+          r_95CI_upper = ci_upper_matrix[i, j],
+          p_raw = p_value_matrix[i, j],
+          p_FDR = p_value_matrix_fdr[i, j],
+          significant_raw = p_value_matrix[i, j] < 0.05,
+          significant_FDR = p_value_matrix_fdr[i, j] < 0.05,
+          stringsAsFactors = FALSE
+        ))
+      }
+    }
+    
+    detailed_tables[[as.character(group)]] <- list(
+      group = group,
+      n = nrow(group_data),
+      correlation_matrix = correlation_matrix,
+      p_value_matrix_raw = p_value_matrix,
+      p_value_matrix_fdr = p_value_matrix_fdr,
+      confidence_intervals_lower = ci_lower_matrix,
+      confidence_intervals_upper = ci_upper_matrix,
+      formatted_table = formatted_table,
+      significant_correlations_raw = sum(formatted_table$significant_raw, na.rm = TRUE),
+      significant_correlations_fdr = sum(formatted_table$significant_FDR, na.rm = TRUE)
+    )
+  }
+  
+  return(detailed_tables)
+}
+
+# TASK 5b: Calculate partial correlations controlling for group
+calculate_partial_correlations_for_group <- function(data, variables, group_column) {
+  
+  # Prepare data with group as numeric for partial correlation
+  clean_data <- data[complete.cases(data[c(variables, group_column)]), ]
+  
+  if (nrow(clean_data) < 10) {
+    return(list(
+      error = "Insufficient data for partial correlation analysis",
+      n = nrow(clean_data)
+    ))
+  }
+  
+  # Convert group to numeric for partial correlation calculation
+  if (is.factor(clean_data[[group_column]]) || is.character(clean_data[[group_column]])) {
+    clean_data$group_numeric <- as.numeric(as.factor(clean_data[[group_column]]))
+  } else {
+    clean_data$group_numeric <- clean_data[[group_column]]
+  }
+  
+  # Calculate partial correlations
+  n_vars <- length(variables)
+  partial_cor_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  partial_p_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  partial_ci_lower <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  partial_ci_upper <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  
+  rownames(partial_cor_matrix) <- colnames(partial_cor_matrix) <- variables
+  rownames(partial_p_matrix) <- colnames(partial_p_matrix) <- variables
+  rownames(partial_ci_lower) <- colnames(partial_ci_lower) <- variables
+  rownames(partial_ci_upper) <- colnames(partial_ci_upper) <- variables
+  
+  # Collect p-values for FDR correction
+  all_partial_p <- c()
+  partial_indices <- list()
+  
+  for (i in 1:n_vars) {
+    for (j in 1:n_vars) {
+      if (i != j) {
+        tryCatch({
+          # Calculate partial correlation using linear regression residuals
+          # Residualize each variable against the control variable (group)
+          var1_resid <- residuals(lm(clean_data[[variables[i]]] ~ clean_data$group_numeric))
+          var2_resid <- residuals(lm(clean_data[[variables[j]]] ~ clean_data$group_numeric))
+          
+          # Calculate correlation of residuals
+          partial_cor_test <- cor.test(var1_resid, var2_resid, method = "pearson")
+          
+          partial_cor_matrix[i, j] <- partial_cor_test$estimate
+          partial_p_matrix[i, j] <- partial_cor_test$p.value
+          partial_ci_lower[i, j] <- partial_cor_test$conf.int[1]
+          partial_ci_upper[i, j] <- partial_cor_test$conf.int[2]
+          
+          # Store for FDR correction
+          all_partial_p <- c(all_partial_p, partial_cor_test$p.value)
+          partial_indices[[length(partial_indices) + 1]] <- c(i, j)
+          
+        }, error = function(e) {
+          partial_cor_matrix[i, j] <- NA
+          partial_p_matrix[i, j] <- NA
+          partial_ci_lower[i, j] <- NA
+          partial_ci_upper[i, j] <- NA
+        })
+      } else {
+        partial_cor_matrix[i, j] <- 1.0
+        partial_p_matrix[i, j] <- NA
+        partial_ci_lower[i, j] <- NA
+        partial_ci_upper[i, j] <- NA
+      }
+    }
+  }
+  
+  # Apply FDR correction to partial correlation p-values
+  if (length(all_partial_p) > 0) {
+    partial_p_fdr <- p.adjust(all_partial_p, method = "BH")
+    
+    partial_p_matrix_fdr <- matrix(NA, nrow = n_vars, ncol = n_vars)
+    rownames(partial_p_matrix_fdr) <- colnames(partial_p_matrix_fdr) <- variables
+    
+    for (k in 1:length(partial_indices)) {
+      i <- partial_indices[[k]][1]
+      j <- partial_indices[[k]][2]
+      partial_p_matrix_fdr[i, j] <- partial_p_fdr[k]
+    }
+  } else {
+    partial_p_matrix_fdr <- partial_p_matrix
+  }
+  
+  # Create formatted table for partial correlations
+  partial_formatted_table <- data.frame(
+    Variable1 = character(),
+    Variable2 = character(),
+    partial_r = numeric(),
+    partial_r_95CI_lower = numeric(),
+    partial_r_95CI_upper = numeric(),
+    p_raw = numeric(),
+    p_FDR = numeric(),
+    significant_raw = logical(),
+    significant_FDR = logical(),
+    stringsAsFactors = FALSE
+  )
+  
+  for (i in 1:(n_vars-1)) {
+    for (j in (i+1):n_vars) {
+      partial_formatted_table <- rbind(partial_formatted_table, data.frame(
+        Variable1 = variables[i],
+        Variable2 = variables[j],
+        partial_r = partial_cor_matrix[i, j],
+        partial_r_95CI_lower = partial_ci_lower[i, j],
+        partial_r_95CI_upper = partial_ci_upper[i, j],
+        p_raw = partial_p_matrix[i, j],
+        p_FDR = partial_p_matrix_fdr[i, j],
+        significant_raw = !is.na(partial_p_matrix[i, j]) && partial_p_matrix[i, j] < 0.05,
+        significant_FDR = !is.na(partial_p_matrix_fdr[i, j]) && partial_p_matrix_fdr[i, j] < 0.05,
+        stringsAsFactors = FALSE
+      ))
+    }
+  }
+  
+  return(list(
+    control_variable = group_column,
+    n = nrow(clean_data),
+    partial_correlation_matrix = partial_cor_matrix,
+    p_value_matrix_raw = partial_p_matrix,
+    p_value_matrix_fdr = partial_p_matrix_fdr,
+    confidence_intervals_lower = partial_ci_lower,
+    confidence_intervals_upper = partial_ci_upper,
+    formatted_table = partial_formatted_table,
+    significant_correlations_raw = sum(partial_formatted_table$significant_raw, na.rm = TRUE),
+    significant_correlations_fdr = sum(partial_formatted_table$significant_FDR, na.rm = TRUE),
+    interpretation = paste0("Partial correlations controlling for ", group_column, 
+                           " (", sum(partial_formatted_table$significant_FDR, na.rm = TRUE), 
+                           " significant after FDR correction)")
   ))
 } 

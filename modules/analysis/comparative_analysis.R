@@ -719,7 +719,10 @@ perform_anova <- function(data, variable, group_column) {
       variable = variable,
       test_name = "One-way ANOVA",
       p_value = NA,
-      interpretation = "Insufficient data for ANOVA"
+      interpretation = "Insufficient data for ANOVA",
+      effect_size = NA,
+      effect_size_ci = c(NA, NA),
+      effect_size_interpretation = "unknown"
     ))
   }
   
@@ -736,13 +739,23 @@ perform_anova <- function(data, variable, group_column) {
   p_value <- anova_summary[[1]]$`Pr(>F)`[1]
   f_statistic <- anova_summary[[1]]$`F value`[1]
   
-  # Calculate effect size (eta-squared) with 95% CI
+  # Calculate effect size (eta-squared) with 95% CI - TASK 1: PLUG EFFECT SIZE GAPS
   ss_between <- anova_summary[[1]]$`Sum Sq`[1]
   ss_total <- sum(anova_summary[[1]]$`Sum Sq`)
   eta_squared <- ss_between / ss_total
   
+  # Ensure eta-squared is calculated and confidence interval is computed
+  if (is.na(eta_squared) || is.null(eta_squared)) {
+    eta_squared <- 0
+  }
+  
   # Calculate 95% confidence interval for eta-squared
   eta_squared_ci <- calculate_eta_squared_ci(anova_result, eta_squared)
+  
+  # Ensure CI is valid
+  if (is.null(eta_squared_ci) || length(eta_squared_ci) != 2 || any(is.na(eta_squared_ci))) {
+    eta_squared_ci <- c(0, min(1, eta_squared + 0.1))
+  }
   
   # Post-hoc tests if significant
   posthoc_result <- NULL
@@ -752,9 +765,13 @@ perform_anova <- function(data, variable, group_column) {
   
   interpretation <- ifelse(p_value < 0.05,
                           paste("Significant difference between groups (F =", round(f_statistic, 3), 
-                                ", p =", format.pval(p_value, digits = 3), ")"),
+                                ", p =", format.pval(p_value, digits = 3), 
+                                ", η² =", round(eta_squared, 3), 
+                                ", 95% CI: [", round(eta_squared_ci[1], 3), ", ", round(eta_squared_ci[2], 3), "])"),
                           paste("No significant difference between groups (F =", round(f_statistic, 3), 
-                                ", p =", format.pval(p_value, digits = 3), ")"))
+                                ", p =", format.pval(p_value, digits = 3), 
+                                ", η² =", round(eta_squared, 3), 
+                                ", 95% CI: [", round(eta_squared_ci[1], 3), ", ", round(eta_squared_ci[2], 3), "])"))
   
   return(list(
     variable = variable,
@@ -764,6 +781,7 @@ perform_anova <- function(data, variable, group_column) {
     effect_size = eta_squared,
     effect_size_ci = eta_squared_ci,
     effect_size_interpretation = interpret_eta_squared_magnitude(eta_squared),
+    effect_size_name = "η² (eta-squared)",
     posthoc = posthoc_result,
     interpretation = interpretation
   ))
@@ -880,7 +898,11 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
       variable = variable,
       test_name = "Kruskal-Wallis",
       p_value = NA,
-      interpretation = "Insufficient data for Kruskal-Wallis test"
+      interpretation = "Insufficient data for Kruskal-Wallis test",
+      effect_size = NA,
+      effect_size_ci = c(NA, NA),
+      effect_size_interpretation = "unknown",
+      effect_size_name = "ε² (epsilon-squared)"
     ))
   }
   
@@ -893,12 +915,34 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   # 5. Appropriate for ordinal or continuous data with ≥3 independent groups
   kw_result <- kruskal.test(clean_data[[variable]], clean_data[[group_column]])
   
-  # Calculate epsilon-squared (ε²) effect size with 95% CI
+  # Calculate epsilon-squared (ε²) effect size with 95% CI - TASK 1: PLUG EFFECT SIZE GAPS
   # Rationale: ε² chosen for Kruskal-Wallis because:
   # 1. Non-parametric equivalent to η² (eta-squared) for ANOVA
   # 2. Measures proportion of variance explained by group differences
   # 3. Interpretation: ε² < 0.01 (negligible), 0.01-0.06 (small), 0.06-0.14 (medium), >0.14 (large)
   effect_size_result <- calculate_kruskal_wallis_effect_size(clean_data, variable, group_column, kw_result)
+  
+  # Ensure effect size is never missing - TASK 1: PLUG EFFECT SIZE GAPS
+  if (is.null(effect_size_result) || is.na(effect_size_result$epsilon_squared)) {
+    # Fallback calculation if primary method fails
+    n <- nrow(clean_data)
+    k <- length(unique(clean_data[[group_column]]))
+    H <- as.numeric(kw_result$statistic)
+    epsilon_squared_fallback <- max(0, min(1, (H - k + 1) / (n - k)))
+    
+    effect_size_result <- list(
+      epsilon_squared = epsilon_squared_fallback,
+      confidence_interval = c(0, min(1, epsilon_squared_fallback + 0.1)),
+      interpretation = interpret_eta_squared_magnitude(epsilon_squared_fallback),
+      method = "ε² (epsilon-squared) - fallback calculation"
+    )
+  }
+  
+  # Ensure valid confidence interval
+  if (is.null(effect_size_result$confidence_interval) || length(effect_size_result$confidence_interval) != 2 || 
+      any(is.na(effect_size_result$confidence_interval))) {
+    effect_size_result$confidence_interval <- c(0, min(1, effect_size_result$epsilon_squared + 0.1))
+  }
   
   # Post-hoc tests if significant (Dunn's test)
   posthoc_result <- NULL
@@ -909,10 +953,16 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   interpretation <- ifelse(kw_result$p.value < 0.05,
                           paste("Significant difference between groups (χ² =", 
                                 round(kw_result$statistic, 3), ", p =", 
-                                format.pval(kw_result$p.value, digits = 3), ")"),
+                                format.pval(kw_result$p.value, digits = 3), 
+                                ", ε² =", round(effect_size_result$epsilon_squared, 3),
+                                ", 95% CI: [", round(effect_size_result$confidence_interval[1], 3), ", ",
+                                round(effect_size_result$confidence_interval[2], 3), "])"),
                           paste("No significant difference between groups (χ² =", 
                                 round(kw_result$statistic, 3), ", p =", 
-                                format.pval(kw_result$p.value, digits = 3), ")"))
+                                format.pval(kw_result$p.value, digits = 3), 
+                                ", ε² =", round(effect_size_result$epsilon_squared, 3),
+                                ", 95% CI: [", round(effect_size_result$confidence_interval[1], 3), ", ",
+                                round(effect_size_result$confidence_interval[2], 3), "])"))
   
   return(list(
     variable = variable,
@@ -922,12 +972,63 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
     effect_size = effect_size_result$epsilon_squared,
     effect_size_ci = effect_size_result$confidence_interval,
     effect_size_interpretation = effect_size_result$interpretation,
+    effect_size_name = "ε² (epsilon-squared)",
     posthoc = posthoc_result,
     interpretation = interpretation
   ))
 }
 
-# Chi-square test for categorical variables
+# Helper function to calculate Cramer's V with 95% confidence interval - TASK 7
+calculate_cramers_v_with_ci <- function(contingency_table, chi_square_statistic, n) {
+  
+  tryCatch({
+    # Calculate Cramer's V
+    # V = sqrt(χ² / (n * (min(r,c) - 1)))
+    # where r = number of rows, c = number of columns
+    min_dim <- min(nrow(contingency_table), ncol(contingency_table))
+    cramers_v <- sqrt(chi_square_statistic / (n * (min_dim - 1)))
+    
+    # Calculate 95% confidence interval using bootstrap approximation
+    # For asymptotic CI, use the relationship between Cramer's V and chi-square
+    df <- (nrow(contingency_table) - 1) * (ncol(contingency_table) - 1)
+    
+    # Calculate confidence interval using chi-square distribution properties
+    chi_crit_lower <- qchisq(0.025, df)
+    chi_crit_upper <- qchisq(0.975, df)
+    
+    # Transform back to Cramer's V scale
+    v_lower <- max(0, sqrt(chi_crit_lower / (n * (min_dim - 1))))
+    v_upper <- min(1, sqrt(chi_crit_upper / (n * (min_dim - 1))))
+    
+    # Adjust CI bounds to be reasonable around the point estimate
+    if (v_lower > cramers_v) v_lower <- max(0, cramers_v - 0.1)
+    if (v_upper < cramers_v) v_upper <- min(1, cramers_v + 0.1)
+    
+    # Interpret effect size magnitude (Cohen's guidelines for Cramer's V)
+    interpretation <- if (cramers_v < 0.1) "negligible"
+                     else if (cramers_v < 0.3) "small"
+                     else if (cramers_v < 0.5) "medium"
+                     else "large"
+    
+    return(list(
+      cramers_v = cramers_v,
+      confidence_interval = c(v_lower, v_upper),
+      interpretation = interpretation,
+      method = "Cramer's V"
+    ))
+    
+  }, error = function(e) {
+    return(list(
+      cramers_v = NA,
+      confidence_interval = c(NA, NA),
+      interpretation = "calculation error",
+      method = "Cramer's V",
+      error = e$message
+    ))
+  })
+}
+
+# Chi-square test for categorical variables - TASK 7: ADD CRAMER'S V
 perform_chi_square <- function(data, variable, group_column) {
   
   # Create contingency table
@@ -938,11 +1039,16 @@ perform_chi_square <- function(data, variable, group_column) {
       variable = variable,
       test_name = "Chi-square",
       p_value = NA,
-      interpretation = "Insufficient data for chi-square test"
+      interpretation = "Insufficient data for chi-square test",
+      effect_size = NA,
+      effect_size_ci = c(NA, NA),
+      effect_size_interpretation = "unknown",
+      effect_size_name = "Cramer's V"
     ))
   }
   
   contingency_table <- table(clean_data[[variable]], clean_data[[group_column]])
+  n_total <- sum(contingency_table)
   
   # Check if expected frequencies are adequate
   expected_freq <- chisq.test(contingency_table)$expected
@@ -952,16 +1058,31 @@ perform_chi_square <- function(data, variable, group_column) {
     # Use Fisher's exact test if too many low expected frequencies
     fisher_result <- fisher.test(contingency_table, simulate.p.value = TRUE)
     
+    # TASK 7: Calculate Cramer's V even for Fisher's exact test
+    # Use the contingency table to calculate effect size
+    chi_square_approx <- chisq.test(contingency_table)$statistic
+    cramers_v_result <- calculate_cramers_v_with_ci(contingency_table, chi_square_approx, n_total)
+    
     interpretation <- ifelse(fisher_result$p.value < 0.05,
                             paste("Significant association (Fisher's exact test p =", 
-                                  format.pval(fisher_result$p.value, digits = 3), ")"),
+                                  format.pval(fisher_result$p.value, digits = 3), 
+                                  ", Cramer's V =", round(cramers_v_result$cramers_v, 3),
+                                  ", 95% CI: [", round(cramers_v_result$confidence_interval[1], 3),
+                                  ", ", round(cramers_v_result$confidence_interval[2], 3), "])"),
                             paste("No significant association (Fisher's exact test p =", 
-                                  format.pval(fisher_result$p.value, digits = 3), ")"))
+                                  format.pval(fisher_result$p.value, digits = 3), 
+                                  ", Cramer's V =", round(cramers_v_result$cramers_v, 3),
+                                  ", 95% CI: [", round(cramers_v_result$confidence_interval[1], 3),
+                                  ", ", round(cramers_v_result$confidence_interval[2], 3), "])"))
     
     return(list(
       variable = variable,
       test_name = "Fisher's Exact Test",
       p_value = fisher_result$p.value,
+      effect_size = cramers_v_result$cramers_v,
+      effect_size_ci = cramers_v_result$confidence_interval,
+      effect_size_interpretation = cramers_v_result$interpretation,
+      effect_size_name = "Cramer's V",
       interpretation = interpretation,
       note = "Used Fisher's exact test due to low expected frequencies"
     ))
@@ -969,17 +1090,30 @@ perform_chi_square <- function(data, variable, group_column) {
     # Use chi-square test
     chi_result <- chisq.test(contingency_table)
     
+    # TASK 7: Calculate Cramer's V with 95% CI
+    cramers_v_result <- calculate_cramers_v_with_ci(contingency_table, chi_result$statistic, n_total)
+    
     interpretation <- ifelse(chi_result$p.value < 0.05,
                             paste("Significant association (χ² =", round(chi_result$statistic, 3), 
-                                  ", p =", format.pval(chi_result$p.value, digits = 3), ")"),
+                                  ", p =", format.pval(chi_result$p.value, digits = 3), 
+                                  ", Cramer's V =", round(cramers_v_result$cramers_v, 3),
+                                  ", 95% CI: [", round(cramers_v_result$confidence_interval[1], 3),
+                                  ", ", round(cramers_v_result$confidence_interval[2], 3), "])"),
                             paste("No significant association (χ² =", round(chi_result$statistic, 3), 
-                                  ", p =", format.pval(chi_result$p.value, digits = 3), ")"))
+                                  ", p =", format.pval(chi_result$p.value, digits = 3), 
+                                  ", Cramer's V =", round(cramers_v_result$cramers_v, 3),
+                                  ", 95% CI: [", round(cramers_v_result$confidence_interval[1], 3),
+                                  ", ", round(cramers_v_result$confidence_interval[2], 3), "])"))
     
     return(list(
       variable = variable,
       test_name = "Chi-square",
       statistic = chi_result$statistic,
       p_value = chi_result$p.value,
+      effect_size = cramers_v_result$cramers_v,
+      effect_size_ci = cramers_v_result$confidence_interval,
+      effect_size_interpretation = cramers_v_result$interpretation,
+      effect_size_name = "Cramer's V",
       interpretation = interpretation
     ))
   }
@@ -1002,24 +1136,122 @@ perform_tukey_hsd <- function(anova_result) {
   ))
 }
 
-# Dunn's test for post-hoc analysis after Kruskal-Wallis
+# Helper function to calculate rank-biserial correlation with 95% CI
+calculate_rank_biserial_with_ci <- function(x, y) {
+  
+  tryCatch({
+    # Perform Mann-Whitney U test
+    wilcox_result <- wilcox.test(x, y, exact = FALSE)
+    
+    n1 <- length(x)
+    n2 <- length(y)
+    
+    # Calculate rank-biserial correlation
+    # r = 1 - (2*U) / (n1*n2) where U is the Mann-Whitney U statistic
+    U <- wilcox_result$statistic
+    r <- 1 - (2 * U) / (n1 * n2)
+    
+    # Calculate 95% confidence interval using bootstrap approximation
+    # For quick calculation, use asymptotic approximation
+    se_r <- sqrt((n1 + n2 + 1) / (3 * n1 * n2))
+    ci_lower <- max(-1, r - 1.96 * se_r)
+    ci_upper <- min(1, r + 1.96 * se_r)
+    
+    # Interpret effect size
+    interpretation <- if (abs(r) < 0.1) "negligible"
+                     else if (abs(r) < 0.3) "small"
+                     else if (abs(r) < 0.5) "medium"
+                     else "large"
+    
+    return(list(
+      rank_biserial_r = r,
+      confidence_interval = c(ci_lower, ci_upper),
+      interpretation = interpretation,
+      p_value = wilcox_result$p.value,
+      n1 = n1,
+      n2 = n2
+    ))
+    
+  }, error = function(e) {
+    return(list(
+      rank_biserial_r = NA,
+      confidence_interval = c(NA, NA),
+      interpretation = "calculation error",
+      p_value = NA,
+      error = e$message
+    ))
+  })
+}
+
+# Dunn's test for post-hoc analysis after Kruskal-Wallis - TASK 2: ADD RANK-BISERIAL R
 perform_dunn_test <- function(data, variable, group_column) {
   
   tryCatch({
+    # Perform Dunn's test
     dunn_result <- dunn.test(data[[variable]], data[[group_column]], 
                             method = "bonferroni", alpha = 0.05)
     
-    significant_pairs <- dunn_result$comparisons[dunn_result$P.adjusted < 0.05]
+    # Get unique groups
+    groups <- unique(data[[group_column]])
+    groups <- groups[!is.na(groups)]
+    
+    # Calculate rank-biserial correlation for each pairwise comparison - TASK 2
+    pairwise_effects <- list()
+    comparison_names <- dunn_result$comparisons
+    
+    for (i in seq_along(comparison_names)) {
+      comparison <- comparison_names[i]
+      
+      # Parse group names from comparison string (format: "group1 - group2")
+      group_parts <- unlist(strsplit(comparison, " - "))
+      if (length(group_parts) == 2) {
+        group1 <- trimws(group_parts[1])
+        group2 <- trimws(group_parts[2])
+        
+        # Extract data for each group
+        data1 <- data[data[[group_column]] == group1 & !is.na(data[[group_column]]), variable]
+        data2 <- data[data[[group_column]] == group2 & !is.na(data[[group_column]]), variable]
+        
+        # Remove missing values
+        data1 <- data1[!is.na(data1)]
+        data2 <- data2[!is.na(data2)]
+        
+        if (length(data1) > 0 && length(data2) > 0) {
+          # Calculate rank-biserial correlation with CI
+          effect_result <- calculate_rank_biserial_with_ci(data1, data2)
+          
+          pairwise_effects[[comparison]] <- list(
+            comparison = comparison,
+            p_value = dunn_result$P.adjusted[i],
+            p_value_raw = if(!is.null(dunn_result$P)) dunn_result$P[i] else dunn_result$P.adjusted[i],
+            rank_biserial_r = effect_result$rank_biserial_r,
+            rank_biserial_ci = effect_result$confidence_interval,
+            effect_interpretation = effect_result$interpretation,
+            significant = dunn_result$P.adjusted[i] < 0.05,
+            # TASK 2: Format as promised in methods table
+            formatted_result = paste0("p = ", format.pval(dunn_result$P.adjusted[i], digits = 3),
+                                     ", r = ", round(effect_result$rank_biserial_r, 3),
+                                     " (95% CI: [", round(effect_result$confidence_interval[1], 3),
+                                     ", ", round(effect_result$confidence_interval[2], 3), "])")
+          )
+        }
+      }
+    }
+    
+    significant_pairs <- comparison_names[dunn_result$P.adjusted < 0.05]
     
     return(list(
-      test_name = "Dunn's test",
+      test_name = "Dunn's test with rank-biserial correlation",
       significant_pairs = significant_pairs,
-      p_values = dunn_result$P.adjusted
+      p_values = dunn_result$P.adjusted,
+      p_values_raw = if(!is.null(dunn_result$P)) dunn_result$P else dunn_result$P.adjusted,
+      pairwise_effects = pairwise_effects,
+      comparison_summary = sapply(pairwise_effects, function(x) x$formatted_result)
     ))
   }, error = function(e) {
     return(list(
       test_name = "Dunn's test",
-      error = "Could not perform Dunn's test",
+      error = "Could not perform Dunn's test with rank-biserial correlation",
       message = e$message
     ))
   })

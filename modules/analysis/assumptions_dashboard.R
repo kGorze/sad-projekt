@@ -461,7 +461,44 @@ perform_fligner_test <- function(data, variable, group_column) {
 # Determine homogeneity recommendation based on multiple tests
 determine_homogeneity_recommendation <- function(levene_result, bartlett_result, fligner_result) {
   
-  # Count how many tests suggest homogeneity
+  # TASK 4: SHOW REAL LEVENE STATISTICS & P-VALUES instead of generic "consensus"
+  # Primary reliance on Levene's test (most robust)
+  if (!is.null(levene_result) && !is.na(levene_result$p_value)) {
+    primary_result <- paste0("Levene: F = ", round(levene_result$statistic, 3), 
+                           ", p = ", format.pval(levene_result$p_value, digits = 3))
+    
+    # Add interpretation
+    levene_interpretation <- if (levene_result$homogeneous) "homogeneous" else "heterogeneous"
+    primary_result <- paste0(primary_result, " (", levene_interpretation, ")")
+    
+    # Add supporting evidence from other tests if available
+    supporting_evidence <- c()
+    
+    if (!is.null(bartlett_result) && !is.na(bartlett_result$p_value)) {
+      bartlett_interp <- if (bartlett_result$homogeneous) "homogeneous" else "heterogeneous"
+      supporting_evidence <- c(supporting_evidence, 
+                             paste0("Bartlett: χ² = ", round(bartlett_result$statistic, 3),
+                                   ", p = ", format.pval(bartlett_result$p_value, digits = 3),
+                                   " (", bartlett_interp, ")"))
+    }
+    
+    if (!is.null(fligner_result) && !is.na(fligner_result$p_value)) {
+      fligner_interp <- if (fligner_result$homogeneous) "homogeneous" else "heterogeneous"
+      supporting_evidence <- c(supporting_evidence,
+                             paste0("Fligner: χ² = ", round(fligner_result$statistic, 3),
+                                   ", p = ", format.pval(fligner_result$p_value, digits = 3),
+                                   " (", fligner_interp, ")"))
+    }
+    
+    # Combine primary and supporting evidence
+    if (length(supporting_evidence) > 0) {
+      return(paste0(primary_result, "; ", paste(supporting_evidence, collapse = "; ")))
+    } else {
+      return(primary_result)
+    }
+  }
+  
+  # Fallback to original consensus approach if Levene not available
   homogeneous_count <- 0
   total_valid_tests <- 0
   
