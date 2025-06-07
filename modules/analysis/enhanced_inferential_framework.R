@@ -493,7 +493,7 @@ check_model_assumptions <- function(model) {
         count = length(influential_obs),
         indices = influential_obs
       )
-    )
+    ))
     
   }, error = function(e) {
     return(list(
