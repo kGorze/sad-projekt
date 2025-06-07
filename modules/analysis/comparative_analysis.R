@@ -8,8 +8,10 @@
 # Source reporting utilities
 source("modules/reporting/export_results.R")
 
-# Source descriptive statistics utilities for helper functions
-source("modules/analysis/descriptive_stats.R")
+# Source the enhanced post hoc module
+source("modules/analysis/enhanced_posthoc.R")
+
+# Centralized modules are loaded in main.R
 
 # Main function: Comprehensive comparative analysis
 perform_group_comparisons <- function(data, group_column = "grupa", include_plots = TRUE) {
@@ -30,36 +32,42 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
   cat("- Analyzing", length(numeric_vars), "continuous variables\n")
   cat("- Analyzing", length(categorical_vars), "categorical variables\n")
   
-  # Step 1: Assess distributions and assumptions
-  cat("\n=== STEP 1: DISTRIBUTION ANALYSIS ===\n")
-  distribution_results <- assess_distributions(data, numeric_vars, group_column)
-  result$distribution_analysis <- distribution_results
+  # Step 1: Comprehensive assumptions testing (uses centralized dashboard)
+  cat("\n=== STEP 1: ASSUMPTIONS TESTING DASHBOARD ===\n")
+  assumptions_results <- perform_assumptions_testing(data, numeric_vars, group_column)
+  result$assumptions_analysis <- assumptions_results
+  result$distribution_analysis <- assumptions_results$normality_tests
+  result$homogeneity_analysis <- assumptions_results$homogeneity_tests
   
-  # Step 2: Test homogeneity of variances
-  cat("\n=== STEP 2: HOMOGENEITY ANALYSIS ===\n")
-  homogeneity_results <- assess_homogeneity(data, numeric_vars, group_column)
-  result$homogeneity_analysis <- homogeneity_results
+  # Extract test recommendations for next step
+  test_recommendations <- assumptions_results$test_recommendations
   
-  # Step 3: Determine appropriate tests and perform comparisons
-  cat("\n=== STEP 3: STATISTICAL COMPARISONS ===\n")
-  comparison_results <- perform_statistical_comparisons(data, numeric_vars, categorical_vars, 
-                                                       group_column, distribution_results, 
-                                                       homogeneity_results)
+  # Step 2: Determine appropriate tests and perform comparisons
+  cat("\n=== STEP 2: STATISTICAL COMPARISONS ===\n")
+  comparison_results <- perform_statistical_comparisons_updated(data, numeric_vars, categorical_vars, 
+                                                               group_column, test_recommendations)
   result$test_results <- comparison_results$test_results
-  result$test_recommendations <- comparison_results$recommendations
+  result$test_recommendations <- test_recommendations
   
-  # Step 3.5: Calculate Cohen's D effect sizes for all numeric variables
-  cat("\n=== STEP 3.5: EFFECT SIZE ANALYSIS (COHEN'S D) ===\n")
+  # Step 3: Calculate Cohen's D effect sizes for all numeric variables
+  cat("\n=== STEP 3: EFFECT SIZE ANALYSIS (COHEN'S D) ===\n")
   effect_size_results <- list()
   for (var in numeric_vars) {
     cat("Calculating Cohen's D for", var, "...\n")
     cohens_d_result <- calculate_cohens_d(data, var, group_column)
     effect_size_results[[var]] <- cohens_d_result
+    
+    # Debug: check if Cohen's D was calculated
+    if (!is.null(cohens_d_result$effect_sizes) && length(cohens_d_result$effect_sizes) > 0) {
+      cat("  - Cohen's D calculated for", length(cohens_d_result$effect_sizes), "comparisons\n")
+    } else {
+      cat("  - No Cohen's D values calculated for", var, "\n")
+    }
   }
   result$effect_sizes <- effect_size_results
   
-  # Step 3.6: Linear regression analysis for numeric variables
-  cat("\n=== STEP 3.6: LINEAR REGRESSION ANALYSIS ===\n")
+  # Step 4: Linear regression analysis for numeric variables
+  cat("\n=== STEP 4: LINEAR REGRESSION ANALYSIS ===\n")
   regression_results <- list()
   for (var in numeric_vars) {
     cat("Performing linear regression for", var, "...\n")
@@ -68,9 +76,20 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
   }
   result$regression_analysis <- regression_results
   
-  # Step 4: Generate plots if requested
+  # Step 5: Enhanced Post Hoc Analysis (if any significant omnibus tests)
+  cat("\n=== STEP 5: ENHANCED POST HOC ANALYSIS ===\n")
+  enhanced_posthoc_results <- perform_enhanced_posthoc_analysis(data, result, group_column)
+  result$enhanced_posthoc <- enhanced_posthoc_results
+  if (length(enhanced_posthoc_results) > 0) {
+    cat("- Enhanced post hoc analysis completed for", length(enhanced_posthoc_results), "variables\n")
+    result$posthoc_summary <- create_comprehensive_posthoc_summary(enhanced_posthoc_results)
+  } else {
+    cat("- No significant omnibus tests found requiring post hoc analysis\n")
+  }
+
+  # Step 6: Generate plots if requested
   if (include_plots) {
-    cat("\n=== STEP 4: GENERATING VISUALIZATIONS ===\n")
+    cat("\n=== STEP 6: GENERATING VISUALIZATIONS ===\n")
     
     # Use fixed output path for plots
     plots_output_path <- file.path("output", "plots", "comparative_analysis")
@@ -80,6 +99,68 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
     result$plot_files <- plots_result$plot_files
     cat("- Generated", length(plots_result$plots), "comparison plots\n")
     cat("- Saved", length(plots_result$plot_files), "plot files\n")
+  }
+  
+  # Map data structures for HTML report compatibility
+  # Fix distribution analysis mapping
+  if (!is.null(result$assumptions_analysis) && !is.null(result$assumptions_analysis$normality_tests)) {
+    result$distribution_analysis <- list()
+    for (var_name in names(result$assumptions_analysis$normality_tests)) {
+      norm_data <- result$assumptions_analysis$normality_tests[[var_name]]
+      
+      # Map overall normality
+      overall_normal <- if (!is.null(norm_data$overall_test)) {
+        list(
+          interpretation = if (!is.null(norm_data$overall_test$interpretation)) {
+            norm_data$overall_test$interpretation
+          } else {
+            paste0(norm_data$overall_test$test, " (p = ", 
+                   format.pval(norm_data$overall_test$p_value, digits = 4), ") - ",
+                   ifelse(norm_data$overall_test$p_value > 0.05, "Normal", "Non-normal"))
+          }
+        )
+      } else {
+        list(interpretation = "Not available")
+      }
+      
+      # Map group-wise normality  
+      group_normality <- if (!is.null(norm_data$group_tests)) {
+        group_results <- list()
+        for (group_name in names(norm_data$group_tests)) {
+          group_test <- norm_data$group_tests[[group_name]]
+          group_results[[group_name]] <- list(
+            interpretation = if (!is.null(group_test$interpretation)) {
+              group_test$interpretation
+            } else {
+              paste0(group_test$test, " (p = ", 
+                     format.pval(group_test$p_value, digits = 4), ") - ",
+                     ifelse(group_test$p_value > 0.05, "Normal", "Non-normal"))
+            }
+          )
+        }
+        group_results
+      } else {
+        NULL
+      }
+      
+      result$distribution_analysis[[var_name]] <- list(
+        overall_normality = overall_normal,
+        group_normality = group_normality
+      )
+    }
+  }
+  
+  # Fix test recommendations mapping
+  if (!is.null(result$assumptions_analysis) && !is.null(result$assumptions_analysis$test_recommendations)) {
+    mapped_recommendations <- list()
+    for (var_name in names(result$assumptions_analysis$test_recommendations)) {
+      rec_data <- result$assumptions_analysis$test_recommendations[[var_name]]
+      mapped_recommendations[[var_name]] <- list(
+        test_type = if (!is.null(rec_data$primary_test)) rec_data$primary_test else "Not available",
+        reasoning = if (!is.null(rec_data$rationale)) rec_data$rationale else "Not available"
+      )
+    }
+    result$test_recommendations <- mapped_recommendations
   }
   
   # Add metadata
@@ -140,9 +221,28 @@ test_normality_overall <- function(variable) {
     test_result <- shapiro.test(clean_var)
     test_name <- "Shapiro-Wilk"
   } else {
-    # Kolmogorov-Smirnov test for larger samples
-    test_result <- ks.test(clean_var, "pnorm", mean(clean_var), sd(clean_var))
-    test_name <- "Kolmogorov-Smirnov"
+    # Anderson-Darling test for larger samples (more robust than KS for ties)
+    tryCatch({
+      if (requireNamespace("nortest", quietly = TRUE)) {
+        library(nortest)
+        test_result <- ad.test(clean_var)
+        test_name <- "Anderson-Darling"
+      } else {
+        # Fallback to Shapiro-Wilk for larger samples (subsampling if needed)
+        if (n > 5000) {
+          sample_indices <- sample(1:n, 5000)
+          test_result <- shapiro.test(clean_var[sample_indices])
+          test_name <- "Shapiro-Wilk (subsample)"
+        } else {
+          test_result <- shapiro.test(clean_var)
+          test_name <- "Shapiro-Wilk"
+        }
+      }
+    }, error = function(e) {
+      # Final fallback to Shapiro-Wilk
+      test_result <- shapiro.test(clean_var)
+      test_name <- "Shapiro-Wilk"
+    })
   }
   
   is_normal <- test_result$p.value > 0.05
@@ -206,6 +306,63 @@ calculate_distribution_stats <- function(data, variable, group_column) {
   }
   
   return(stats_list)
+}
+
+# Updated statistical comparisons using centralized test recommendations
+perform_statistical_comparisons_updated <- function(data, numeric_vars, categorical_vars, group_column, test_recommendations) {
+  
+  test_results <- list()
+  
+  # Test continuous variables using centralized recommendations
+  for (var in numeric_vars) {
+    cat("Performing comparison for", var, "...\n")
+    
+    # Get test recommendation from centralized assumptions dashboard
+    var_recommendation <- test_recommendations[[var]]
+    
+    if (is.null(var_recommendation)) {
+      test_results[[var]] <- list(
+        variable = var,
+        test_name = "No recommendation available",
+        p_value = NA,
+        interpretation = "Test recommendation not found"
+      )
+      next
+    }
+    
+    # Perform the recommended test
+    recommended_test <- var_recommendation$primary_test
+    
+    if (recommended_test == "One-way ANOVA") {
+      test_result <- perform_anova(data, var, group_column)
+    } else if (recommended_test == "Welch's ANOVA") {
+      test_result <- perform_welch_anova(data, var, group_column)
+    } else if (recommended_test == "Kruskal-Wallis test") {
+      test_result <- perform_kruskal_wallis(data, var, group_column)
+    } else {
+      test_result <- list(
+        variable = var,
+        test_name = paste("Unsupported test:", recommended_test),
+        p_value = NA,
+        interpretation = "Test not implemented"
+      )
+    }
+    
+    # Add recommendation info to result
+    test_result$recommendation <- var_recommendation
+    test_results[[var]] <- test_result
+  }
+  
+  # Test categorical variables (if any)
+  if (length(categorical_vars) > 0) {
+    for (var in categorical_vars) {
+      cat("Performing categorical comparison for", var, "...\n")
+      test_result <- perform_chi_square(data, var, group_column)
+      test_results[[var]] <- test_result
+    }
+  }
+  
+  return(list(test_results = test_results))
 }
 
 # Assess homogeneity of variances
@@ -613,12 +770,16 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
       # Choose overall test based on number of groups
       overall_method <- if (length(groups) > 2) "anova" else "t.test"
 
+      # Ensure group column is factor and get clean data
+      plot_data <- data[!is.na(data[[var]]) & !is.na(data[[group_column]]), ]
+      plot_data[[group_column]] <- as.factor(plot_data[[group_column]])
+      
       # Create enhanced boxplot with statistical tests
-      p <- ggboxplot(data, x = group_column, y = var,
+      p <- ggboxplot(plot_data, x = group_column, y = var,
                      color = group_column, palette = "jco",
                      add = "jitter", add.params = list(alpha = 0.3)) +
         stat_compare_means(method = overall_method,
-                           label.y = max(data[[var]], na.rm = TRUE) * 1.1) +
+                           label.y = max(plot_data[[var]], na.rm = TRUE) * 1.1) +
         stat_compare_means(comparisons = pairwise_comparisons,
                            method = "t.test", label = "p.signif") +
         labs(title = paste("Enhanced Comparison of", var, "across groups"),
@@ -645,9 +806,11 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   # 2. Density plots with group overlays
   for (var in numeric_vars[1:min(4, length(numeric_vars))]) {
     tryCatch({
-      # Calculate group means for vertical lines using base R
-      group_means <- aggregate(data[[var]], by = list(group = data[[group_column]]), 
-                              FUN = function(x) mean(x, na.rm = TRUE), na.action = na.pass)
+      # Calculate group means for vertical lines using base R (fixed na.action issue)
+      clean_data_for_means <- data[!is.na(data[[var]]) & !is.na(data[[group_column]]), ]
+      group_means <- aggregate(clean_data_for_means[[var]], 
+                              by = list(group = clean_data_for_means[[group_column]]), 
+                              FUN = function(x) mean(x, na.rm = TRUE))
       names(group_means) <- c(group_column, "mean_val")
       
       p <- ggplot(data, aes(x = .data[[var]], fill = .data[[group_column]])) +
@@ -714,7 +877,7 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
           p <- ggplot(data, aes(x = .data[[var1]], y = .data[[var2]], color = .data[[group_column]])) +
             geom_point(alpha = 0.7, size = 2) +
             geom_smooth(method = "lm", se = TRUE, alpha = 0.3) +
-            stat_cor(aes(label = paste(..rr.label.., ..p.label.., sep = "~`,`~")), 
+            stat_cor(aes(label = paste(after_stat(rr.label), after_stat(p.label), sep = "~`,`~")), 
                      label.x.npc = "left", label.y.npc = "top") +
             labs(title = paste("Scatter Plot:", var1, "vs", var2),
                  subtitle = "With regression lines and correlation coefficients by group",
@@ -766,50 +929,16 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
     })
   }
   
-  # 6. Correlation matrix heatmap (for numeric variables)
-  if (length(numeric_vars) >= 3) {
-    tryCatch({
-      # Calculate correlation matrix
-      cor_data <- data[, numeric_vars, drop = FALSE]
-      cor_matrix <- cor(cor_data, use = "complete.obs")
-      
-      # Convert to long format for ggplot
-      cor_long <- expand.grid(Var1 = rownames(cor_matrix), Var2 = colnames(cor_matrix))
-      cor_long$value <- as.vector(cor_matrix)
-      
-      p <- ggplot(cor_long, aes(Var1, Var2, fill = value)) +
-        geom_tile() +
-        geom_text(aes(label = round(value, 2)), color = "white", size = 3) +
-        scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                            midpoint = 0, limit = c(-1,1), space = "Lab",
-                            name = "Correlation") +
-        labs(title = "Correlation Matrix Heatmap",
-             subtitle = "Pearson correlations between numeric variables",
-             x = "", y = "") +
-        theme_minimal() +
-        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5, size = 10),
-              axis.text.x = element_text(angle = 45, hjust = 1))
-      
-      plot_filename <- file.path(output_path, paste0("correlation_heatmap_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-      
-      plots[["correlation_heatmap"]] <- p
-      plot_files[["correlation_heatmap"]] <- plot_filename
-      cat("Created correlation heatmap\n")
-      
-    }, error = function(e) {
-      cat("Error creating correlation heatmap:", e$message, "\n")
-    })
-  }
+  # Note: Correlation heatmap moved to correlation_analysis.R module to avoid redundancy
   
   # 7. Enhanced bar plots for categorical variables
   for (var in categorical_vars) {
     if (length(unique(data[[var]])) <= 10) {
       tryCatch({
-        # Calculate proportions using base R
-        temp_data <- aggregate(rep(1, nrow(data)), 
-                             by = list(group = data[[group_column]], var = data[[var]]), 
+        # Calculate proportions using base R (fixed aggregate issue)
+        clean_cat_data <- data[!is.na(data[[var]]) & !is.na(data[[group_column]]), ]
+        temp_data <- aggregate(rep(1, nrow(clean_cat_data)), 
+                             by = list(group = clean_cat_data[[group_column]], var = clean_cat_data[[var]]), 
                              FUN = length)
         names(temp_data) <- c("group", "var", "count")
         
@@ -878,19 +1007,32 @@ calculate_cohens_d <- function(data, variable, group_column) {
       group1 <- groups[i]
       group2 <- groups[j]
       
-      # Get data for each group
-      data1 <- data[data[[group_column]] == group1 & !is.na(data[[group_column]]), variable]
-      data2 <- data[data[[group_column]] == group2 & !is.na(data[[group_column]]), variable]
+      # Get data for each group with proper indexing
+      group1_indices <- which(data[[group_column]] == group1 & !is.na(data[[group_column]]) & !is.na(data[[variable]]))
+      group2_indices <- which(data[[group_column]] == group2 & !is.na(data[[group_column]]) & !is.na(data[[variable]]))
       
-      # Remove missing values
+      data1 <- data[group1_indices, variable]
+      data2 <- data[group2_indices, variable]
+      
+      # Remove any remaining missing values
       data1 <- data1[!is.na(data1)]
       data2 <- data2[!is.na(data2)]
       
       if (length(data1) > 1 && length(data2) > 1) {
-        # Calculate Cohen's D using effsize package
+        # Calculate Cohen's D manually (more reliable than effsize package)
         tryCatch({
-          cohens_d_result <- cohen.d(data1, data2)
-          d_value <- cohens_d_result$estimate
+          mean1 <- mean(data1, na.rm = TRUE)
+          mean2 <- mean(data2, na.rm = TRUE)
+          sd1 <- sd(data1, na.rm = TRUE)
+          sd2 <- sd(data2, na.rm = TRUE)
+          n1 <- length(data1)
+          n2 <- length(data2)
+          
+          # Pooled standard deviation
+          pooled_sd <- sqrt(((n1 - 1) * sd1^2 + (n2 - 1) * sd2^2) / (n1 + n2 - 2))
+          
+          # Cohen's D calculation
+          d_value <- (mean1 - mean2) / pooled_sd
           
           # Interpret effect size
           if (abs(d_value) < 0.2) {
@@ -907,11 +1049,13 @@ calculate_cohens_d <- function(data, variable, group_column) {
           effect_sizes[[comparison_name]] <- list(
             cohens_d = d_value,
             magnitude = interpretation,
-            confidence_interval = cohens_d_result$conf.int,
             group1 = group1,
             group2 = group2,
-            n1 = length(data1),
-            n2 = length(data2)
+            n1 = n1,
+            n2 = n2,
+            mean1 = mean1,
+            mean2 = mean2,
+            pooled_sd = pooled_sd
           )
           
         }, error = function(e) {
@@ -919,7 +1063,9 @@ calculate_cohens_d <- function(data, variable, group_column) {
           effect_sizes[[comparison_name]] <- list(
             cohens_d = NA,
             magnitude = "calculation error",
-            error = e$message
+            error = e$message,
+            n1 = length(data1),
+            n2 = length(data2)
           )
         })
       }

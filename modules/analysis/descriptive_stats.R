@@ -8,6 +8,8 @@
 # Source reporting utilities
 source("modules/reporting/export_results.R")
 
+# Centralized modules are loaded in main.R
+
 # Main function: Generate comprehensive descriptive statistics
 generate_descriptive_stats <- function(data, group_column = NULL, include_plots = TRUE) {
   
@@ -26,54 +28,30 @@ generate_descriptive_stats <- function(data, group_column = NULL, include_plots 
     categorical_vars <- categorical_vars[categorical_vars != group_column]
   }
   
-  # Calculate statistics for continuous variables
+  # Step 1: Generate master descriptive summary (replaces duplicated descriptive stats)
+  cat("\n=== STEP 1: MASTER DESCRIPTIVE SUMMARY ===\n")
+  master_summary <- generate_master_descriptive_summary(data, group_column, c(numeric_vars, categorical_vars))
+  result$master_summary <- master_summary
+  result$summary_data <- master_summary$numeric_summary$master_table
+  result$categorical_data <- master_summary$categorical_summary
+  result$data_summary <- master_summary$overall_summary
+  
+  cat("- Master descriptive summary completed\n")
+  
+  # Step 2: Comprehensive assumptions testing (replaces duplicated normality tests)
   if (length(numeric_vars) > 0) {
-    continuous_stats <- calculate_continuous_stats(data, numeric_vars, group_column)
-    result$summary_data <- continuous_stats
+    cat("\n=== STEP 2: ASSUMPTIONS TESTING DASHBOARD ===\n")
+    assumptions_results <- perform_assumptions_testing(data, numeric_vars, group_column)
+    result$assumptions_analysis <- assumptions_results
+    result$normality_analysis <- assumptions_results$normality_tests
+    result$homogeneity_analysis <- assumptions_results$homogeneity_tests
     
-    cat("- Continuous variables analyzed:", length(numeric_vars), "\n")
+    cat("- Comprehensive assumptions testing completed\n")
   }
   
-  # Calculate statistics for categorical variables
-  if (length(categorical_vars) > 0) {
-    categorical_stats <- calculate_categorical_stats(data, categorical_vars, group_column)
-    result$categorical_data <- categorical_stats
-    
-    cat("- Categorical variables analyzed:", length(categorical_vars), "\n")
-  }
-  
-  # Create summary table
-  summary_table <- create_summary_table(data, group_column)
-  result$data_summary <- summary_table
-  
-  # Step 3: Normality testing for numeric variables
-  if (length(numeric_vars) > 0) {
-    cat("\n=== STEP 3: NORMALITY TESTING ===\n")
-    normality_results <- perform_normality_tests(data, numeric_vars, group_column)
-    result$normality_analysis <- normality_results
-    cat("- Normality tests performed for", length(numeric_vars), "variables\n")
-  }
-  
-  # Step 3.5: Outlier detection and analysis
-  if (length(numeric_vars) > 0) {
-    cat("\n=== STEP 3.5: OUTLIER ANALYSIS ===\n")
-    outlier_results <- perform_outlier_analysis(data, numeric_vars, group_column)
-    result$outlier_analysis <- outlier_results
-    cat("- Outlier analysis completed for", length(numeric_vars), "variables\n")
-  }
-  
-  # Step 3.6: Create comprehensive variable properties table
-  if (length(numeric_vars) > 0 && !is.null(group_column)) {
-    cat("\n=== STEP 3.6: VARIABLE PROPERTIES ANALYSIS ===\n")
-    variable_properties <- create_variable_properties_table(data, numeric_vars, group_column, 
-                                                           normality_results, outlier_results)
-    result$variable_properties <- variable_properties
-    cat("- Variable properties table created for", length(numeric_vars), "variables across groups\n")
-  }
-  
-  # Step 4: Generate plots if requested
+  # Step 3: Generate plots if requested
   if (include_plots) {
-    cat("\n=== STEP 4: GENERATING VISUALIZATIONS ===\n")
+    cat("\n=== STEP 3: GENERATING VISUALIZATIONS ===\n")
     
     # Use fixed output path for plots
     plots_output_path <- file.path("output", "plots", "descriptive_stats")
@@ -96,10 +74,147 @@ generate_descriptive_stats <- function(data, group_column = NULL, include_plots 
     analysis_date = Sys.time()
   )
   
+  # Ensure compatibility with HTML report generation by restructuring data
+  # Map new structure to old expected structure
+  
+  # Create data_summary structure expected by HTML report
+  result$data_summary <- list(
+    dataset_overview = data.frame(
+      metric = c("Total observations", "Total variables", "Numeric variables", "Categorical variables", "Group column"),
+      value = c(nrow(data), ncol(data), length(numeric_vars), length(categorical_vars), group_column),
+      stringsAsFactors = FALSE
+    ),
+    variable_types = data.frame(
+      type = c("Numeric", "Categorical"),
+      count = c(length(numeric_vars), length(categorical_vars)),
+      stringsAsFactors = FALSE
+    ),
+    group_summary = {
+      group_table <- table(data[[group_column]])
+      data.frame(
+        group = names(group_table),
+        n = as.numeric(group_table),
+        percentage = round(as.numeric(prop.table(group_table)) * 100, 2),
+        stringsAsFactors = FALSE
+      )
+    },
+    missing_data = {
+      missing_counts <- sapply(data, function(x) sum(is.na(x)))
+      missing_vars <- missing_counts[missing_counts > 0]
+      if (length(missing_vars) > 0) {
+        data.frame(
+          variable = names(missing_vars),
+          missing_count = as.numeric(missing_vars),
+          missing_percentage = round(as.numeric(missing_vars) / nrow(data) * 100, 2),
+          stringsAsFactors = FALSE
+        )
+      } else {
+        data.frame(
+          variable = character(0),
+          missing_count = numeric(0),
+          missing_percentage = numeric(0),
+          stringsAsFactors = FALSE
+        )
+      }
+    }
+  )
+  
+  # Map summary_data for continuous variables (expected by HTML report)
+  if (!is.null(master_summary$numeric_summary) && !is.null(master_summary$numeric_summary$master_table)) {
+    # Map column names to expected HTML report format
+    master_table <- master_summary$numeric_summary$master_table
+    
+    # Create properly formatted table for HTML report
+    result$summary_data <- data.frame(
+      variable = master_table$Variable,
+      n = master_table$N,
+      missing = master_table$Missing,
+      mean = round(master_table$Mean, 3),
+      sd = round(master_table$SD, 3),
+      median = round(master_table$Median, 3),
+      q25 = round(master_table$Q25, 3),
+      q75 = round(master_table$Q75, 3),
+      min = round(master_table$Min, 3),
+      max = round(master_table$Max, 3),
+      range = round(master_table$Max - master_table$Min, 3),
+      iqr = round(master_table$Q75 - master_table$Q25, 3),
+      cv = round(master_table$CV_Pct, 1),
+      skewness = round(master_table$Skewness, 3),
+      kurtosis = round(master_table$Kurtosis, 3),
+      stringsAsFactors = FALSE
+    )
+  }
+  
+  # Map categorical_data (expected by HTML report)
+  if (!is.null(master_summary$categorical_summary)) {
+    # Convert categorical summary format to expected format
+    result$categorical_data <- list()
+    for (var_name in names(master_summary$categorical_summary)) {
+      var_data <- master_summary$categorical_summary[[var_name]]
+      if (!is.null(var_data$summary_table)) {
+        result$categorical_data[[var_name]] <- var_data$summary_table
+      } else if (!is.null(var_data$overall_summary)) {
+        result$categorical_data[[var_name]] <- var_data$overall_summary
+      } else {
+        # Fallback: create basic categorical summary
+        if (var_name %in% names(data)) {
+          freq_table <- table(data[[var_name]], useNA = "ifany")
+          prop_table <- prop.table(freq_table) * 100
+          result$categorical_data[[var_name]] <- data.frame(
+            category = names(freq_table),
+            frequency = as.numeric(freq_table),
+            percentage = round(as.numeric(prop_table), 2),
+            stringsAsFactors = FALSE
+          )
+        }
+      }
+    }
+  }
+  
+  # Map normality_analysis to expected HTML report format
+  if (!is.null(result$assumptions_analysis) && !is.null(result$assumptions_analysis$normality_tests)) {
+    # Convert assumptions dashboard format to HTML expected format
+    result$normality_analysis <- list()
+    for (var_name in names(result$assumptions_analysis$normality_tests)) {
+      norm_data <- result$assumptions_analysis$normality_tests[[var_name]]
+      
+      # Extract overall test results
+      overall_test <- norm_data$overall_test
+      descriptive_measures <- norm_data$descriptive_measures
+      
+      # Map to expected HTML format
+      result$normality_analysis[[var_name]] <- list(
+        test = if (!is.null(overall_test$test)) overall_test$test else "Not available",
+        statistic = if (!is.null(overall_test$statistic)) overall_test$statistic else NULL,
+        p_value = if (!is.null(overall_test$p_value)) overall_test$p_value else NULL,
+        normal = if (!is.null(overall_test$normal)) overall_test$normal else FALSE,
+        interpretation = if (!is.null(overall_test$interpretation)) overall_test$interpretation else "",
+        skewness = if (!is.null(descriptive_measures$skewness)) descriptive_measures$skewness else NULL,
+        kurtosis = if (!is.null(descriptive_measures$kurtosis)) descriptive_measures$kurtosis else NULL,
+        group_normality = if (!is.null(norm_data$group_tests)) norm_data$group_tests else NULL
+      )
+    }
+  }
+  
+  # Add variable_properties for HTML report compatibility
+  result$variable_properties <- list(
+    properties_table = if (!is.null(result$assumptions_analysis$assumptions_summary)) {
+      result$assumptions_analysis$assumptions_summary
+    } else {
+      data.frame()
+    },
+    homogeneity_p_values = if (!is.null(result$assumptions_analysis$homogeneity_tests)) {
+      lapply(result$assumptions_analysis$homogeneity_tests, function(x) x$p_value)
+    } else {
+      list()
+    }
+  )
+  
   cat("Descriptive statistics analysis completed successfully.\n")
   return(result)
 }
 
+# DEPRECATED: Use generate_master_descriptive_summary instead
 # Calculate comprehensive statistics for continuous variables
 calculate_continuous_stats <- function(data, variables, group_column = NULL) {
   
@@ -353,142 +468,12 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
     }
   }
   
-  # 2. Q-Q plots for normality assessment
-  if (length(numeric_vars) > 0) {
-    for (var in numeric_vars[1:min(4, length(numeric_vars))]) {
-      tryCatch({
-        if (!is.null(group_column)) {
-          p <- ggplot(data, aes(sample = .data[[var]])) +
-            stat_qq(aes(color = .data[[group_column]]), alpha = 0.7) +
-            stat_qq_line(aes(color = .data[[group_column]])) +
-            facet_wrap(as.formula(paste("~", group_column))) +
-            labs(title = paste("Q-Q Plot for", var, "by", group_column),
-                 subtitle = "Assessment of normality assumption by group",
-                 x = "Theoretical Quantiles", y = "Sample Quantiles") +
-            theme_minimal() +
-            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                  plot.subtitle = element_text(hjust = 0.5, size = 10)) +
-            scale_color_brewer(type = "qual", palette = "Set2")
-        } else {
-          p <- ggplot(data, aes(sample = .data[[var]])) +
-            stat_qq(alpha = 0.7, color = "steelblue") +
-            stat_qq_line(color = "red", size = 1) +
-            labs(title = paste("Q-Q Plot for", var),
-                 subtitle = "Assessment of normality assumption",
-                 x = "Theoretical Quantiles", y = "Sample Quantiles") +
-            theme_minimal() +
-            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                  plot.subtitle = element_text(hjust = 0.5, size = 10))
-        }
-        
-        plot_filename <- file.path(output_path, paste0("qq_plot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-        ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-        
-        plots[[paste0("qq_plot_", var)]] <- p
-        plot_files[[paste0("qq_plot_", var)]] <- plot_filename
-        cat("Created Q-Q plot for", var, "\n")
-        
-      }, error = function(e) {
-        cat("Error creating Q-Q plot for", var, ":", e$message, "\n")
-      })
-    }
-  }
+  # Note: Q-Q plots moved to comparative_analysis.R (normality assumption testing for group comparisons)
   
-  # 3. Enhanced box plots with statistical annotations
-  if (!is.null(group_column) && length(numeric_vars) > 0) {
-    for (var in numeric_vars[1:min(4, length(numeric_vars))]) {
-      tryCatch({
-        p <- ggboxplot(data, x = group_column, y = var, 
-                       color = group_column, palette = "jco",
-                       add = "jitter", add.params = list(alpha = 0.3)) +
-          stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red") +
-          labs(title = paste("Enhanced Box Plot of", var, "by", group_column),
-               subtitle = "With jitter points and means (red diamonds)",
-               x = group_column, y = var) +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                plot.subtitle = element_text(hjust = 0.5, size = 10),
-                legend.position = "none")
-        
-        plot_filename <- file.path(output_path, paste0("enhanced_boxplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-        ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-        
-        plots[[paste0("enhanced_boxplot_", var)]] <- p
-        plot_files[[paste0("enhanced_boxplot_", var)]] <- plot_filename
-        cat("Created enhanced boxplot for", var, "\n")
-        
-      }, error = function(e) {
-        cat("Error creating enhanced boxplot for", var, ":", e$message, "\n")
-      })
-    }
-  }
+    # Note: Enhanced boxplots and violin plots moved to comparative_analysis.R (group comparisons)
+  # Note: Q-Q plots moved to comparative_analysis.R (assumption testing for group comparisons)
   
-  # 4. Violin plots for distribution shape analysis
-  if (!is.null(group_column) && length(numeric_vars) > 0) {
-    for (var in numeric_vars[1:min(3, length(numeric_vars))]) {
-      tryCatch({
-        p <- ggplot(data, aes(x = .data[[group_column]], y = .data[[var]], fill = .data[[group_column]])) +
-          geom_violin(alpha = 0.7, trim = FALSE) +
-          geom_boxplot(width = 0.1, fill = "white", alpha = 0.8) +
-          stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red") +
-          stat_summary(fun = median, geom = "point", shape = 21, size = 2, fill = "blue") +
-          labs(title = paste("Violin Plot of", var, "by", group_column),
-               subtitle = "Shows distribution shape, quartiles, means (red) and medians (blue)",
-               x = group_column, y = var) +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                plot.subtitle = element_text(hjust = 0.5, size = 10),
-                legend.position = "none") +
-          scale_fill_brewer(type = "qual", palette = "Set2")
-        
-        plot_filename <- file.path(output_path, paste0("violin_plot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-        ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-        
-        plots[[paste0("violin_plot_", var)]] <- p
-        plot_files[[paste0("violin_plot_", var)]] <- plot_filename
-        cat("Created violin plot for", var, "\n")
-        
-      }, error = function(e) {
-        cat("Error creating violin plot for", var, ":", e$message, "\n")
-      })
-    }
-  }
-  
-  # 5. Correlation matrix heatmap
-  if (length(numeric_vars) >= 3) {
-    tryCatch({
-      cor_data <- data[, numeric_vars, drop = FALSE]
-      cor_matrix <- cor(cor_data, use = "complete.obs")
-      
-      # Convert to long format for ggplot
-      cor_long <- expand.grid(Var1 = rownames(cor_matrix), Var2 = colnames(cor_matrix))
-      cor_long$value <- as.vector(cor_matrix)
-      
-      p <- ggplot(cor_long, aes(Var1, Var2, fill = value)) +
-        geom_tile() +
-        geom_text(aes(label = round(value, 2)), color = "white", size = 3) +
-        scale_fill_gradient2(low = "blue", high = "red", mid = "white", 
-                            midpoint = 0, limit = c(-1,1), space = "Lab",
-                            name = "Correlation") +
-        labs(title = "Correlation Matrix Heatmap",
-             subtitle = "Pearson correlations between numeric variables",
-             x = "", y = "") +
-        theme_minimal() +
-        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5, size = 10),
-              axis.text.x = element_text(angle = 45, hjust = 1))
-      
-      plot_filename <- file.path(output_path, paste0("correlation_heatmap_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-      
-      plots[["correlation_heatmap"]] <- p
-      plot_files[["correlation_heatmap"]] <- plot_filename
-      cat("Created correlation heatmap\n")
-      
-    }, error = function(e) {
-      cat("Error creating correlation heatmap:", e$message, "\n")
-    })
-  }
+  # Note: Correlation heatmap moved to correlation_analysis.R module to avoid redundancy
   
   # 6. Pairs plot for numeric variables (if not too many)
   if (length(numeric_vars) >= 3 && length(numeric_vars) <= 6) {

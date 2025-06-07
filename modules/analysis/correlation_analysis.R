@@ -484,13 +484,13 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                       method = "circle",
                       colors = c("#6D9EC1", "white", "#E46726"),
                       title = paste("Overall Correlation Matrix (Pearson)"),
-                      subtitle = paste("Based on", nrow(cor_data), "complete observations across all groups"),
                       ggtheme = theme_minimal()) +
+        labs(subtitle = paste("Based on", nrow(cor_data), "complete observations across all groups"),
+             caption = paste("Variables:", paste(colnames(cor_matrix), collapse = ", "))) +
         theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
               plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
               axis.text.x = element_text(angle = 45, hjust = 1),
-              axis.text.y = element_text(angle = 0)) +
-        labs(caption = paste("Variables:", paste(colnames(cor_matrix), collapse = ", ")))
+              axis.text.y = element_text(angle = 0))
       
       plot_filename <- file.path(output_path, paste0("correlation_matrix_overall_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
       ggsave(plot_filename, plot = p, width = 12, height = 10, dpi = 300)
@@ -570,8 +570,8 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                           lab_size = 3.5,
                           colors = c("#6D9EC1", "white", "#E46726"),
                           title = paste("Correlation Matrix -", group, "Group"),
-                          subtitle = paste("Based on", nrow(group_data), "observations in this group"),
                           ggtheme = theme_minimal()) +
+            labs(subtitle = paste("Based on", nrow(group_data), "observations in this group")) +
             theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
                   plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
                   axis.text.x = element_text(angle = 45, hjust = 1))
@@ -698,7 +698,7 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
       
       p <- ggplot(cors_df, aes(x = correlation)) +
         geom_histogram(bins = 20, fill = "steelblue", alpha = 0.7, color = "white") +
-        geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +
+        geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = 1) +
         geom_vline(xintercept = c(-0.3, 0.3), linetype = "dotted", color = "orange", alpha = 0.7) +
         geom_vline(xintercept = c(-0.7, 0.7), linetype = "dotted", color = "darkgreen", alpha = 0.7) +
         annotate("text", x = 0, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.9, 
@@ -753,7 +753,7 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
     explanation_data$Direction[explanation_data$Correlation == 0] <- "None"
     
     p_explanation <- ggplot(explanation_data, aes(x = Correlation, y = Y_Position, fill = Color_Demo)) +
-      geom_tile(height = 0.8, color = "white", size = 0.5) +
+      geom_tile(height = 0.8, color = "white", linewidth = 0.5) +
       geom_text(aes(label = round(Correlation, 1)), color = "black", size = 3, fontface = "bold") +
       scale_fill_gradient2(low = "#6D9EC1", high = "#E46726", mid = "white", 
                           midpoint = 0, limit = c(-1,1), space = "Lab", 
@@ -837,7 +837,7 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                                    ))
     
     # Create the plot with title
-    p_table_plot <- grid::grid.arrange(
+    p_table_plot <- gridExtra::grid.arrange(
       p_table,
       top = grid::textGrob(paste("Top 10 Strongest Correlations\n(Based on", nrow(cor_data), "complete observations)"), 
                           gp = grid::gpar(fontsize = 14, fontface = "bold"))

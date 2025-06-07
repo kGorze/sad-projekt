@@ -153,13 +153,19 @@ create_comparative_analysis_content <- function(results, include_plots) {
     
     for (var_name in names(results$homogeneity_analysis)) {
       var_data <- results$homogeneity_analysis[[var_name]]
-      homo_class <- if (!is.na(var_data$homogeneous) && var_data$homogeneous) "significant" else "not-significant"
+      # Use levene test result as the primary homogeneity indicator
+      homogeneous <- if (!is.null(var_data$levene_test) && !is.null(var_data$levene_test$homogeneous)) {
+        var_data$levene_test$homogeneous
+      } else {
+        FALSE
+      }
+      homo_class <- if (!is.na(homogeneous) && homogeneous) "significant" else "not-significant"
       
       content <- paste0(content, '
         <div class="test-result ', homo_class, '">
             <h4>', var_name, '</h4>
-            <strong>Test:</strong> ', var_data$test, '<br>
-            <strong>Result:</strong> ', var_data$interpretation, '
+            <strong>Test:</strong> ', ifelse(!is.null(var_data$levene_test), var_data$levene_test$test, "Levene"), '<br>
+            <strong>Result:</strong> ', ifelse(!is.null(var_data$recommendation), var_data$recommendation, "Not available"), '
         </div>')
     }
   }
@@ -432,25 +438,32 @@ create_comparative_analysis_content <- function(results, include_plots) {
                 </thead>
                 <tbody>')
       
-      for (var_name in names(results$variable_properties$homogeneity_p_values)) {
-        p_val <- results$variable_properties$homogeneity_p_values[[var_name]]
-        homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
-        row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
-        interpretation <- if(is.na(p_val)) {
-          "Insufficient data for testing"
-        } else if(p_val > 0.05) {
-          "Variances are equal across groups"
-        } else {
-          "Variances differ significantly between groups"
-        }
+      # Use properties table instead of homogeneity_p_values since the latter contains NULL values
+      if (!is.null(results$variable_properties$properties_table) && 
+          "Homogeneity_P" %in% names(results$variable_properties$properties_table)) {
         
-        content <- paste0(content, '
-                    <tr class="', row_class, '">
-                        <td><strong>', var_name, '</strong></td>
-                        <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
-                        <td>', homog_status, '</td>
-                        <td>', interpretation, '</td>
-                    </tr>')
+        properties_table <- results$variable_properties$properties_table
+        for (i in 1:nrow(properties_table)) {
+          var_name <- properties_table$Variable[i]
+          p_val <- properties_table$Homogeneity_P[i]
+          homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
+          row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
+          interpretation <- if(is.na(p_val)) {
+            "Insufficient data for testing"
+          } else if(p_val > 0.05) {
+            "Variances are equal across groups"
+          } else {
+            "Variances differ significantly between groups"
+          }
+          
+          content <- paste0(content, '
+                      <tr class="', row_class, '">
+                          <td><strong>', var_name, '</strong></td>
+                          <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
+                          <td>', homog_status, '</td>
+                          <td>', interpretation, '</td>
+                      </tr>')
+        }
       }
       
       content <- paste0(content, '
@@ -793,25 +806,32 @@ create_descriptive_stats_content <- function(results, include_plots) {
                 </thead>
                 <tbody>')
       
-      for (var_name in names(results$variable_properties$homogeneity_p_values)) {
-        p_val <- results$variable_properties$homogeneity_p_values[[var_name]]
-        homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
-        row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
-        interpretation <- if(is.na(p_val)) {
-          "Insufficient data for testing"
-        } else if(p_val > 0.05) {
-          "Variances are equal across groups"
-        } else {
-          "Variances differ significantly between groups"
-        }
+      # Use properties table instead of homogeneity_p_values since the latter contains NULL values
+      if (!is.null(results$variable_properties$properties_table) && 
+          "Homogeneity_P" %in% names(results$variable_properties$properties_table)) {
         
-        content <- paste0(content, '
-                    <tr class="', row_class, '">
-                        <td><strong>', var_name, '</strong></td>
-                        <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
-                        <td>', homog_status, '</td>
-                        <td>', interpretation, '</td>
-                    </tr>')
+        properties_table <- results$variable_properties$properties_table
+        for (i in 1:nrow(properties_table)) {
+          var_name <- properties_table$Variable[i]
+          p_val <- properties_table$Homogeneity_P[i]
+          homog_status <- if(is.na(p_val)) "Unknown" else if(p_val > 0.05) "Homogeneous" else "Heterogeneous"
+          row_class <- if(is.na(p_val)) "" else if(p_val > 0.05) "table-success" else "table-warning"
+          interpretation <- if(is.na(p_val)) {
+            "Insufficient data for testing"
+          } else if(p_val > 0.05) {
+            "Variances are equal across groups"
+          } else {
+            "Variances differ significantly between groups"
+          }
+          
+          content <- paste0(content, '
+                      <tr class="', row_class, '">
+                          <td><strong>', var_name, '</strong></td>
+                          <td>', ifelse(is.na(p_val), "Not tested", format.pval(p_val, digits = 4)), '</td>
+                          <td>', homog_status, '</td>
+                          <td>', interpretation, '</td>
+                      </tr>')
+        }
       }
       
       content <- paste0(content, '
@@ -888,7 +908,13 @@ create_descriptive_stats_content <- function(results, include_plots) {
     
     for (var_name in names(results$normality_analysis)) {
       var_data <- results$normality_analysis[[var_name]]
-      normality_class <- if (!is.na(var_data$normal) && var_data$normal) "significant" else "not-significant"
+      # Check if normal field exists and is logical, otherwise default to FALSE
+      normal_result <- if (!is.null(var_data$normal) && is.logical(var_data$normal) && !is.na(var_data$normal)) {
+        var_data$normal
+      } else {
+        FALSE
+      }
+      normality_class <- if (normal_result) "significant" else "not-significant"
       
       content <- paste0(content, '
         <div class="test-result ', normality_class, '">
@@ -900,7 +926,7 @@ create_descriptive_stats_content <- function(results, include_plots) {
                     <strong>p-value:</strong> ', 
                     ifelse(is.null(var_data$p_value), "Not available", format.pval(var_data$p_value, digits = 4)), '<br>
                     <strong>Normal Distribution:</strong> ', 
-                    ifelse(var_data$normal, "Yes", "No"), '
+                    ifelse(normal_result, "Yes", "No"), '
                 </div>
                 <div class="col-md-6">
                     <strong>Skewness:</strong> ', 
@@ -1463,6 +1489,11 @@ create_missing_data_table_html <- function(missing_data) {
 create_variable_properties_table_html <- function(properties_data) {
   if (is.null(properties_data) || nrow(properties_data) == 0) return("")
   
+  # Check if this is the new simplified format from assumptions dashboard
+  if ("Overall_Normal" %in% names(properties_data)) {
+    return(create_simplified_properties_table_html(properties_data))
+  }
+  
   html <- '<table class="table table-striped stats-table" style="font-size: 0.85em;">
             <thead>
                 <tr>
@@ -1569,6 +1600,69 @@ create_variable_properties_table_html <- function(properties_data) {
                     <td><small>', row$Alternative_Tests, '</small></td>
                     <td><small>', row$Effect_Size_Measure, '</small></td>
                     <td class="', borderline_class, '"><small>', row$Borderline_Cases, '</small></td>
+                </tr>')
+  }
+  
+  html <- paste0(html, '</tbody></table>')
+  return(html)
+}
+
+# Helper function to create simplified variable properties table HTML (for new assumptions dashboard)
+create_simplified_properties_table_html <- function(properties_data) {
+  if (is.null(properties_data) || nrow(properties_data) == 0) return("")
+  
+  html <- '<table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>N Total</th>
+                    <th>N Missing</th>
+                    <th>Overall Normal</th>
+                    <th>Normality p-value</th>
+                    <th>Group Normality</th>
+                    <th>Homogeneity</th>
+                    <th>Homogeneity p-value</th>
+                    <th>Skewness</th>
+                    <th>Kurtosis</th>
+                </tr>
+            </thead>
+            <tbody>'
+  
+  for (i in 1:nrow(properties_data)) {
+    row <- properties_data[i, ]
+    
+    # Color coding for normality
+    normal_class <- ""
+    if (!is.na(row$Overall_Normal)) {
+      if (row$Overall_Normal == "Yes") {
+        normal_class <- "table-success"
+      } else {
+        normal_class <- "table-danger"
+      }
+    }
+    
+    # Color coding for homogeneity
+    homog_class <- ""
+    if (!is.na(row$Homogeneity)) {
+      if (row$Homogeneity == "Yes") {
+        homog_class <- "table-success"
+      } else {
+        homog_class <- "table-warning"
+      }
+    }
+    
+    html <- paste0(html, '
+                <tr>
+                    <td><strong>', row$Variable, '</strong></td>
+                    <td>', ifelse(is.na(row$N_Total), "-", row$N_Total), '</td>
+                    <td>', ifelse(is.na(row$N_Missing) || row$N_Missing == 0, "-", row$N_Missing), '</td>
+                    <td class="', normal_class, '"><strong>', ifelse(is.na(row$Overall_Normal), "-", row$Overall_Normal), '</strong></td>
+                    <td>', ifelse(is.na(row$Normality_P), "-", format.pval(row$Normality_P, digits = 4)), '</td>
+                    <td>', ifelse(is.na(row$Group_Normality), "-", row$Group_Normality), '</td>
+                    <td class="', homog_class, '"><strong>', ifelse(is.na(row$Homogeneity), "-", row$Homogeneity), '</strong></td>
+                    <td>', ifelse(is.na(row$Homogeneity_P), "-", format.pval(row$Homogeneity_P, digits = 4)), '</td>
+                    <td>', ifelse(is.na(row$Skewness), "-", round(row$Skewness, 3)), '</td>
+                    <td>', ifelse(is.na(row$Kurtosis), "-", round(row$Kurtosis, 3)), '</td>
                 </tr>')
   }
   

@@ -90,3 +90,88 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 # Generowanie raportu podsumowującego
 
+
+
+
+
+
+
+
+
+
+## To do 
+
+### 🗒️ Comprehensive To-Do List
+
+**A. Remove Redundancy**
+
+* [ ] Build one “Assumptions dashboard” that holds all normality + variance tests; delete the duplicates now in Descriptive Stats and Comparative Analysis
+* [ ] Merge repeated group-wise descriptive tables into a single master summary; link to it instead of re-printing the full table everywhere&#x20;
+
+**B. Strengthen Inferential Framework**
+
+* [ ] Add multiple linear regression / ANCOVA models to measure group effects after adjusting for covariates (e.g., age, hsCRP)&#x20;
+* [ ] Test interaction terms (e.g., group × age) and keep those that improve model fit
+
+**C. Deepen Association Analysis**
+
+* [ ] Compute separate correlation matrices for CHOR1, CHOR2, KONTROLA
+* [ ] Provide partial correlations that adjust for group in an “overall” matrix
+
+**D. Control for Multiple Testing**
+
+* [ ] Apply Benjamini–Hochberg (FDR) correction to every correlation p-value
+* [ ] Use Holm (or BH) adjustment for all post-hoc comparisons (Tukey, Dunn)&#x20;
+
+**E. Report Effect Sizes Fully**
+
+* [ ] Calculate rank-biserial *r* for each Mann-Whitney result
+* [ ] Calculate ε² (or η²) with 95 % CI for every Kruskal-Wallis; fill “Effect Size: Not calculated” gaps&#x20;
+* [ ] Add 95 % CI to η² in every ANOVA and Cohen’s *d* to all two-group t-tests
+
+**F. Fix Model Residual Issues**
+
+* [ ] For each model flagged “Residuals Non-normal” (e.g., *wiek \~ grupa*, *hsCRP \~ grupa*) try log/sqrt transforms and re-check assumptions
+* [ ] If transformation fails, refit with robust regression (Huber/M-estimator)
+
+**G. Handle Missing Data**
+
+* [ ] Review missing-value summary (4 % overall) and decide on imputation route
+* [ ] Run mean/median and multiple-imputation sensitivity analyses; document impact
+
+**H. Automate Assumption Flags**
+
+* [ ] Code an automatic flag for borderline normality (e.g., MON Shapiro p = 0.0435) that feeds directly into test-selection rules&#x20;
+
+**I. Visual & UX Enhancements**
+
+* [ ] Replace static correlation table with an interactive heat-map (hover shows *r*, CI, FDR-adjusted p)
+* [ ] Swap boxplots for violin/rain-cloud plots to convey distribution shape
+* [ ] Combine the three HTML files into one dashboard with tab navigation and sticky sidebar
+
+**J. Standardize Nomenclature & Formatting**
+
+* [ ] Harmonize variable names (e.g., always “hsCRP”) across all outputs
+* [ ] Format all p-values consistently (e.g., three decimals, *p* < 0.001 in sci-notation)
+* [ ] Add a small glossary for variable abbreviations and units
+
+**K. Document Statistical Choices**
+
+* [ ] Insert footnotes explaining each test/effect-size choice (per decision matrix)&#x20;
+* [ ] Explicitly describe the chosen multiple-testing correction in the methods section
+
+**L. Summarize Key Findings Up Front**
+
+* [ ] Create a two-line “Executive summary” at the very top of the report highlighting main significant differences and effect sizes
+
+**M. Dashboard Polish**
+
+* [ ] Add quick filters (group select) and download buttons for plots/tables
+* [ ] Ensure responsive layout works on tablets and phones
+
+**N. Quality Assurance**
+
+* [ ] Unit-test every analysis step with representative data slices
+* [ ] Cross-check that table totals and *N*’s match the raw dataset counts
+
+*(Tick off each box as you implement—feel free to expand any item into subtasks as needed.)*
