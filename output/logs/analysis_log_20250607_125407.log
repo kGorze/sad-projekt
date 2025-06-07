@@ -1,0 +1,43 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG - ENHANCED DEBUGGING MODE
+Session started: 2025-06-07 12:54:07.235605
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --correlation_analysis --input dane2.csv --report --export
+Log level: INFO
+================================================================================
+
+[2025-06-07 12:54:07] [INFO] STEP: DATA LOADING - Loading data from: dane2.csv
+[2025-06-07 12:54:08] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 80 rows and 10 columns
+[2025-06-07 12:54:08] [INFO] STEP: CORRELATION ANALYSIS - Starting correlation analysis of variables
+[2025-06-07 12:54:11] [INFO] STEP: CORRELATION ANALYSIS COMPLETED - Correlation analysis successfully completed
+[2025-06-07 12:54:11] [INFO] STEP: CSV EXPORT - Starting CSV export of analysis results
+[2025-06-07 12:54:12] [INFO] STEP: CSV EXPORT COMPLETED - Exported 4 CSV files to output/tables/
+[2025-06-07 12:54:12] [INFO] STEP: HTML REPORT GENERATION - Starting HTML report generation
+[2025-06-07 12:54:12] [INFO] STEP: HTML REPORT COMPLETED - Report saved to: correlation_analysis_report_20250607_125412.html
+
+================================================================================
+ENHANCED SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.08 minutes
+Total analysis steps: 8
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 0
+Total console output entries: 0
+Session ended: 2025-06-07 12:54:12.327074
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (12:54:07)
+  2. DATA PREPARATION COMPLETED (12:54:08)
+  3. CORRELATION ANALYSIS (12:54:08)
+  4. CORRELATION ANALYSIS COMPLETED (12:54:11)
+  5. CSV EXPORT (12:54:11)
+  6. CSV EXPORT COMPLETED (12:54:12)
+  7. HTML REPORT GENERATION (12:54:12)
+  8. HTML REPORT COMPLETED (12:54:12)
+
+DEBUGGING RECOMMENDATIONS:
+  ✅ No R warnings - clean execution
+
+================================================================================

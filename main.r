@@ -1,12 +1,13 @@
 # Medical Data Statistical Analysis Tool
 # Main entry point for command-line execution
 # Author: SAD Project Team
-# Usage: Rscript main.R --input data.csv --output results/ --groups group_column
 # Usage: Rscript main.R --comparative_analysis --report
 # Usage: Rscript main.R --correlation_analysis --report
 # Usage: Rscript main.R --descriptive_stats --report
 # Usage: Rscript main.R --comparative_analysis --export
 # Usage: Rscript main.R --correlation_analysis --report --export
+# Usage: Rscript main.R --input dane2.csv --descriptive_stats --export
+# Usage: Rscript main.R --correlation_analysis --input mydata.csv --report --export
 
 # Load required libraries for command line parsing with error handling
 if (!require(optparse, quietly = TRUE)) {
@@ -81,62 +82,103 @@ parse_arguments <- function() {
 # Run analysis based on command line arguments
 run_analysis_with_args <- function(args) {
   
+  # Initialize enhanced logging system to capture all console output and warnings
+  log_file <- init_logging()
+  
+  # Set up error handling to ensure logging is closed
+  on.exit({
+    # Restore warning option
+    options(warn = old_warn)
+    close_logging()
+  })
+  
+  # Set warning options to capture all warnings
+  old_warn <- getOption("warn")
+  options(warn = 1)  # Print warnings immediately
+  
   # Load and prepare data first
-  cat("Loading and preparing data...\n")
+  log_analysis_step("DATA LOADING", paste("Loading data from:", args$input))
+  cat("Loading and preparing data from:", args$input, "\n")
   data_prep_result <- main(
+    data_file = args$input,
     repair_data = args$repair_data, 
     validate_data = args$validate_data
   )
   
   if (is.null(data_prep_result)) {
+    log_error("Failed to load or prepare data")
     cat("Error: Failed to load or prepare data\n")
     return(NULL)
   }
   
   medical_data <- data_prep_result$data
+  log_analysis_step("DATA PREPARATION COMPLETED", 
+                   paste("Dataset loaded with", nrow(medical_data), "rows and", ncol(medical_data), "columns"))
   
   # Determine which analysis to run
   analysis_results <- NULL
   analysis_type <- NULL
   
   if (args$comparative_analysis) {
+    log_analysis_step("COMPARATIVE ANALYSIS", "Starting comparative analysis between groups")
     cat("Running comparative analysis...\n")
     analysis_type <- "comparative_analysis"
     
-    # Use the implemented comparative analysis function
-    analysis_results <- perform_group_comparisons(
-      data = medical_data, 
-      group_column = "grupa", 
-      include_plots = TRUE
-    )
+    # Use the implemented comparative analysis function with warning capture
+    analysis_results <- execute_with_warning_capture({
+      perform_group_comparisons(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    if (!is.null(analysis_results)) {
+      log_analysis_step("COMPARATIVE ANALYSIS COMPLETED", "Group comparisons successfully completed")
+    }
   }
   
   if (args$correlation_analysis) {
+    log_analysis_step("CORRELATION ANALYSIS", "Starting correlation analysis of variables")
     cat("Running correlation analysis...\n")
     analysis_type <- "correlation_analysis"
     
-    # Use the implemented correlation analysis function
-    analysis_results <- perform_correlation_analysis(
-      data = medical_data, 
-      group_column = "grupa",
-      variables = NULL,  # Will auto-detect numeric variables
-      include_plots = TRUE
-    )
+    # Use the implemented correlation analysis function with warning capture
+    analysis_results <- execute_with_warning_capture({
+      perform_correlation_analysis(
+        data = medical_data, 
+        group_column = "grupa",
+        variables = NULL,  # Will auto-detect numeric variables
+        include_plots = TRUE
+      )
+    })
+    
+    if (!is.null(analysis_results)) {
+      log_analysis_step("CORRELATION ANALYSIS COMPLETED", "Correlation analysis successfully completed")
+    }
   }
   
   if (args$descriptive_stats) {
+    log_analysis_step("DESCRIPTIVE STATISTICS", "Starting descriptive statistics generation")
     cat("Running descriptive statistics...\n")
     analysis_type <- "descriptive_stats"
     
-    # Use the implemented descriptive statistics function
-    analysis_results <- generate_descriptive_stats(
-      data = medical_data, 
-      group_column = "grupa", 
-      include_plots = TRUE
-    )
+    # Use the implemented descriptive statistics function with warning capture
+    analysis_results <- execute_with_warning_capture({
+      generate_descriptive_stats(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    if (!is.null(analysis_results)) {
+      log_analysis_step("DESCRIPTIVE STATISTICS COMPLETED", "Descriptive statistics successfully generated")
+    }
   }
   
   if (args$statistical_tests) {
+    log_analysis_step("STATISTICAL TESTS", "Starting statistical tests (placeholder)")
     cat("Running statistical tests...\n")
     analysis_type <- "statistical_tests"
     # Placeholder for future statistical tests implementation
@@ -148,11 +190,16 @@ run_analysis_with_args <- function(args) {
         n_variables = ncol(medical_data)
       )
     )
+    
+    if (!is.null(analysis_results)) {
+      log_analysis_step("STATISTICAL TESTS COMPLETED", "Statistical tests placeholder completed")
+    }
   }
   
   # Export CSV files if requested
   exported_files <- NULL
   if (args$export && !is.null(analysis_results) && !is.null(analysis_type)) {
+    log_analysis_step("CSV EXPORT", "Starting CSV export of analysis results")
     cat("Exporting analysis results to CSV files...\n")
     
     # Create output directory if it doesn't exist
@@ -172,10 +219,14 @@ run_analysis_with_args <- function(args) {
     for (file_type in names(exported_files)) {
       cat("-", basename(exported_files[[file_type]]), "\n")
     }
+    
+    log_analysis_step("CSV EXPORT COMPLETED", 
+                     paste("Exported", length(exported_files), "CSV files to output/tables/"))
   }
   
   # Generate report if requested
   if (args$report && !is.null(analysis_results) && !is.null(analysis_type)) {
+    log_analysis_step("HTML REPORT GENERATION", "Starting HTML report generation")
     cat("Generating HTML report...\n")
     
     # Create output directory if it doesn't exist
@@ -193,6 +244,7 @@ run_analysis_with_args <- function(args) {
     )
     
     cat("Report generated successfully:", report_file, "\n")
+    log_analysis_step("HTML REPORT COMPLETED", paste("Report saved to:", basename(report_file)))
     
     # Return analysis results, report information, and exported files
     return(list(
@@ -229,16 +281,15 @@ run_analysis_with_args <- function(args) {
   cat("  Rscript main.R --comparative_analysis --report\n")
   cat("  Rscript main.R --comparative_analysis --export\n")
   cat("  Rscript main.R --correlation_analysis --report --export\n")
+  cat("  Rscript main.R --input dane2.csv --descriptive_stats --export\n")
+  cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
   
   return(NULL)
 }
 
 # Original main function for backward compatibility
-main <- function(repair_data = TRUE, validate_data = TRUE, missing_method = "regression",
+main <- function(data_file = "dane.csv", repair_data = TRUE, validate_data = TRUE, missing_method = "regression",
                 outlier_method = "iqr", missing_threshold = 0.05, zero_missing = FALSE) {
-  
-  # Use the default data file
-  data_file <- "dane.csv"
 
   tryCatch({
     medical_data <- quiet(fetch_dataset(data_file))
@@ -335,8 +386,47 @@ main <- function(repair_data = TRUE, validate_data = TRUE, missing_method = "reg
 
 # Main execution logic
 if (!interactive()) {
-  # Parse command line arguments and run analysis
-  args <- parse_arguments()
-  result <- run_analysis_with_args(args)
+  # Capture any warnings that occur during execution
+  old_warn_option <- getOption("warn")
+  options(warn = 1)  # Print warnings as they occur
+  
+  tryCatch({
+    # Parse command line arguments and run analysis
+    args <- parse_arguments()
+    result <- run_analysis_with_args(args)
+    
+    # Check for any accumulated warnings and capture them to the log
+    accumulated_warnings <- warnings()
+    if (length(accumulated_warnings) > 0) {
+      cat("\n=== R WARNINGS SUMMARY ===\n")
+      print(accumulated_warnings)
+      cat("===========================\n")
+      
+      # Log warning count and sample warnings to the log system if available
+      if (exists("log_data_quality")) {
+        log_data_quality("R_WARNINGS", 
+                         paste("Total R warnings encountered:", length(accumulated_warnings)), 
+                         "INFO")
+        
+        # Log first few unique warnings as examples
+        unique_warnings <- unique(names(accumulated_warnings))
+        if (length(unique_warnings) > 0) {
+          sample_warnings <- head(unique_warnings, 5)
+          for (warning_msg in sample_warnings) {
+            log_data_quality("R_WARNING_SAMPLE", warning_msg, "WARNING")
+          }
+        }
+      }
+    }
+    
+  }, error = function(e) {
+    cat("Critical error occurred:", e$message, "\n")
+    if (exists("log_error")) {
+      log_error("Critical execution error", e$message)
+    }
+  }, finally = {
+    # Restore original warning option
+    options(warn = old_warn_option)
+  })
 }
 

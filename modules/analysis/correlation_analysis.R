@@ -469,30 +469,35 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
   cor_data <- data[, variables, drop = FALSE]
   cor_data <- cor_data[complete.cases(cor_data), ]
   
-  # 1. Overall correlation matrix heatmap
+  # 1. Enhanced overall correlation matrix heatmap
   if (nrow(cor_data) >= 3 && ncol(cor_data) >= 2) {
     tryCatch({
       # Calculate correlation matrix
       cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
       
-      # Create correlation heatmap using ggcorrplot
+      # Create enhanced correlation heatmap with sample size info
       p <- ggcorrplot(cor_matrix, 
                       hc.order = TRUE,
                       type = "lower",
                       lab = TRUE,
-                      lab_size = 3,
+                      lab_size = 3.5,
                       method = "circle",
-                      colors = c("blue", "white", "red"),
-                      title = "Overall Correlation Matrix (Pearson)",
+                      colors = c("#6D9EC1", "white", "#E46726"),
+                      title = paste("Overall Correlation Matrix (Pearson)"),
+                      subtitle = paste("Based on", nrow(cor_data), "complete observations across all groups"),
                       ggtheme = theme_minimal()) +
-        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+              plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
+              axis.text.x = element_text(angle = 45, hjust = 1),
+              axis.text.y = element_text(angle = 0)) +
+        labs(caption = paste("Variables:", paste(colnames(cor_matrix), collapse = ", ")))
       
       plot_filename <- file.path(output_path, paste0("correlation_matrix_overall_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
+      ggsave(plot_filename, plot = p, width = 12, height = 10, dpi = 300)
       
       plots[["correlation_matrix_overall"]] <- p
       plot_files[["correlation_matrix_overall"]] <- plot_filename
-      cat("Created overall correlation matrix heatmap\n")
+      cat("Created enhanced overall correlation matrix heatmap\n")
       
     }, error = function(e) {
       cat("Error creating overall correlation matrix:", e$message, "\n")
@@ -545,7 +550,7 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
     })
   }
   
-  # 3. Group-wise correlation matrices
+  # 3. Group-wise correlation matrices (individual plots)
   if (!is.null(group_column)) {
     groups <- unique(data[[group_column]])
     groups <- groups[!is.na(groups)]
@@ -562,11 +567,14 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                           hc.order = TRUE,
                           type = "lower",
                           lab = TRUE,
-                          lab_size = 3,
-                          colors = c("blue", "white", "red"),
+                          lab_size = 3.5,
+                          colors = c("#6D9EC1", "white", "#E46726"),
                           title = paste("Correlation Matrix -", group, "Group"),
+                          subtitle = paste("Based on", nrow(group_data), "observations in this group"),
                           ggtheme = theme_minimal()) +
-            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
+            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+                  plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
+                  axis.text.x = element_text(angle = 45, hjust = 1))
           
           plot_filename <- file.path(output_path, paste0("correlation_matrix_", group, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
           ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
@@ -580,6 +588,63 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
         cat("Error creating correlation matrix for group", group, ":", e$message, "\n")
       })
     }
+    
+    # 3b. Combined group comparison matrix
+    tryCatch({
+      if (length(groups) >= 2) {
+        # Create side-by-side comparison plot
+        group_plots <- list()
+        
+        for (group in groups) {
+          group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables, drop = FALSE]
+          group_data <- group_data[complete.cases(group_data), ]
+          
+          if (nrow(group_data) >= 3 && ncol(group_data) >= 2) {
+            cor_matrix_group <- cor(group_data, method = "pearson", use = "complete.obs")
+            
+            # Convert matrix to long format for ggplot
+            cor_long <- reshape2::melt(cor_matrix_group, na.rm = TRUE)
+            cor_long$Group <- group
+            cor_long$n_obs <- nrow(group_data)
+            
+            group_plots[[group]] <- cor_long
+          }
+        }
+        
+        if (length(group_plots) >= 2) {
+          # Combine all group data
+          combined_data <- do.call(rbind, group_plots)
+          combined_data$Group <- factor(combined_data$Group)
+          
+          # Create comparison plot
+          p_compare <- ggplot(combined_data, aes(x = Var1, y = Var2, fill = value)) +
+            geom_tile(color = "white") +
+            geom_text(aes(label = round(value, 2)), size = 2.5) +
+            scale_fill_gradient2(low = "#6D9EC1", high = "#E46726", mid = "white", 
+                               midpoint = 0, limit = c(-1,1), space = "Lab", 
+                               name = "Correlation") +
+            facet_wrap(~ paste(Group, "\n(n =", n_obs, ")"), ncol = length(groups)) +
+            theme_minimal() +
+            theme(axis.text.x = element_text(angle = 45, hjust = 1),
+                  axis.text.y = element_text(angle = 0),
+                  panel.grid = element_blank(),
+                  strip.text = element_text(face = "bold")) +
+            labs(title = "Correlation Matrix Comparison Across Groups",
+                 subtitle = "Pearson correlations for each group separately",
+                 x = "", y = "") +
+            coord_fixed()
+          
+          plot_filename <- file.path(output_path, paste0("correlation_comparison_groups_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+          ggsave(plot_filename, plot = p_compare, width = 4 * length(groups), height = 6, dpi = 300)
+          
+          plots[["correlation_comparison_groups"]] <- p_compare
+          plot_files[["correlation_comparison_groups"]] <- plot_filename
+          cat("Created group comparison correlation matrix\n")
+        }
+      }
+    }, error = function(e) {
+      cat("Error creating group comparison matrix:", e$message, "\n")
+    })
   }
   
   # 4. Pairs plot with correlations
@@ -634,12 +699,28 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
       p <- ggplot(cors_df, aes(x = correlation)) +
         geom_histogram(bins = 20, fill = "steelblue", alpha = 0.7, color = "white") +
         geom_vline(xintercept = 0, linetype = "dashed", color = "red", size = 1) +
+        geom_vline(xintercept = c(-0.3, 0.3), linetype = "dotted", color = "orange", alpha = 0.7) +
+        geom_vline(xintercept = c(-0.7, 0.7), linetype = "dotted", color = "darkgreen", alpha = 0.7) +
+        annotate("text", x = 0, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.9, 
+                 label = "No Correlation", color = "red", size = 3, hjust = 0.5) +
+        annotate("text", x = -0.5, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.3, 
+                 label = "Weak", color = "orange", size = 3, angle = 90) +
+        annotate("text", x = 0.5, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.3, 
+                 label = "Weak", color = "orange", size = 3, angle = 90) +
+        annotate("text", x = -0.85, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.2, 
+                 label = "Strong", color = "darkgreen", size = 3, angle = 90) +
+        annotate("text", x = 0.85, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.2, 
+                 label = "Strong", color = "darkgreen", size = 3, angle = 90) +
         labs(title = "Distribution of Correlation Strengths",
-             subtitle = "Histogram of all pairwise correlations",
-             x = "Correlation Coefficient", y = "Frequency") +
+             subtitle = paste("Histogram of all pairwise correlations (n =", length(all_correlations), "pairs)"),
+             x = "Correlation Coefficient\n(-1 = Perfect Negative, 0 = No Correlation, +1 = Perfect Positive)", 
+             y = "Frequency (Number of Variable Pairs)") +
+        scale_x_continuous(breaks = seq(-1, 1, 0.2), limits = c(-1, 1)) +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5, size = 10))
+              plot.subtitle = element_text(hjust = 0.5, size = 10),
+              axis.title.x = element_text(size = 10),
+              axis.title.y = element_text(size = 10))
       
       plot_filename <- file.path(output_path, paste0("correlation_distribution_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
       ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
@@ -651,6 +732,126 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
     
   }, error = function(e) {
     cat("Error creating correlation distribution plot:", e$message, "\n")
+  })
+  
+  # 6. Create correlation explanation plot
+  tryCatch({
+    # Create an educational plot explaining correlation
+    explanation_data <- data.frame(
+      Correlation = seq(-1, 1, by = 0.1),
+      Color_Demo = seq(-1, 1, by = 0.1),
+      Y_Position = 1
+    )
+    
+    # Add interpretation categories
+    explanation_data$Strength <- cut(abs(explanation_data$Correlation),
+                                   breaks = c(0, 0.1, 0.3, 0.5, 0.7, 1),
+                                   labels = c("Negligible", "Weak", "Moderate", "Strong", "Very Strong"),
+                                   include.lowest = TRUE)
+    
+    explanation_data$Direction <- ifelse(explanation_data$Correlation >= 0, "Positive", "Negative")
+    explanation_data$Direction[explanation_data$Correlation == 0] <- "None"
+    
+    p_explanation <- ggplot(explanation_data, aes(x = Correlation, y = Y_Position, fill = Color_Demo)) +
+      geom_tile(height = 0.8, color = "white", size = 0.5) +
+      geom_text(aes(label = round(Correlation, 1)), color = "black", size = 3, fontface = "bold") +
+      scale_fill_gradient2(low = "#6D9EC1", high = "#E46726", mid = "white", 
+                          midpoint = 0, limit = c(-1,1), space = "Lab", 
+                          name = "Correlation\nValue") +
+      scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
+      scale_y_continuous(limits = c(0.5, 1.5)) +
+      labs(title = "Understanding Correlation Colors and Values",
+           subtitle = paste("Blue = Negative Correlation | White = No Correlation | Red = Positive Correlation"),
+           x = "Correlation Coefficient",
+           y = "") +
+      theme_minimal() +
+      theme(axis.text.y = element_blank(),
+            axis.ticks.y = element_blank(),
+            panel.grid.y = element_blank(),
+            plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+            plot.subtitle = element_text(hjust = 0.5, size = 12, color = "gray50")) +
+      
+      # Add strength labels
+      annotate("text", x = -0.8, y = 1.4, label = "Very Strong\nNegative", size = 3, color = "darkblue", fontface = "bold") +
+      annotate("text", x = -0.4, y = 1.4, label = "Moderate\nNegative", size = 3, color = "blue", fontface = "bold") +
+      annotate("text", x = 0, y = 1.4, label = "No\nCorrelation", size = 3, color = "black", fontface = "bold") +
+      annotate("text", x = 0.4, y = 1.4, label = "Moderate\nPositive", size = 3, color = "red", fontface = "bold") +
+      annotate("text", x = 0.8, y = 1.4, label = "Very Strong\nPositive", size = 3, color = "darkred", fontface = "bold")
+    
+    plot_filename <- file.path(output_path, paste0("correlation_explanation_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+    ggsave(plot_filename, plot = p_explanation, width = 14, height = 6, dpi = 300)
+    
+    plots[["correlation_explanation"]] <- p_explanation
+    plot_files[["correlation_explanation"]] <- plot_filename
+    cat("Created correlation explanation plot\n")
+    
+  }, error = function(e) {
+    cat("Error creating correlation explanation plot:", e$message, "\n")
+  })
+
+  # 7. Create correlation summary table plot
+  tryCatch({
+    # Calculate all pairwise correlations with details
+    cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
+    upper_tri <- upper.tri(cor_matrix)
+    
+    # Create summary data frame
+    cor_summary <- data.frame(
+      Variable_1 = rep(rownames(cor_matrix), ncol(cor_matrix))[upper_tri],
+      Variable_2 = rep(colnames(cor_matrix), each = nrow(cor_matrix))[upper_tri],
+      Correlation = cor_matrix[upper_tri],
+      stringsAsFactors = FALSE
+    )
+    
+    # Add interpretation
+    cor_summary$Abs_Correlation <- abs(cor_summary$Correlation)
+    cor_summary$Strength <- sapply(cor_summary$Correlation, function(r) {
+      interpret_correlation_strength(r)$strength
+    })
+    cor_summary$Direction <- sapply(cor_summary$Correlation, function(r) {
+      interpret_correlation_strength(r)$direction
+    })
+    
+    # Sort by absolute correlation strength
+    cor_summary <- cor_summary[order(cor_summary$Abs_Correlation, decreasing = TRUE), ]
+    cor_summary$Rank <- 1:nrow(cor_summary)
+    
+    # Create top correlations table plot
+    top_cors <- head(cor_summary, 10)  # Top 10 correlations
+    
+    # Prepare table data for plotting
+    table_data <- data.frame(
+      Rank = top_cors$Rank,
+      `Variable Pair` = paste(top_cors$Variable_1, "↔", top_cors$Variable_2),
+      `Correlation` = sprintf("%.3f", top_cors$Correlation),
+      `Strength` = stringr::str_to_title(top_cors$Strength),
+      `Direction` = stringr::str_to_title(top_cors$Direction),
+      check.names = FALSE
+    )
+    
+    # Create table plot
+    p_table <- gridExtra::tableGrob(table_data, rows = NULL, 
+                                   theme = gridExtra::ttheme_default(
+                                     core = list(fg_params = list(cex = 0.8)),
+                                     colhead = list(fg_params = list(cex = 0.9, fontface = "bold"))
+                                   ))
+    
+    # Create the plot with title
+    p_table_plot <- grid::grid.arrange(
+      p_table,
+      top = grid::textGrob(paste("Top 10 Strongest Correlations\n(Based on", nrow(cor_data), "complete observations)"), 
+                          gp = grid::gpar(fontsize = 14, fontface = "bold"))
+    )
+    
+    plot_filename <- file.path(output_path, paste0("correlation_summary_table_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+    ggsave(plot_filename, plot = p_table_plot, width = 12, height = 8, dpi = 300)
+    
+    plots[["correlation_summary_table"]] <- p_table_plot
+    plot_files[["correlation_summary_table"]] <- plot_filename
+    cat("Created correlation summary table\n")
+    
+  }, error = function(e) {
+    cat("Error creating correlation summary table:", e$message, "\n")
   })
   
   cat("Correlation visualization creation completed!\n")
@@ -677,4 +878,67 @@ quick_correlation_analysis <- function(data, group_column = NULL, variables = NU
   }
   
   return(result)
+}
+
+# Helper function to demonstrate correlation calculation step by step
+demonstrate_correlation_calculation <- function(x, y, var1_name, var2_name) {
+  
+  # Remove missing values
+  complete_cases <- complete.cases(x, y)
+  x_clean <- x[complete_cases]
+  y_clean <- y[complete_cases]
+  
+  n <- length(x_clean)
+  
+  if (n < 3) {
+    return(list(error = "Insufficient data"))
+  }
+  
+  # Step 1: Calculate means
+  mean_x <- mean(x_clean)
+  mean_y <- mean(y_clean)
+  
+  # Step 2: Calculate deviations from mean
+  dev_x <- x_clean - mean_x
+  dev_y <- y_clean - mean_y
+  
+  # Step 3: Calculate sum of products of deviations
+  sum_product_deviations <- sum(dev_x * dev_y)
+  
+  # Step 4: Calculate sum of squared deviations
+  sum_sq_dev_x <- sum(dev_x^2)
+  sum_sq_dev_y <- sum(dev_y^2)
+  
+  # Step 5: Calculate correlation coefficient
+  correlation <- sum_product_deviations / sqrt(sum_sq_dev_x * sum_sq_dev_y)
+  
+  # Verify with R's built-in function
+  r_correlation <- cor(x_clean, y_clean, method = "pearson")
+  
+  return(list(
+    variables = paste(var1_name, "vs", var2_name),
+    n_observations = n,
+    mean_x = mean_x,
+    mean_y = mean_y,
+    arithmetic_mean_of_x = mean_x,
+    arithmetic_mean_of_y = mean_y,
+    sum_product_deviations = sum_product_deviations,
+    sum_sq_dev_x = sum_sq_dev_x,
+    sum_sq_dev_y = sum_sq_dev_y,
+    calculated_correlation = correlation,
+    r_built_in_correlation = r_correlation,
+    difference = abs(correlation - r_correlation),
+    interpretation = paste0(
+      "The correlation of ", round(correlation, 3), 
+      " means the variables have a ", 
+      ifelse(abs(correlation) < 0.3, "weak", 
+             ifelse(abs(correlation) < 0.7, "moderate", "strong")),
+      " ", ifelse(correlation > 0, "positive", "negative"), " linear relationship."
+    ),
+    formula_explanation = paste0(
+      "Correlation = Σ[(x - mean_x)(y - mean_y)] / √[Σ(x - mean_x)² × Σ(y - mean_y)²]\n",
+      "This is NOT the arithmetic average of the values!\n",
+      "It measures how much the variables vary together relative to their individual variations."
+    )
+  ))
 } 
