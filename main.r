@@ -105,7 +105,8 @@ run_analysis_with_args <- function(args) {
   data_prep_result <- main(
     data_file = args$input,
     repair_data = args$repair_data, 
-    validate_data = args$validate_data
+    validate_data = args$validate_data,
+    zero_missing = TRUE  # Task G: Always perform missing data sensitivity analysis
   )
   
   if (is.null(data_prep_result)) {
@@ -347,7 +348,7 @@ cleanup_unwanted_graphics_files <- function() {
 
 # Original main function for backward compatibility
 main <- function(data_file = "dane.csv", repair_data = TRUE, validate_data = TRUE, missing_method = "regression",
-                outlier_method = "iqr", missing_threshold = 0.05, zero_missing = FALSE) {
+                outlier_method = "iqr", missing_threshold = 0.05, zero_missing = TRUE) {
 
   tryCatch({
     cat("Attempting to fetch dataset from:", data_file, "\n")
@@ -378,9 +379,11 @@ main <- function(data_file = "dane.csv", repair_data = TRUE, validate_data = TRU
       # Adjust threshold for zero missing tolerance
       effective_threshold <- if (zero_missing) 0.0 else missing_threshold
       
-        if (zero_missing) {
-          # zero missing mode active
-        }
+      # Task G: Always perform missing data imputation sensitivity analysis
+      if (zero_missing) {
+        cat("=== TASK G: MISSING DATA SENSITIVITY ANALYSIS ===\n")
+        cat("Forcing imputation for all missing values to perform sensitivity analysis\n")
+      }
       
       repair_result <- repair_dataset(
         data = medical_data,

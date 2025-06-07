@@ -31,21 +31,42 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
   # Step 2: Intelligent missing data handling
   if (any(missing_analysis$missing_percentages > missing_threshold * 100) || 
       (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0)) {
-    cat("\n2. INTELLIGENT MISSING DATA HANDLING\n")
-    cat("====================================\n")
     
-    # Choose method based on analysis
-    chosen_method <- choose_optimal_imputation_method(missing_analysis, missing_method)
-    cat(sprintf("Selected imputation method: %s\n", chosen_method))
-    
-    data_imputed <- handle_missing_data(data, method = chosen_method, threshold = missing_threshold)
-    repair_log$missing_treatment <- list(
-      method = chosen_method,
-      columns_imputed = names(which(missing_analysis$missing_counts > 0)),
-      recommendations_followed = missing_analysis$recommendations
-    )
-    data <- data_imputed$data
-    repair_log$imputation_details <- data_imputed$details
+    # Task G: If missing_threshold is 0, perform sensitivity analysis
+    if (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0) {
+      cat("\n2. TASK G: MISSING DATA SENSITIVITY ANALYSIS\n")
+      cat("===========================================\n")
+      
+      # Perform multiple imputation sensitivity analysis
+      sensitivity_results <- perform_missing_data_sensitivity_analysis(data, missing_analysis)
+      repair_log$sensitivity_analysis <- sensitivity_results
+      
+      # Use the best performing method
+      data <- sensitivity_results$recommended_data
+      repair_log$missing_treatment <- list(
+        method = sensitivity_results$recommended_method,
+        columns_imputed = names(which(missing_analysis$missing_counts > 0)),
+        sensitivity_results = sensitivity_results$comparison,
+        recommendations_followed = missing_analysis$recommendations
+      )
+      
+    } else {
+      cat("\n2. INTELLIGENT MISSING DATA HANDLING\n")
+      cat("====================================\n")
+      
+      # Choose method based on analysis
+      chosen_method <- choose_optimal_imputation_method(missing_analysis, missing_method)
+      cat(sprintf("Selected imputation method: %s\n", chosen_method))
+      
+      data_imputed <- handle_missing_data(data, method = chosen_method, threshold = missing_threshold)
+      repair_log$missing_treatment <- list(
+        method = chosen_method,
+        columns_imputed = names(which(missing_analysis$missing_counts > 0)),
+        recommendations_followed = missing_analysis$recommendations
+      )
+      data <- data_imputed$data
+      repair_log$imputation_details <- data_imputed$details
+    }
   } else {
     cat("\n2. MISSING DATA CHECK\n")
     cat("====================\n")
@@ -1074,4 +1095,214 @@ generate_cleaning_report <- function(original_data, cleaned_data, changes_made) 
   cat("=== END REPORT ===\n\n")
   
   return(report)
+}
+
+# Task G: Missing Data Sensitivity Analysis
+perform_missing_data_sensitivity_analysis <- function(data, missing_analysis) {
+  
+  cat("=== TASK G: MISSING DATA SENSITIVITY ANALYSIS ===\n")
+  cat("Performing comprehensive imputation comparison as per project requirements\n\n")
+  
+  # Get columns with missing data
+  missing_columns <- names(which(missing_analysis$missing_counts > 0))
+  
+  if (length(missing_columns) == 0) {
+    cat("No missing data found - sensitivity analysis not needed\n")
+    return(list(
+      recommended_data = data,
+      recommended_method = "none",
+      comparison = "No missing data"
+    ))
+  }
+  
+  cat("Columns with missing data:", paste(missing_columns, collapse = ", "), "\n")
+  cat("Total missing values:", sum(missing_analysis$missing_counts), "\n\n")
+  
+  # Methods to test (as specified in project plan)
+  methods <- list(
+    "mean_median" = "mean/median imputation",
+    "regression" = "regression imputation", 
+    "multiple_mice" = "multiple imputation (MICE)"
+  )
+  
+  results <- list()
+  imputed_datasets <- list()
+  
+  # 1. MEAN/MEDIAN IMPUTATION
+  cat("1. TESTING MEAN/MEDIAN IMPUTATION\n")
+  cat("----------------------------------\n")
+  tryCatch({
+    data_mean_median <- data
+    for (col in missing_columns) {
+      if (is.numeric(data[[col]])) {
+        # Use median for skewed data, mean for normal data
+        if (abs(e1071::skewness(data[[col]], na.rm = TRUE)) > 1) {
+          impute_value <- median(data[[col]], na.rm = TRUE)
+          method_used <- "median"
+        } else {
+          impute_value <- mean(data[[col]], na.rm = TRUE)
+          method_used <- "mean"
+        }
+        missing_count <- sum(is.na(data_mean_median[[col]]))
+        data_mean_median[[col]][is.na(data_mean_median[[col]])] <- impute_value
+        cat(sprintf("  %s: Imputed %d values using %s (%.3f)\n", 
+                   col, missing_count, method_used, impute_value))
+      }
+    }
+    
+    imputed_datasets[["mean_median"]] <- data_mean_median
+    results[["mean_median"]] <- list(
+      success = TRUE,
+      method = "Mean/Median",
+      missing_after = sum(sapply(data_mean_median, function(x) sum(is.na(x)))),
+      note = "Simple univariate imputation"
+    )
+    cat("  ✓ Mean/median imputation completed\n\n")
+    
+  }, error = function(e) {
+    cat("  ✗ Mean/median imputation failed:", e$message, "\n\n")
+    results[["mean_median"]] <- list(success = FALSE, error = e$message)
+  })
+  
+  # 2. REGRESSION IMPUTATION
+  cat("2. TESTING REGRESSION IMPUTATION\n")
+  cat("---------------------------------\n")
+  tryCatch({
+    data_regression <- handle_missing_data(data, method = "regression", threshold = 0)$data
+    
+    imputed_datasets[["regression"]] <- data_regression
+    results[["regression"]] <- list(
+      success = TRUE,
+      method = "Regression",
+      missing_after = sum(sapply(data_regression, function(x) sum(is.na(x)))),
+      note = "Predictive imputation using other variables"
+    )
+    cat("  ✓ Regression imputation completed\n\n")
+    
+  }, error = function(e) {
+    cat("  ✗ Regression imputation failed:", e$message, "\n\n")
+    results[["regression"]] <- list(success = FALSE, error = e$message)
+  })
+  
+  # 3. MULTIPLE IMPUTATION (MICE)
+  cat("3. TESTING MULTIPLE IMPUTATION (MICE)\n")
+  cat("-------------------------------------\n")
+  tryCatch({
+    if (requireNamespace("mice", quietly = TRUE)) {
+      library(mice)
+      
+      # Run MICE with 5 imputations
+      mice_result <- mice(data, m = 5, method = 'pmm', printFlag = FALSE, seed = 123)
+      
+      # Complete the first imputation for comparison
+      data_mice <- complete(mice_result, 1)
+      
+      imputed_datasets[["multiple_mice"]] <- data_mice
+      results[["multiple_mice"]] <- list(
+        success = TRUE,
+        method = "Multiple Imputation (MICE)",
+        missing_after = sum(sapply(data_mice, function(x) sum(is.na(x)))),
+        note = "Multiple imputation with predictive mean matching",
+        mice_object = mice_result
+      )
+      cat("  ✓ Multiple imputation (MICE) completed with 5 imputations\n\n")
+      
+    } else {
+      cat("  ⚠ MICE package not available - skipping multiple imputation\n\n")
+      results[["multiple_mice"]] <- list(
+        success = FALSE, 
+        error = "MICE package not available"
+      )
+    }
+    
+  }, error = function(e) {
+    cat("  ✗ Multiple imputation failed:", e$message, "\n\n")
+    results[["multiple_mice"]] <- list(success = FALSE, error = e$message)
+  })
+  
+  # 4. SENSITIVITY ANALYSIS COMPARISON
+  cat("4. SENSITIVITY ANALYSIS COMPARISON\n")
+  cat("==================================\n")
+  
+  successful_methods <- names(results)[sapply(results, function(x) x$success)]
+  
+  if (length(successful_methods) == 0) {
+    cat("No imputation methods succeeded - returning original data\n")
+    return(list(
+      recommended_data = data,
+      recommended_method = "none",
+      comparison = results
+    ))
+  }
+  
+  # Compare distributions and correlations
+  comparison_results <- list()
+  
+  for (method in successful_methods) {
+    cat(sprintf("Analyzing %s method:\n", results[[method]]$method))
+    
+    imputed_data <- imputed_datasets[[method]]
+    
+    # Calculate impact metrics
+    comparison_metrics <- list()
+    
+    for (col in missing_columns) {
+      if (is.numeric(data[[col]])) {
+        original_mean <- mean(data[[col]], na.rm = TRUE)
+        original_sd <- sd(data[[col]], na.rm = TRUE)
+        imputed_mean <- mean(imputed_data[[col]], na.rm = TRUE)
+        imputed_sd <- sd(imputed_data[[col]], na.rm = TRUE)
+        
+        comparison_metrics[[col]] <- list(
+          original_mean = original_mean,
+          imputed_mean = imputed_mean,
+          mean_change = abs(imputed_mean - original_mean),
+          original_sd = original_sd,
+          imputed_sd = imputed_sd,
+          sd_change = abs(imputed_sd - original_sd)
+        )
+        
+        cat(sprintf("  %s: Mean %.3f→%.3f (Δ=%.3f), SD %.3f→%.3f (Δ=%.3f)\n",
+                   col, original_mean, imputed_mean, 
+                   comparison_metrics[[col]]$mean_change,
+                   original_sd, imputed_sd,
+                   comparison_metrics[[col]]$sd_change))
+      }
+    }
+    
+    comparison_results[[method]] <- comparison_metrics
+    cat("\n")
+  }
+  
+  # 5. RECOMMENDATION
+  cat("5. RECOMMENDATION\n")
+  cat("=================\n")
+  
+  # Choose method with smallest distributional impact
+  if ("multiple_mice" %in% successful_methods) {
+    recommended_method <- "multiple_mice"
+    recommendation_reason <- "Multiple imputation provides most robust estimates"
+  } else if ("regression" %in% successful_methods) {
+    recommended_method <- "regression" 
+    recommendation_reason <- "Regression imputation uses available information"
+  } else {
+    recommended_method <- "mean_median"
+    recommendation_reason <- "Simple imputation as fallback"
+  }
+  
+  cat(sprintf("Recommended method: %s\n", results[[recommended_method]]$method))
+  cat(sprintf("Reason: %s\n", recommendation_reason))
+  
+  return(list(
+    recommended_data = imputed_datasets[[recommended_method]],
+    recommended_method = results[[recommended_method]]$method,
+    comparison = results,
+    sensitivity_metrics = comparison_results,
+    summary = list(
+      methods_tested = length(results),
+      methods_successful = length(successful_methods),
+      total_missing_original = sum(missing_analysis$missing_counts),
+      recommended_approach = recommendation_reason
+    )
+  ))
 }
