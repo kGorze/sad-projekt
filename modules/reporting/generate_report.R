@@ -21,8 +21,18 @@ generate_html_report <- function(analysis_results, analysis_type, output_path = 
     dir.create(output_path, recursive = TRUE)
   }
   
-  # Generate HTML content
-  html_content <- create_html_report_content(analysis_results, analysis_type, title, include_plots)
+  # Calculate relative path depth based on output path structure
+  # Simple approach: check if we're in a subdirectory of reports
+  if (grepl("full_report_", output_path)) {
+    # Unified dashboard: need to go up two levels (../../plots)
+    plot_base_path <- file.path("..", "..")
+  } else {
+    # Individual report: need to go up one level (../plots)
+    plot_base_path <- ".."
+  }
+  
+  # Generate HTML content with correct plot paths
+  html_content <- create_html_report_content(analysis_results, analysis_type, title, include_plots, plot_base_path)
   
   # Write HTML file
   report_filename <- file.path(output_path, paste0(analysis_type, "_report_", 
@@ -35,7 +45,7 @@ generate_html_report <- function(analysis_results, analysis_type, output_path = 
 }
 
 # Create complete HTML report content
-create_html_report_content <- function(analysis_results, analysis_type, title, include_plots) {
+create_html_report_content <- function(analysis_results, analysis_type, title, include_plots, plot_base_path = "..") {
   
   # HTML header with Bootstrap CSS for styling
   html_header <- paste0('
@@ -69,7 +79,7 @@ create_html_report_content <- function(analysis_results, analysis_type, title, i
         </div>')
   
   # Generate body content based on analysis type
-  html_body <- create_analysis_specific_content(analysis_results, analysis_type, include_plots)
+  html_body <- create_analysis_specific_content(analysis_results, analysis_type, include_plots, plot_base_path)
   
   # HTML footer
   html_footer <- '
@@ -82,23 +92,23 @@ create_html_report_content <- function(analysis_results, analysis_type, title, i
 }
 
 # Create analysis-specific content
-create_analysis_specific_content <- function(analysis_results, analysis_type, include_plots) {
+create_analysis_specific_content <- function(analysis_results, analysis_type, include_plots, plot_base_path = "..") {
   
   content <- switch(analysis_type,
-    "comparative_analysis" = create_comparative_analysis_content(analysis_results, include_plots),
-    "correlation_analysis" = create_correlation_analysis_content(analysis_results, include_plots),
-    "descriptive_stats" = create_descriptive_stats_content(analysis_results, include_plots),
-    "statistical_tests" = create_statistical_tests_content(analysis_results, include_plots),
-    "enhanced_inferential" = create_enhanced_inferential_content(analysis_results, include_plots),
+    "comparative_analysis" = create_comparative_analysis_content(analysis_results, include_plots, plot_base_path),
+    "correlation_analysis" = create_correlation_analysis_content(analysis_results, include_plots, plot_base_path),
+    "descriptive_stats" = create_descriptive_stats_content(analysis_results, include_plots, plot_base_path),
+    "statistical_tests" = create_statistical_tests_content(analysis_results, include_plots, plot_base_path),
+    "enhanced_inferential" = create_enhanced_inferential_content(analysis_results, include_plots, plot_base_path),
     # Default content for any analysis
-    create_generic_analysis_content(analysis_results, include_plots)
+    create_generic_analysis_content(analysis_results, include_plots, plot_base_path)
   )
   
   return(content)
 }
 
 # Create content for comparative analysis
-create_comparative_analysis_content <- function(results, include_plots) {
+create_comparative_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   # Summary section
@@ -644,7 +654,7 @@ create_comparative_analysis_content <- function(results, include_plots) {
       # Convert absolute path to relative path for HTML
       if (file.exists(plot_file)) {
         # Get relative path from the report location
-        relative_plot_path <- file.path("..", "plots", "comparative_analysis", basename(plot_file))
+        relative_plot_path <- file.path(plot_base_path, "plots", "comparative_analysis", basename(plot_file))
         
         # Create a nice title for the plot
         plot_title <- gsub("_", " ", gsub("boxplot_|barplot_", "", plot_name))
@@ -664,7 +674,7 @@ create_comparative_analysis_content <- function(results, include_plots) {
 }
 
 # Create content for correlation analysis
-create_correlation_analysis_content <- function(results, include_plots) {
+create_correlation_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   # Summary section
@@ -795,7 +805,7 @@ create_correlation_analysis_content <- function(results, include_plots) {
     
     for (plot_name in names(results$plot_files)) {
       plot_file <- results$plot_files[[plot_name]]
-      relative_plot_path <- file.path("..", "plots", "correlation_analysis", basename(plot_file))
+      relative_plot_path <- file.path(plot_base_path, "plots", "correlation_analysis", basename(plot_file))
       
       content <- paste0(content, '
         <div class="plot-container">
@@ -831,7 +841,7 @@ create_correlation_analysis_content <- function(results, include_plots) {
 }
 
 # Create content for descriptive statistics
-create_descriptive_stats_content <- function(results, include_plots) {
+create_descriptive_stats_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   content <- paste0(content, '
@@ -1204,7 +1214,7 @@ create_descriptive_stats_content <- function(results, include_plots) {
       # Convert absolute path to relative path for HTML
       if (file.exists(plot_file)) {
         # Get relative path from the report location
-        relative_plot_path <- file.path("..", "plots", "descriptive_stats", basename(plot_file))
+        relative_plot_path <- file.path(plot_base_path, "plots", "descriptive_stats", basename(plot_file))
         
         # Create a nice title for the plot
         plot_title <- gsub("_", " ", gsub("histogram_|boxplot_|barplot_", "", plot_name))
@@ -1316,7 +1326,7 @@ create_descriptive_stats_content <- function(results, include_plots) {
 }
 
 # Create content for statistical tests
-create_statistical_tests_content <- function(results, include_plots) {
+create_statistical_tests_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   content <- paste0(content, '
@@ -1370,7 +1380,7 @@ create_statistical_tests_content <- function(results, include_plots) {
 }
 
 # Create content for enhanced inferential analysis
-create_enhanced_inferential_content <- function(results, include_plots) {
+create_enhanced_inferential_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   # Summary section
@@ -1535,7 +1545,7 @@ create_enhanced_inferential_content <- function(results, include_plots) {
 }
 
 # Create generic content for any analysis
-create_generic_analysis_content <- function(results, include_plots) {
+create_generic_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   content <- paste0(content, '
@@ -1795,7 +1805,9 @@ create_categorical_table_html <- function(cat_data) {
 
 # Helper function to create missing data table HTML
 create_missing_data_table_html <- function(missing_data) {
-  if (is.null(missing_data)) return("")
+  if (is.null(missing_data) || nrow(missing_data) == 0) {
+    return('<div class="alert alert-success"><strong>No missing data detected!</strong> All variables are complete.</div>')
+  }
   
   html <- '<table class="table table-striped stats-table">
             <thead>
@@ -1808,18 +1820,21 @@ create_missing_data_table_html <- function(missing_data) {
             <tbody>'
   
   for (i in 1:nrow(missing_data)) {
-    # Color code based on missing percentage
+    # Color code based on missing percentage - handle NA values
     row_class <- ""
-    if (missing_data$missing_percentage[i] > 20) {
-      row_class <- "table-danger"
-    } else if (missing_data$missing_percentage[i] > 10) {
-      row_class <- "table-warning"
+    missing_pct <- missing_data$missing_percentage[i]
+    if (!is.na(missing_pct)) {
+      if (missing_pct > 20) {
+        row_class <- "table-danger"
+      } else if (missing_pct > 10) {
+        row_class <- "table-warning"
+      }
     }
     
     html <- paste0(html, '<tr class="', row_class, '">
                         <td><strong>', missing_data$variable[i], '</strong></td>
-                        <td>', missing_data$missing_count[i], '</td>
-                        <td>', missing_data$missing_percentage[i], '%</td>
+                        <td>', ifelse(is.na(missing_data$missing_count[i]), "0", missing_data$missing_count[i]), '</td>
+                        <td>', ifelse(is.na(missing_pct), "0", paste0(missing_pct, "%")), '</td>
                       </tr>')
   }
   

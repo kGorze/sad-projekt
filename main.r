@@ -64,6 +64,8 @@ parse_arguments <- function() {
                 help="Run statistical tests"),
     make_option(c("--enhanced_inferential"), action="store_true", default=FALSE,
                 help="Run enhanced inferential analysis (multiple regression, ANCOVA, interactions)"),
+    make_option(c("--unified_dashboard"), action="store_true", default=FALSE,
+                help="Generate unified dashboard with all analyses"),
     make_option(c("--report"), action="store_true", default=FALSE,
                 help="Generate HTML report for the analysis"),
     make_option(c("--export"), action="store_true", default=FALSE,
@@ -222,6 +224,259 @@ run_analysis_with_args <- function(args) {
     }
   }
   
+  if (args$unified_dashboard) {
+    log_analysis_step("UNIFIED DASHBOARD", "Starting unified dashboard generation with all analyses")
+    cat("Generating unified dashboard with all analyses...\n")
+    analysis_type <- "unified_dashboard"
+    
+    # Source the enhanced inferential framework for the complete analysis
+    source("modules/analysis/enhanced_inferential_framework.R")
+    
+    # Run all four analyses
+    cat("Running comprehensive analysis suite...\n")
+    
+    # Collect all results
+    all_results <- list()
+    
+    # 1. Descriptive Statistics
+    cat("  1/4: Descriptive Statistics...\n")
+    all_results$descriptive_stats <- execute_with_warning_capture({
+      generate_descriptive_stats(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    # 2. Correlation Analysis  
+    cat("  2/4: Correlation Analysis...\n")
+    all_results$correlation_analysis <- execute_with_warning_capture({
+      perform_correlation_analysis(
+        data = medical_data, 
+        group_column = "grupa",
+        variables = NULL,  # Will auto-detect numeric variables
+        include_plots = TRUE
+      )
+    })
+    
+    # 3. Comparative Analysis
+    cat("  3/4: Comparative Analysis...\n")
+    all_results$comparative_analysis <- execute_with_warning_capture({
+      perform_group_comparisons(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    # 4. Enhanced Inferential Analysis
+    cat("  4/4: Enhanced Inferential Analysis...\n")
+    all_results$enhanced_inferential <- execute_with_warning_capture({
+      perform_enhanced_inferential_analysis(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    # Create unified dashboard directory with timestamp
+    timestamp <- format(Sys.time(), "%d%m_%H%M")
+    dashboard_dir <- paste0("output/reports/full_report_", timestamp)
+    dir.create(dashboard_dir, recursive = TRUE, showWarnings = FALSE)
+    
+    # Generate individual HTML reports for each analysis
+    cat("Generating individual HTML reports...\n")
+    
+    report_files <- list()
+    analysis_names <- c("descriptive_stats", "correlation_analysis", "comparative_analysis", "enhanced_inferential")
+    
+    for (i in seq_along(analysis_names)) {
+      analysis_name <- analysis_names[i]
+      cat(sprintf("  Generating %s report...\n", analysis_name))
+      
+      if (!is.null(all_results[[analysis_name]])) {
+        report_file <- tryCatch({
+          generate_html_report(
+            analysis_results = all_results[[analysis_name]],
+            analysis_type = analysis_name,
+            output_path = dashboard_dir,
+            title = paste("Statistical Analysis Report -", stringr::str_to_title(gsub("_", " ", analysis_name))),
+            include_plots = TRUE
+          )
+        }, error = function(e) {
+          cat(sprintf("  Warning: %s report generation failed: %s\n", analysis_name, e$message))
+          NULL
+        })
+        
+        if (!is.null(report_file)) {
+          # Create a simple filename for the navigation
+          simple_name <- paste0(analysis_name, ".html")
+          file.copy(report_file, file.path(dashboard_dir, simple_name), overwrite = TRUE)
+          report_files[[analysis_name]] <- simple_name
+          cat(sprintf("  ✓ %s report generated\n", analysis_name))
+        }
+      }
+    }
+    
+    # Generate navigation index.html
+    cat("Creating unified dashboard navigation...\n")
+    
+    # Generate button HTML for each analysis
+    desc_button <- if(!is.null(report_files$descriptive_stats)) {
+      sprintf('<a href="%s" class="btn btn-primary btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+              report_files$descriptive_stats)
+    } else {
+      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+    }
+    
+    corr_button <- if(!is.null(report_files$correlation_analysis)) {
+      sprintf('<a href="%s" class="btn btn-success btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+              report_files$correlation_analysis)
+    } else {
+      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+    }
+    
+    comp_button <- if(!is.null(report_files$comparative_analysis)) {
+      sprintf('<a href="%s" class="btn btn-warning btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+              report_files$comparative_analysis)
+    } else {
+      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+    }
+    
+    infer_button <- if(!is.null(report_files$enhanced_inferential)) {
+      sprintf('<a href="%s" class="btn btn-info btn-analysis"><i class="fas fa-eye me-2"></i>View Report</a>', 
+              report_files$enhanced_inferential)
+    } else {
+      '<button class="btn btn-secondary btn-analysis" disabled><i class="fas fa-exclamation-triangle me-2"></i>Report Failed</button>'
+    }
+    
+    index_html <- sprintf('
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Analysis Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: linear-gradient(135deg, #667eea 0%%, #764ba2 100%%); min-height: 100vh; }
+        .card { box-shadow: 0 8px 25px rgba(0,0,0,0.1); border: none; transition: transform 0.3s; }
+        .card:hover { transform: translateY(-5px); }
+        .analysis-card { margin-bottom: 30px; }
+        .btn-analysis { width: 100%%; padding: 15px; font-size: 1.1em; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid py-5">
+        <div class="row justify-content-center">
+            <div class="col-md-10">
+                <div class="text-center text-white mb-5">
+                    <h1 class="display-4 fw-bold"><i class="fas fa-chart-line me-3"></i>Statistical Analysis Dashboard</h1>
+                    <p class="lead">Complete Medical Data Analysis Suite</p>
+                    <p class="text-light">Generated: %s | Dataset: %d observations, %d variables</p>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6 col-lg-3 analysis-card">
+                        <div class="card h-100">
+                            <div class="card-header bg-primary text-white text-center">
+                                <i class="fas fa-table fa-2x mb-2"></i>
+                                <h5>Descriptive Statistics</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <p>Summary statistics, distributions, and data quality assessment</p>
+                                %s
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 analysis-card">
+                        <div class="card h-100">
+                            <div class="card-header bg-success text-white text-center">
+                                <i class="fas fa-project-diagram fa-2x mb-2"></i>
+                                <h5>Correlation Analysis</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <p>Variable relationships and correlation matrices</p>
+                                %s
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 analysis-card">
+                        <div class="card h-100">
+                            <div class="card-header bg-warning text-white text-center">
+                                <i class="fas fa-balance-scale fa-2x mb-2"></i>
+                                <h5>Comparative Analysis</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <p>Group comparisons and statistical tests</p>
+                                %s
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6 col-lg-3 analysis-card">
+                        <div class="card h-100">
+                            <div class="card-header bg-info text-white text-center">
+                                <i class="fas fa-brain fa-2x mb-2"></i>
+                                <h5>Enhanced Inferential</h5>
+                            </div>
+                            <div class="card-body text-center">
+                                <p>Advanced modeling with covariates and interactions</p>
+                                %s
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <p class="text-white">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Click on any analysis button to view the detailed report
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>',
+      format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      nrow(medical_data),
+      ncol(medical_data),
+      desc_button,
+      corr_button,
+      comp_button,
+      infer_button
+    )
+    
+    # Write the index file
+    writeLines(index_html, file.path(dashboard_dir, "index.html"))
+    
+    # Set analysis results for potential export
+    analysis_results <- list(
+      analysis_type = "unified_dashboard",
+      dashboard_directory = dashboard_dir,
+      individual_results = all_results,
+      report_files = report_files,
+      summary = list(
+        total_analyses = length(analysis_names),
+        successful_analyses = length(report_files),
+        failed_analyses = length(analysis_names) - length(report_files),
+        dashboard_url = file.path(dashboard_dir, "index.html")
+      )
+    )
+    
+    cat(sprintf("Unified dashboard generated successfully!\n"))
+    cat(sprintf("Dashboard location: %s\n", dashboard_dir))
+    cat(sprintf("Open: %s\n", file.path(dashboard_dir, "index.html")))
+    cat(sprintf("Analyses completed: %d/%d\n", length(report_files), length(analysis_names)))
+    
+    log_analysis_step("UNIFIED DASHBOARD COMPLETED", 
+                     paste("Dashboard generated with", length(report_files), "successful analyses"))
+  }
+  
   # Export CSV files if requested
   exported_files <- NULL
   if (args$export && !is.null(analysis_results) && !is.null(analysis_type)) {
@@ -284,16 +539,16 @@ run_analysis_with_args <- function(args) {
       log_analysis_step("HTML REPORT SKIPPED", "Report generation encountered technical issues but analysis completed successfully")
     }
     
-      # Cleanup any unwanted graphics files before returning
-  cleanup_unwanted_graphics_files()
-  
-  # Return analysis results, report information, and exported files
-  return(list(
-    analysis_results = analysis_results,
-    report_file = report_file,
-    exported_files = exported_files,
-    analysis_type = analysis_type
-  ))
+    # Cleanup any unwanted graphics files before returning
+    cleanup_unwanted_graphics_files()
+    
+    # Return analysis results, report information, and exported files
+    return(list(
+      analysis_results = analysis_results,
+      report_file = report_file,
+      exported_files = exported_files,
+      analysis_type = analysis_type
+    ))
   }
   
   # If no report requested, just return analysis results
@@ -315,12 +570,14 @@ run_analysis_with_args <- function(args) {
   cat("  --comparative_analysis: Run comparative analysis\n")
   cat("  --correlation_analysis: Run correlation analysis\n")
   cat("  --descriptive_stats: Run descriptive statistics\n")
+  cat("  --enhanced_inferential: Run enhanced inferential analysis\n")
+  cat("  --unified_dashboard: Generate unified dashboard with all analyses\n")
   cat("  --statistical_tests: Run statistical tests\n")
   cat("  --report: Generate HTML report (use with any analysis option)\n")
   cat("  --export: Export analysis results to CSV files (use with any analysis option)\n")
   cat("\nExample usage:\n")
   cat("  Rscript main.R --comparative_analysis --report\n")
-  cat("  Rscript main.R --comparative_analysis --export\n")
+  cat("  Rscript main.R --unified_dashboard\n")
   cat("  Rscript main.R --correlation_analysis --report --export\n")
   cat("  Rscript main.R --input dane2.csv --descriptive_stats --export\n")
   cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
@@ -431,19 +688,19 @@ main <- function(data_file = "dane.csv", repair_data = TRUE, validate_data = TRU
       readiness_status <- paste(readiness_issues, collapse = "; ")
     }
     
-      # Cleanup any unwanted graphics files
-  cleanup_unwanted_graphics_files()
-  
-  # Return the processed data and all results
-  return(list(
-    data = medical_data,
-    original_data = original_data,
-    inspection_results = inspection_results,
-    validation_results = validation_results,
-    repair_log = repair_log,
-    readiness_issues = readiness_issues,
-    readiness_status = readiness_status
-  ))
+    # Cleanup any unwanted graphics files
+    cleanup_unwanted_graphics_files()
+    
+    # Return the processed data and all results
+    return(list(
+      data = medical_data,
+      original_data = original_data,
+      inspection_results = inspection_results,
+      validation_results = validation_results,
+      repair_log = repair_log,
+      readiness_issues = readiness_issues,
+      readiness_status = readiness_status
+    ))
     
   }, error = function(e) {
     cat("Error in main function:", e$message, "\n")
