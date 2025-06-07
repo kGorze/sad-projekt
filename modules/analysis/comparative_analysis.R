@@ -522,6 +522,65 @@ determine_appropriate_test <- function(dist_result, homo_result) {
   }
 }
 
+# Calculate confidence interval for eta-squared
+calculate_eta_squared_ci <- function(anova_result, eta_squared) {
+  
+  tryCatch({
+    anova_summary <- summary(anova_result)
+    f_statistic <- anova_summary[[1]]$`F value`[1]
+    df_between <- anova_summary[[1]]$Df[1]
+    df_within <- anova_summary[[1]]$Df[2]
+    
+    # Using the non-central F distribution approach for confidence intervals
+    # This is based on Steiger (2004) method
+    
+    # Calculate non-centrality parameter
+    n <- df_between + df_within + 1
+    lambda <- f_statistic * df_between
+    
+    # Calculate confidence interval using non-central F distribution
+    # Lower bound
+    f_lower <- qf(0.025, df_between, df_within, ncp = 0)
+    if (f_statistic > f_lower) {
+      # Find lambda that gives our observed F at the upper 97.5% point
+      lambda_lower <- optimize(function(x) {
+        abs(qf(0.975, df_between, df_within, ncp = x) - f_statistic)
+      }, c(0, 100))$minimum
+      eta_squared_lower <- lambda_lower / (lambda_lower + n)
+    } else {
+      eta_squared_lower <- 0
+    }
+    
+    # Upper bound
+    lambda_upper <- optimize(function(x) {
+      abs(qf(0.025, df_between, df_within, ncp = x) - f_statistic)
+    }, c(0, 200))$minimum
+    eta_squared_upper <- lambda_upper / (lambda_upper + n)
+    
+    # Ensure bounds are reasonable
+    eta_squared_lower <- max(0, min(eta_squared_lower, eta_squared))
+    eta_squared_upper <- max(eta_squared, min(1, eta_squared_upper))
+    
+    return(c(eta_squared_lower, eta_squared_upper))
+    
+  }, error = function(e) {
+    # Fallback to approximate CI if exact calculation fails
+    se_approx <- sqrt(eta_squared * (1 - eta_squared) / (df_between + df_within + 1))
+    ci_lower <- max(0, eta_squared - 1.96 * se_approx)
+    ci_upper <- min(1, eta_squared + 1.96 * se_approx)
+    return(c(ci_lower, ci_upper))
+  })
+}
+
+# Interpret eta-squared magnitude
+interpret_eta_squared_magnitude <- function(eta_squared) {
+  if (is.na(eta_squared)) return("unknown")
+  if (eta_squared < 0.01) return("negligible")
+  else if (eta_squared < 0.06) return("small")
+  else if (eta_squared < 0.14) return("medium") 
+  else return("large")
+}
+
 # ANOVA for continuous variables (parametric)
 perform_anova <- function(data, variable, group_column) {
   
@@ -545,10 +604,13 @@ perform_anova <- function(data, variable, group_column) {
   p_value <- anova_summary[[1]]$`Pr(>F)`[1]
   f_statistic <- anova_summary[[1]]$`F value`[1]
   
-  # Calculate effect size (eta-squared)
+  # Calculate effect size (eta-squared) with 95% CI
   ss_between <- anova_summary[[1]]$`Sum Sq`[1]
   ss_total <- sum(anova_summary[[1]]$`Sum Sq`)
   eta_squared <- ss_between / ss_total
+  
+  # Calculate 95% confidence interval for eta-squared
+  eta_squared_ci <- calculate_eta_squared_ci(anova_result, eta_squared)
   
   # Post-hoc tests if significant
   posthoc_result <- NULL
@@ -568,6 +630,8 @@ perform_anova <- function(data, variable, group_column) {
     statistic = f_statistic,
     p_value = p_value,
     effect_size = eta_squared,
+    effect_size_ci = eta_squared_ci,
+    effect_size_interpretation = interpret_eta_squared_magnitude(eta_squared),
     posthoc = posthoc_result,
     interpretation = interpretation
   ))
@@ -609,6 +673,65 @@ perform_welch_anova <- function(data, variable, group_column) {
   ))
 }
 
+# Calculate epsilon-squared effect size for Kruskal-Wallis test with 95% CI
+calculate_kruskal_wallis_effect_size <- function(data, variable, group_column, kw_result) {
+  
+  tryCatch({
+    n <- nrow(data)
+    k <- length(unique(data[[group_column]]))
+    
+    # Calculate epsilon-squared (ε²)
+    # ε² = (H - k + 1) / (n - k)
+    # where H is the Kruskal-Wallis H statistic
+    H <- as.numeric(kw_result$statistic)
+    epsilon_squared <- (H - k + 1) / (n - k)
+    
+    # Ensure epsilon-squared is between 0 and 1
+    epsilon_squared <- max(0, min(1, epsilon_squared))
+    
+    # Calculate 95% confidence interval using bootstrap
+    # This is an approximation - for exact CI, bootstrap would be needed
+    # For now, using a simplified approach based on chi-square distribution
+    df <- k - 1
+    chi_crit_lower <- qchisq(0.025, df)
+    chi_crit_upper <- qchisq(0.975, df)
+    
+    # Approximate confidence interval
+    ci_lower <- max(0, (chi_crit_lower - k + 1) / (n - k))
+    ci_upper <- min(1, (chi_crit_upper - k + 1) / (n - k))
+    
+    # If the calculated CI doesn't make sense, use a conservative approach
+    if (ci_lower > epsilon_squared || ci_upper < epsilon_squared) {
+      # Conservative CI around the point estimate
+      se_approx <- sqrt(epsilon_squared * (1 - epsilon_squared) / n)
+      ci_lower <- max(0, epsilon_squared - 1.96 * se_approx)
+      ci_upper <- min(1, epsilon_squared + 1.96 * se_approx)
+    }
+    
+    # Interpret effect size magnitude
+    interpretation <- if (epsilon_squared < 0.01) "negligible"
+                     else if (epsilon_squared < 0.06) "small"
+                     else if (epsilon_squared < 0.14) "medium"
+                     else "large"
+    
+    return(list(
+      epsilon_squared = epsilon_squared,
+      confidence_interval = c(ci_lower, ci_upper),
+      interpretation = interpretation,
+      method = "epsilon-squared (ε²)"
+    ))
+    
+  }, error = function(e) {
+    return(list(
+      epsilon_squared = NA,
+      confidence_interval = c(NA, NA),
+      interpretation = "calculation error",
+      method = "epsilon-squared (ε²)",
+      error = e$message
+    ))
+  })
+}
+
 # Kruskal-Wallis test for continuous variables (non-parametric)
 perform_kruskal_wallis <- function(data, variable, group_column) {
   
@@ -626,6 +749,9 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   
   # Perform Kruskal-Wallis test
   kw_result <- kruskal.test(clean_data[[variable]], clean_data[[group_column]])
+  
+  # Calculate epsilon-squared (ε²) effect size with 95% CI
+  effect_size_result <- calculate_kruskal_wallis_effect_size(clean_data, variable, group_column, kw_result)
   
   # Post-hoc tests if significant (Dunn's test)
   posthoc_result <- NULL
@@ -646,6 +772,9 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
     test_name = "Kruskal-Wallis",
     statistic = kw_result$statistic,
     p_value = kw_result$p.value,
+    effect_size = effect_size_result$epsilon_squared,
+    effect_size_ci = effect_size_result$confidence_interval,
+    effect_size_interpretation = effect_size_result$interpretation,
     posthoc = posthoc_result,
     interpretation = interpretation
   ))
@@ -998,6 +1127,42 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   ))
 }
 
+# Calculate confidence interval for Cohen's d
+calculate_cohens_d_ci <- function(d, n1, n2, conf_level = 0.95) {
+  
+  tryCatch({
+    # Calculate standard error of Cohen's d
+    # Using Hedges & Olkin (1985) formula
+    df <- n1 + n2 - 2
+    j <- 1 - (3 / (4 * df - 1))  # Hedges' correction factor
+    
+    # Variance of d
+    var_d <- ((n1 + n2) / (n1 * n2)) + (d^2 / (2 * (n1 + n2)))
+    se_d <- sqrt(var_d)
+    
+    # Apply Hedges' correction
+    g <- j * d  # Hedges' g (bias-corrected)
+    se_g <- j * se_d
+    
+    # Critical value for confidence interval
+    alpha <- 1 - conf_level
+    t_crit <- qt(1 - alpha/2, df)
+    
+    # Confidence interval
+    ci_lower <- g - t_crit * se_g
+    ci_upper <- g + t_crit * se_g
+    
+    return(c(ci_lower, ci_upper))
+    
+  }, error = function(e) {
+    # Fallback to approximate CI
+    se_approx <- sqrt(((n1 + n2) / (n1 * n2)) + (d^2 / (2 * (n1 + n2))))
+    ci_lower <- d - 1.96 * se_approx
+    ci_upper <- d + 1.96 * se_approx
+    return(c(ci_lower, ci_upper))
+  })
+}
+
 # Cohen's D effect size calculation
 calculate_cohens_d <- function(data, variable, group_column) {
   
@@ -1047,6 +1212,9 @@ calculate_cohens_d <- function(data, variable, group_column) {
           # Cohen's D calculation
           d_value <- (mean1 - mean2) / pooled_sd
           
+          # Calculate 95% confidence interval for Cohen's d
+          d_ci <- calculate_cohens_d_ci(d_value, n1, n2)
+          
           # Interpret effect size
           if (abs(d_value) < 0.2) {
             interpretation <- "negligible effect"
@@ -1061,6 +1229,7 @@ calculate_cohens_d <- function(data, variable, group_column) {
           comparison_name <- paste(group1, "vs", group2)
           effect_sizes[[comparison_name]] <- list(
             cohens_d = d_value,
+            cohens_d_ci = d_ci,
             magnitude = interpretation,
             group1 = group1,
             group2 = group2,

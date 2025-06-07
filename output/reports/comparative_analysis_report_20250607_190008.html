@@ -1,0 +1,666 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Analysis Report - Comparative Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: "Arial", sans-serif; margin: 20px; }
+        .result-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-result { background-color: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .significant { border-left: 5px solid #28a745; }
+        .not-significant { border-left: 5px solid #dc3545; }
+        .warning { border-left: 5px solid #ffc107; }
+        .plot-container { text-align: center; margin: 20px 0; }
+        .stats-table { font-size: 0.9em; }
+        .interpretation { background-color: #e9ecef; padding: 15px; border-radius: 5px; font-style: italic; }
+        .timestamp { color: #6c757d; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Statistical Analysis Report - Comparative Analysis</h1>
+                <p class="text-center timestamp">Generated on: 2025-06-07 19:00:08</p>
+            </div>
+        </div><div class="row"><div class="col-12">
+    <div class="result-section">
+        <h2>Comparative Analysis Summary</h2>
+        <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>
+        <h3>Analysis Overview</h3>
+        <div class="interpretation">
+            <strong>Groups Analyzed:</strong> CHOR1, CHOR2, KONTROLA<br>
+            <strong>Group Sizes:</strong> CHOR1 = 25, CHOR2 = 25, KONTROLA = 25<br>
+            <strong>Continuous Variables:</strong> 9<br>
+            <strong>Categorical Variables:</strong> 1<br>
+            <strong>Total Observations:</strong> 75
+        </div>
+        <h3>Distribution Analysis</h3>
+        <p>Assessment of normality for each variable overall and by group:</p>
+        <h4>wiek</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data deviates from normal distribution ( Anderson-Darling  p = 0.0441 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.0758 )<br>&nbsp;&nbsp;• CHOR2: Data appears normally distributed ( Shapiro-Wilk  p = 0.0812 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.7867 )<br></div>
+        <h4>hsCRP</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data deviates from normal distribution ( Anderson-Darling  p = 0 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data deviates from normal distribution ( Shapiro-Wilk  p = 0 )<br>&nbsp;&nbsp;• CHOR2: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0093 )<br>&nbsp;&nbsp;• KONTROLA: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0066 )<br></div>
+        <h4>ERY</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data appears normally distributed ( Anderson-Darling  p = 0.1981 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.108 )<br>&nbsp;&nbsp;• CHOR2: Data appears normally distributed ( Shapiro-Wilk  p = 0.3296 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.6268 )<br></div>
+        <h4>PLT</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data deviates from normal distribution ( Anderson-Darling  p = 1e-04 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.2912 )<br>&nbsp;&nbsp;• CHOR2: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0027 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.0632 )<br></div>
+        <h4>HGB</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data appears normally distributed ( Anderson-Darling  p = 0.1136 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.3829 )<br>&nbsp;&nbsp;• CHOR2: Data appears normally distributed ( Shapiro-Wilk  p = 0.0838 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.1444 )<br></div>
+        <h4>HCT</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data appears normally distributed ( Anderson-Darling  p = 0.0744 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.2928 )<br>&nbsp;&nbsp;• CHOR2: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0435 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.49 )<br></div>
+        <h4>MCHC</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data appears normally distributed ( Anderson-Darling  p = 0.123 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.4256 )<br>&nbsp;&nbsp;• CHOR2: Data appears normally distributed ( Shapiro-Wilk  p = 0.1261 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.1813 )<br></div>
+        <h4>MON</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data deviates from normal distribution ( Anderson-Darling  p = 6e-04 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0435 )<br>&nbsp;&nbsp;• CHOR2: Data deviates from normal distribution ( Shapiro-Wilk  p = 0.0085 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.303 )<br></div>
+        <h4>LEU</h4>
+        <div class="test-result">
+            <strong>Overall Normality:</strong> Data deviates from normal distribution ( Anderson-Darling  p = 0.0258 )<br><strong>Group-wise Normality:</strong><br>&nbsp;&nbsp;• CHOR1: Data appears normally distributed ( Shapiro-Wilk  p = 0.1128 )<br>&nbsp;&nbsp;• CHOR2: Data appears normally distributed ( Shapiro-Wilk  p = 0.5245 )<br>&nbsp;&nbsp;• KONTROLA: Data appears normally distributed ( Shapiro-Wilk  p = 0.0824 )<br></div>
+        <h3>Homogeneity of Variances</h3>
+        <p>Assessment of variance homogeneity across groups:</p>
+        <div class="test-result significant">
+            <h4>wiek</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>hsCRP</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>ERY</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>PLT</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>HGB</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>HCT</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>MCHC</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>MON</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <div class="test-result significant">
+            <h4>LEU</h4>
+            <strong>Test:</strong> Levene<br>
+            <strong>Result:</strong> Homogeneous (consensus)
+        </div>
+        <h3>Statistical Test Recommendations</h3>
+        <p>Based on distribution and homogeneity analysis, the following tests were selected:</p>
+        <div class="interpretation">
+            <strong>wiek:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <div class="interpretation">
+            <strong>hsCRP:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <div class="interpretation">
+            <strong>ERY:</strong> One-way ANOVA<br>
+            <em>Reasoning:</em> Normal distribution and homogeneous variances
+        </div>
+        <div class="interpretation">
+            <strong>PLT:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <div class="interpretation">
+            <strong>HGB:</strong> One-way ANOVA<br>
+            <em>Reasoning:</em> Normal distribution and homogeneous variances
+        </div>
+        <div class="interpretation">
+            <strong>HCT:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <div class="interpretation">
+            <strong>MCHC:</strong> One-way ANOVA<br>
+            <em>Reasoning:</em> Normal distribution and homogeneous variances
+        </div>
+        <div class="interpretation">
+            <strong>MON:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <div class="interpretation">
+            <strong>LEU:</strong> Kruskal-Wallis test<br>
+            <em>Reasoning:</em> Non-normal distribution or other assumption violations
+        </div>
+        <h3>Statistical Test Results</h3>
+        <p>Results of group comparisons:</p>
+        <div class="test-result not-significant">
+            <h4>wiek - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 3.2267<br>
+                    <strong>p-value:</strong> 0.1992<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (χ² = 3.227 , p = 0.1992 )
+                </div>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>hsCRP - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.2682<br>
+                    <strong>p-value:</strong> 0.8745<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (χ² = 0.268 , p = 0.8745 )
+                </div>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>ERY - One-way ANOVA</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 1.871<br>
+                    <strong>p-value:</strong> 0.1614<br>
+                    <strong>Effect Size:</strong> 0.049
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (F = 1.871 , p = 0.1614 )
+                </div>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>PLT - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 2.2955<br>
+                    <strong>p-value:</strong> 0.3174<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (χ² = 2.295 , p = 0.3174 )
+                </div>
+            </div></div>
+        <div class="test-result significant">
+            <h4>HGB - One-way ANOVA</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 7.5086<br>
+                    <strong>p-value:</strong> 0.0011<br>
+                    <strong>Effect Size:</strong> 0.177
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> Significant difference between groups (F = 7.509 , p = 0.0011 )
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Post-hoc Analysis (Tukey HSD):</strong><br>
+                <em>Significant pairwise differences:</em> KONTROLA-CHOR1, KONTROLA-CHOR2
+            </div></div>
+        <div class="test-result significant">
+            <h4>HCT - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 8.0145<br>
+                    <strong>p-value:</strong> 0.0182<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> Significant difference between groups (χ² = 8.014 , p = 0.0182 )
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Post-hoc Analysis (Dunn's test):</strong><br>
+                <em>Significant pairwise differences:</em> CHOR1 - KONTROLA
+            </div></div>
+        <div class="test-result significant">
+            <h4>MCHC - One-way ANOVA</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 6.5273<br>
+                    <strong>p-value:</strong> 0.0025<br>
+                    <strong>Effect Size:</strong> 0.153
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> Significant difference between groups (F = 6.527 , p = 0.0025 )
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Post-hoc Analysis (Tukey HSD):</strong><br>
+                <em>Significant pairwise differences:</em> KONTROLA-CHOR1, KONTROLA-CHOR2
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>MON - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 2.5875<br>
+                    <strong>p-value:</strong> 0.2742<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (χ² = 2.588 , p = 0.2742 )
+                </div>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>LEU - Kruskal-Wallis</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 1.2939<br>
+                    <strong>p-value:</strong> 0.5236<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant difference between groups (χ² = 1.294 , p = 0.5236 )
+                </div>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>plec - Chi-square</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.4286<br>
+                    <strong>p-value:</strong> 0.8071<br>
+                    <strong>Effect Size:</strong> Not calculated
+                </div>
+                <div class="col-md-6">
+                    <strong>Interpretation:</strong> No significant association (χ² = 0.429 , p = 0.8071 )
+                </div>
+            </div></div>
+        <h3>Effect Size Analysis (Cohen's D)</h3>
+        <p>Cohen's D measures the standardized difference between group means:</p>
+        <h4>wiek</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> -0.073<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> -0.45<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> -0.357<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>hsCRP</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> -0.153<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> -0.134<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.022<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>ERY</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> 0.109<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="warning" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.552<br>
+                        <strong>Effect Size:</strong> medium effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.39<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>PLT</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> 0.325<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.069<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> -0.256<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>HGB</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> -0.052<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=24, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 1.017<br>
+                        <strong>Effect Size:</strong> large effect<br>
+                        <strong>Sample Sizes:</strong> n₁=24, n₂=24
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.975<br>
+                        <strong>Effect Size:</strong> large effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=24
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>HCT</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> 0.246<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.869<br>
+                        <strong>Effect Size:</strong> large effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="warning" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.503<br>
+                        <strong>Effect Size:</strong> medium effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>MCHC</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> -0.296<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="warning" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.727<br>
+                        <strong>Effect Size:</strong> medium effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.939<br>
+                        <strong>Effect Size:</strong> large effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>MON</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> 0.37<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=24, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.36<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=24, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> -0.081<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <h4>LEU</h4>
+        <div class="test-result">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs CHOR2:</strong><br>
+                        <strong>Cohen's D:</strong> 0.008<br>
+                        <strong>Effect Size:</strong> negligible effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR1 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.238<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="not-significant" style="margin: 5px; padding: 10px; border-radius: 5px;">
+                        <strong>CHOR2 vs KONTROLA:</strong><br>
+                        <strong>Cohen's D:</strong> 0.238<br>
+                        <strong>Effect Size:</strong> small effect<br>
+                        <strong>Sample Sizes:</strong> n₁=25, n₂=25
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="interpretation">
+            <strong>Cohen's D Interpretation:</strong><br>
+            • |d| < 0.2: Negligible effect<br>
+            • 0.2 ≤ |d| < 0.5: Small effect<br>
+            • 0.5 ≤ |d| < 0.8: Medium effect<br>
+            • |d| ≥ 0.8: Large effect
+        </div>
+        <h3>Analysis Metadata</h3>
+        <div class="interpretation">
+            <strong>Analysis Date:</strong> 2025-06-07 19:00:08<br>
+            <strong>Group Column:</strong> grupa<br>
+            <strong>Statistical Approach:</strong> Comprehensive assumption testing followed by appropriate test selection
+        </div>
+        <h3>Visualizations</h3>
+        <p>The following plots illustrate the group comparisons:</p>
+        <div class="plot-container">
+            <h4>Enhanced Wiek</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_wiek_20250607_185954.png" alt="Enhanced Wiek" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hscrp</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_hsCRP_20250607_185955.png" alt="Enhanced Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Ery</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_ERY_20250607_185956.png" alt="Enhanced Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Plt</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_PLT_20250607_185956.png" alt="Enhanced Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hgb</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_HGB_20250607_185957.png" alt="Enhanced Hgb" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hct</h4>
+            <img src="../plots/comparative_analysis/enhanced_boxplot_HCT_20250607_185957.png" alt="Enhanced Hct" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Density Plot Wiek</h4>
+            <img src="../plots/comparative_analysis/density_plot_wiek_20250607_185958.png" alt="Density Plot Wiek" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Density Plot Hscrp</h4>
+            <img src="../plots/comparative_analysis/density_plot_hsCRP_20250607_185959.png" alt="Density Plot Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Density Plot Ery</h4>
+            <img src="../plots/comparative_analysis/density_plot_ERY_20250607_185959.png" alt="Density Plot Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Density Plot Plt</h4>
+            <img src="../plots/comparative_analysis/density_plot_PLT_20250607_190000.png" alt="Density Plot Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Qq Plot Wiek</h4>
+            <img src="../plots/comparative_analysis/qq_plot_wiek_20250607_190000.png" alt="Qq Plot Wiek" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Qq Plot Hscrp</h4>
+            <img src="../plots/comparative_analysis/qq_plot_hsCRP_20250607_190001.png" alt="Qq Plot Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Qq Plot Ery</h4>
+            <img src="../plots/comparative_analysis/qq_plot_ERY_20250607_190001.png" alt="Qq Plot Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Qq Plot Plt</h4>
+            <img src="../plots/comparative_analysis/qq_plot_PLT_20250607_190002.png" alt="Qq Plot Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Wiek Vs Hscrp</h4>
+            <img src="../plots/comparative_analysis/scatter_wiek_vs_hsCRP_20250607_190002.png" alt="Scatter Wiek Vs Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Wiek Vs Ery</h4>
+            <img src="../plots/comparative_analysis/scatter_wiek_vs_ERY_20250607_190003.png" alt="Scatter Wiek Vs Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Hscrp Vs Ery</h4>
+            <img src="../plots/comparative_analysis/scatter_hsCRP_vs_ERY_20250607_190003.png" alt="Scatter Hscrp Vs Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Hscrp Vs Plt</h4>
+            <img src="../plots/comparative_analysis/scatter_hsCRP_vs_PLT_20250607_190004.png" alt="Scatter Hscrp Vs Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Ery Vs Plt</h4>
+            <img src="../plots/comparative_analysis/scatter_ERY_vs_PLT_20250607_190005.png" alt="Scatter Ery Vs Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Scatter Ery Vs Hgb</h4>
+            <img src="../plots/comparative_analysis/scatter_ERY_vs_HGB_20250607_190005.png" alt="Scatter Ery Vs Hgb" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Violin Plot Wiek</h4>
+            <img src="../plots/comparative_analysis/violin_plot_wiek_20250607_190006.png" alt="Violin Plot Wiek" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Violin Plot Hscrp</h4>
+            <img src="../plots/comparative_analysis/violin_plot_hsCRP_20250607_190006.png" alt="Violin Plot Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Violin Plot Ery</h4>
+            <img src="../plots/comparative_analysis/violin_plot_ERY_20250607_190007.png" alt="Violin Plot Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Plec</h4>
+            <img src="../plots/comparative_analysis/enhanced_barplot_plec_20250607_190007.png" alt="Enhanced Plec" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div></div></div></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -207,7 +207,15 @@ create_comparative_analysis_content <- function(results, include_plots) {
                     <strong>p-value:</strong> ', 
                     ifelse(is.null(test$p_value), "Not available", format.pval(test$p_value, digits = 4)), '<br>
                     <strong>Effect Size:</strong> ', 
-                    ifelse(is.null(test$effect_size), "Not calculated", round(test$effect_size, 3)), '
+                    ifelse(is.null(test$effect_size), "Not calculated", 
+                           paste0(ifelse(!is.null(test$effect_size_interpretation), 
+                                        paste0(test$effect_size_interpretation, " ("), ""),
+                                 round(test$effect_size, 3),
+                                 ifelse(!is.null(test$effect_size_ci) && length(test$effect_size_ci) == 2,
+                                       paste0(", 95% CI: [", round(test$effect_size_ci[1], 3), ", ", 
+                                             round(test$effect_size_ci[2], 3), "]"),
+                                       ""),
+                                 ifelse(!is.null(test$effect_size_interpretation), ")", ""))), '
                 </div>
                 <div class="col-md-6">
                     <strong>Interpretation:</strong> ', test$interpretation, '
@@ -272,7 +280,12 @@ create_comparative_analysis_content <- function(results, include_plots) {
                     <div class="', effect_class, '" style="margin: 5px; padding: 10px; border-radius: 5px;">
                         <strong>', comparison_name, ':</strong><br>
                         <strong>Cohen\'s D:</strong> ', 
-                        ifelse(is.na(comparison$cohens_d), "Not calculated", round(comparison$cohens_d, 3)), '<br>
+                        ifelse(is.na(comparison$cohens_d), "Not calculated", 
+                               paste0(round(comparison$cohens_d, 3),
+                                     ifelse(!is.null(comparison$cohens_d_ci) && length(comparison$cohens_d_ci) == 2,
+                                           paste0(" (95% CI: [", round(comparison$cohens_d_ci[1], 3), ", ", 
+                                                 round(comparison$cohens_d_ci[2], 3), "])"),
+                                           ""))), '<br>
                         <strong>Effect Size:</strong> ', comparison$magnitude, '<br>
                         <strong>Sample Sizes:</strong> n₁=', comparison$n1, ', n₂=', comparison$n2, '
                     </div>
@@ -1184,7 +1197,15 @@ create_statistical_tests_content <- function(results, include_plots) {
                     <strong>p-value:</strong> ', 
                     ifelse(is.null(test$p_value), "Not available", format.pval(test$p_value, digits = 4)), '<br>
                     <strong>Effect Size:</strong> ', 
-                    ifelse(is.null(test$effect_size), "Not calculated", round(test$effect_size, 3)), '
+                    ifelse(is.null(test$effect_size), "Not calculated", 
+                           paste0(ifelse(!is.null(test$effect_size_interpretation), 
+                                        paste0(test$effect_size_interpretation, " ("), ""),
+                                 round(test$effect_size, 3),
+                                 ifelse(!is.null(test$effect_size_ci) && length(test$effect_size_ci) == 2,
+                                       paste0(", 95% CI: [", round(test$effect_size_ci[1], 3), ", ", 
+                                             round(test$effect_size_ci[2], 3), "]"),
+                                       ""),
+                                 ifelse(!is.null(test$effect_size_interpretation), ")", ""))), '
                 </div>
                 <div class="col-md-6">
                     <strong>Interpretation:</strong> ', 
