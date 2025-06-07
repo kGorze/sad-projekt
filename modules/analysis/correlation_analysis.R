@@ -605,6 +605,12 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
     graphics.off()
   }
   
+  # Source plotting utilities if not already loaded
+  if (!exists("ensure_clean_graphics_environment")) {
+    source("modules/utils/plotting_utils.R")
+  }
+  ensure_clean_graphics_environment()
+  
   # Prepare data for correlation analysis
   cor_data <- data[, variables, drop = FALSE]
   cor_data <- cor_data[complete.cases(cor_data), ]
@@ -633,7 +639,7 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
               axis.text.y = element_text(angle = 0))
       
       plot_filename <- file.path(output_path, paste0("correlation_matrix_overall_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 12, height = 10, dpi = 300)
+      safe_ggsave(plot_filename, plot = p, width = 12, height = 10, dpi = 300)
       
       plots[["correlation_matrix_overall"]] <- p
       plot_files[["correlation_matrix_overall"]] <- plot_filename
@@ -997,6 +1003,9 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
   cat("Correlation visualization creation completed!\n")
   cat("Total plots created:", length(plots), "\n")
   cat("Total plot files saved:", length(plot_files), "\n")
+  
+  # Clean up graphics environment after plotting
+  cleanup_graphics_after_analysis()
   
   return(list(
     plots = plots,

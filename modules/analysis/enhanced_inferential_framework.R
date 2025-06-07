@@ -768,6 +768,12 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
     graphics.off()
   }
   
+  # Source plotting utilities if not already loaded
+  if (!exists("ensure_clean_graphics_environment")) {
+    source("modules/utils/plotting_utils.R")
+  }
+  ensure_clean_graphics_environment()
+  
   # Create plots directory
   if (!dir.exists(output_path)) {
     dir.create(output_path, recursive = TRUE)

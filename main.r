@@ -90,11 +90,22 @@ run_analysis_with_args <- function(args) {
   # Initialize enhanced logging system to capture all console output and warnings
   log_file <- init_logging()
   
+  # Setup graphics environment to prevent unwanted Rplots.pdf creation
+  setup_graphics_environment()
+  
+  # Source plotting utilities for enhanced graphics management
+  source("modules/utils/plotting_utils.R")
+  init_graphics_session()
+  
   # Set up error handling to ensure logging is closed
   on.exit({
     # Restore warning option
     options(warn = old_warn)
     close_logging()
+    # End graphics session cleanly
+    end_graphics_session()
+    # Cleanup any unwanted graphics files before exiting
+    cleanup_unwanted_graphics_files()
   })
   
   # Set warning options to capture all warnings
@@ -142,6 +153,8 @@ run_analysis_with_args <- function(args) {
     if (!is.null(analysis_results)) {
       log_analysis_step("COMPARATIVE ANALYSIS COMPLETED", "Group comparisons successfully completed")
     }
+    # Clean up any unwanted graphics files after analysis
+    cleanup_unwanted_graphics_files()
   }
   
   if (args$correlation_analysis) {
@@ -162,6 +175,8 @@ run_analysis_with_args <- function(args) {
     if (!is.null(analysis_results)) {
       log_analysis_step("CORRELATION ANALYSIS COMPLETED", "Correlation analysis successfully completed")
     }
+    # Clean up any unwanted graphics files after analysis
+    cleanup_unwanted_graphics_files()
   }
   
   if (args$descriptive_stats) {
@@ -181,6 +196,8 @@ run_analysis_with_args <- function(args) {
     if (!is.null(analysis_results)) {
       log_analysis_step("DESCRIPTIVE STATISTICS COMPLETED", "Descriptive statistics successfully generated")
     }
+    # Clean up any unwanted graphics files after analysis
+    cleanup_unwanted_graphics_files()
   }
   
   if (args$statistical_tests) {
@@ -222,6 +239,8 @@ run_analysis_with_args <- function(args) {
     if (!is.null(analysis_results)) {
       log_analysis_step("ENHANCED INFERENTIAL ANALYSIS COMPLETED", "Enhanced inferential analysis successfully completed")
     }
+    # Clean up any unwanted graphics files after analysis
+    cleanup_unwanted_graphics_files()
   }
   
   if (args$unified_dashboard) {
@@ -743,7 +762,29 @@ run_analysis_with_args <- function(args) {
   return(NULL)
 }
 
-# Function to cleanup unwanted graphics files
+# Function to setup graphics environment to prevent unwanted Rplots.pdf
+setup_graphics_environment <- function() {
+  # Close any existing graphics devices
+  if (length(dev.list()) > 0) {
+    graphics.off()
+  }
+  
+  # Set options to prevent default PDF device creation
+  options(device = function(...) {
+    # Create a null device that doesn't output files
+    if (requireNamespace("grDevices", quietly = TRUE)) {
+      if (.Platform$OS.type == "windows") {
+        grDevices::windows(width = 10, height = 8)
+      } else {
+        grDevices::x11(width = 10, height = 8)
+      }
+    }
+  })
+  
+  cat("Graphics environment configured to prevent unwanted PDF creation\n")
+}
+
+# Enhanced function to cleanup unwanted graphics files
 cleanup_unwanted_graphics_files <- function() {
   # Check for and remove Rplots.pdf if it exists
   if (file.exists("Rplots.pdf")) {
