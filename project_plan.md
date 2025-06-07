@@ -145,9 +145,7 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **I. Visual & UX Enhancements**
 
-* [ ] Replace static correlation table with an interactive heat-map (hover shows *r*, CI, FDR-adjusted p)
-* [ ] Swap boxplots for violin/rain-cloud plots to convey distribution shape
-* [ ] Combine the three HTML files into one dashboard with tab navigation and sticky sidebar
+* [ ] Combine the four HTML files into one dashboard with tab navigation and sticky sidebar
 
 **J. Standardize Nomenclature & Formatting**
 

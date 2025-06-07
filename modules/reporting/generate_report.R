@@ -2112,5 +2112,453 @@ generate_executive_summary <- function(key_findings) {
   }
   
   summary <- paste0(summary, '</div></div>')
-  return(summary)
+    return(summary)
+}
+
+# Generate unified dashboard with all available analysis reports in tabs
+generate_unified_dashboard <- function(data, output_path = "output/reports", title = "Comprehensive Statistical Analysis Dashboard") {
+  
+  # Create output directory if it doesn't exist
+  if (!dir.exists(output_path)) {
+    dir.create(output_path, recursive = TRUE)
+  }
+  
+  cat("Generating unified dashboard with all available analyses...\n")
+  
+  # Initialize list to store all analysis results
+  all_analyses <- list()
+  
+  # Source required analysis modules
+  source("modules/analysis/descriptive_stats.R")
+  source("modules/analysis/comparative_analysis.R") 
+  source("modules/analysis/correlation_analysis.R")
+  source("modules/analysis/enhanced_inferential_framework.R")
+  
+  # Run all analyses and capture results
+  tryCatch({
+    cat("Running descriptive statistics analysis...\n")
+    all_analyses$descriptive <- perform_comprehensive_descriptive_analysis(data, group_column = "grupa", include_plots = TRUE)
+  }, error = function(e) {
+    cat("Warning: Descriptive analysis failed -", e$message, "\n")
+    all_analyses$descriptive <- NULL
+  })
+  
+  tryCatch({
+    cat("Running comparative analysis...\n")
+    all_analyses$comparative <- perform_comprehensive_comparative_analysis(data, group_column = "grupa", include_plots = TRUE)
+  }, error = function(e) {
+    cat("Warning: Comparative analysis failed -", e$message, "\n")
+    all_analyses$comparative <- NULL
+  })
+  
+  tryCatch({
+    cat("Running correlation analysis...\n")
+    all_analyses$correlation <- perform_comprehensive_correlation_analysis(data, group_column = "grupa", include_plots = TRUE)
+  }, error = function(e) {
+    cat("Warning: Correlation analysis failed -", e$message, "\n")
+    all_analyses$correlation <- NULL
+  })
+  
+  tryCatch({
+    cat("Running enhanced inferential analysis...\n")
+    all_analyses$enhanced_inferential <- perform_enhanced_inferential_analysis(data, group_column = "grupa", include_plots = TRUE)
+  }, error = function(e) {
+    cat("Warning: Enhanced inferential analysis failed -", e$message, "\n")
+    all_analyses$enhanced_inferential <- NULL
+  })
+  
+  # Generate unified HTML content
+  html_content <- create_unified_dashboard_html(all_analyses, title)
+  
+  # Write HTML file
+  dashboard_filename <- file.path(output_path, paste0("unified_dashboard_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".html"))
+  writeLines(html_content, dashboard_filename)
+  
+  cat("Unified dashboard generated:", dashboard_filename, "\n")
+  return(dashboard_filename)
+}
+
+# Create unified dashboard HTML content with tabs
+create_unified_dashboard_html <- function(all_analyses, title) {
+  
+  # HTML header with enhanced styling for tabbed interface
+  html_header <- paste0('
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>', title, '</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { 
+            font-family: "Arial", sans-serif; 
+            margin: 0; 
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .main-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .navbar-custom {
+            background-color: #343a40;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .nav-link {
+            color: #fff !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active {
+            color: #007bff !important;
+            background-color: rgba(255,255,255,0.1);
+            border-radius: 4px;
+        }
+        .tab-content {
+            padding: 20px;
+            background-color: white;
+            margin: 0;
+            min-height: 500px;
+        }
+        .result-section { 
+            margin-bottom: 30px; 
+            padding: 20px; 
+            border: 1px solid #ddd; 
+            border-radius: 8px; 
+            background-color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .test-result { 
+            background-color: #f8f9fa; 
+            padding: 15px; 
+            margin: 10px 0; 
+            border-radius: 5px; 
+            border-left: 4px solid #6c757d;
+        }
+        .significant { border-left-color: #28a745 !important; }
+        .not-significant { border-left-color: #dc3545 !important; }
+        .warning { border-left-color: #ffc107 !important; }
+        .plot-container { 
+            text-align: center; 
+            margin: 20px 0; 
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 8px;
+        }
+        .stats-table { 
+            font-size: 0.9em; 
+            margin-top: 15px;
+        }
+        .interpretation { 
+            background-color: #e9ecef; 
+            padding: 15px; 
+            border-radius: 5px; 
+            font-style: italic; 
+            border-left: 4px solid #17a2b8;
+        }
+        .timestamp { 
+            color: #6c757d; 
+            font-size: 0.9em; 
+        }
+        .analysis-summary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .footer-info {
+            background-color: #343a40;
+            color: white;
+            padding: 20px 0;
+            text-align: center;
+            margin-top: 40px;
+        }
+        @media (max-width: 768px) {
+            .tab-content { padding: 10px; }
+            .result-section { padding: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-header">
+        <div class="container">
+            <h1 class="text-center mb-2">', title, '</h1>
+            <p class="text-center mb-0 timestamp">Generated on: ', format(Sys.time(), "%Y-%m-%d %H:%M:%S"), '</p>
+        </div>
+    </div>
+    
+    <nav class="navbar navbar-expand-lg navbar-custom">
+        <div class="container">
+            <ul class="nav nav-tabs flex-row w-100" id="analysisTab" role="tablist">')
+  
+  # Generate navigation tabs
+  active_tab <- TRUE
+  nav_tabs <- ""
+  tab_content <- ""
+  
+  # Overview/Summary tab
+  nav_tabs <- paste0(nav_tabs, '
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="overview-tab" data-bs-toggle="tab" data-bs-target="#overview" type="button" role="tab">
+                        📊 Overview
+                    </button>
+                </li>')
+  
+  # Create overview content
+  overview_content <- create_overview_content(all_analyses)
+  tab_content <- paste0(tab_content, '
+            <div class="tab-pane fade show active" id="overview" role="tabpanel">
+                ', overview_content, '
+            </div>')
+  
+  # Add tabs for each available analysis
+  if (!is.null(all_analyses$descriptive)) {
+    nav_tabs <- paste0(nav_tabs, '
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="descriptive-tab" data-bs-toggle="tab" data-bs-target="#descriptive" type="button" role="tab">
+                        📈 Descriptive Stats
+                    </button>
+                </li>')
+    
+    descriptive_content <- create_descriptive_stats_content(all_analyses$descriptive, TRUE)
+    tab_content <- paste0(tab_content, '
+            <div class="tab-pane fade" id="descriptive" role="tabpanel">
+                ', descriptive_content, '
+            </div>')
+  }
+  
+  if (!is.null(all_analyses$comparative)) {
+    nav_tabs <- paste0(nav_tabs, '
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="comparative-tab" data-bs-toggle="tab" data-bs-target="#comparative" type="button" role="tab">
+                        🔍 Comparative Analysis
+                    </button>
+                </li>')
+    
+    comparative_content <- create_comparative_analysis_content(all_analyses$comparative, TRUE)
+    tab_content <- paste0(tab_content, '
+            <div class="tab-pane fade" id="comparative" role="tabpanel">
+                ', comparative_content, '
+            </div>')
+  }
+  
+  if (!is.null(all_analyses$correlation)) {
+    nav_tabs <- paste0(nav_tabs, '
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="correlation-tab" data-bs-toggle="tab" data-bs-target="#correlation" type="button" role="tab">
+                        🔗 Correlation Analysis
+                    </button>
+                </li>')
+    
+    correlation_content <- create_correlation_analysis_content(all_analyses$correlation, TRUE)
+    tab_content <- paste0(tab_content, '
+            <div class="tab-pane fade" id="correlation" role="tabpanel">
+                ', correlation_content, '
+            </div>')
+  }
+  
+  if (!is.null(all_analyses$enhanced_inferential)) {
+    nav_tabs <- paste0(nav_tabs, '
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="enhanced-tab" data-bs-toggle="tab" data-bs-target="#enhanced" type="button" role="tab">
+                        🧮 Enhanced Inferential
+                    </button>
+                </li>')
+    
+    enhanced_content <- create_enhanced_inferential_content(all_analyses$enhanced_inferential, TRUE)
+    tab_content <- paste0(tab_content, '
+            <div class="tab-pane fade" id="enhanced" role="tabpanel">
+                ', enhanced_content, '
+            </div>')
+  }
+  
+  # Complete the HTML structure
+  html_middle <- paste0(nav_tabs, '
+            </ul>
+        </div>
+    </nav>
+    
+    <div class="container-fluid">
+        <div class="tab-content" id="analysisTabContent">
+            ', tab_content, '
+        </div>
+    </div>
+    
+    <div class="footer-info">
+        <div class="container">
+            <p class="mb-0">Statistical Analysis Dashboard | Generated by R Statistical Analysis Framework</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Initialize tooltips and other interactive elements
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll(\'[data-bs-toggle="tooltip"]\'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+</body>
+</html>')
+  
+  return(paste0(html_header, html_middle))
+}
+
+# Create overview/summary content for the dashboard
+create_overview_content <- function(all_analyses) {
+  
+  content <- '
+    <div class="analysis-summary">
+        <h2>📋 Analysis Summary</h2>
+        <p>This comprehensive dashboard presents multiple statistical analysis perspectives of your data.</p>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="result-section">
+                <h3>Available Analyses</h3>
+                <ul class="list-group list-group-flush">'
+  
+  if (!is.null(all_analyses$descriptive)) {
+    content <- paste0(content, '
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>📈 Descriptive Statistics</strong><br><small>Summary statistics, distributions, and data quality assessment</small></span>
+                        <span class="badge bg-success rounded-pill">✓</span>
+                    </li>')
+  }
+  
+  if (!is.null(all_analyses$comparative)) {
+    content <- paste0(content, '
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>🔍 Comparative Analysis</strong><br><small>Group comparisons and statistical tests</small></span>
+                        <span class="badge bg-success rounded-pill">✓</span>
+                    </li>')
+  }
+  
+  if (!is.null(all_analyses$correlation)) {
+    content <- paste0(content, '
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>🔗 Correlation Analysis</strong><br><small>Relationships between variables</small></span>
+                        <span class="badge bg-success rounded-pill">✓</span>
+                    </li>')
+  }
+  
+  if (!is.null(all_analyses$enhanced_inferential)) {
+    content <- paste0(content, '
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        <span><strong>🧮 Enhanced Inferential</strong><br><small>Advanced modeling and effect size analysis</small></span>
+                        <span class="badge bg-success rounded-pill">✓</span>
+                    </li>')
+  }
+  
+  content <- paste0(content, '
+                </ul>
+            </div>
+        </div>
+        
+        <div class="col-md-6">
+            <div class="result-section">
+                <h3>Quick Navigation</h3>
+                <div class="interpretation">
+                    <p><strong>How to use this dashboard:</strong></p>
+                    <ul>
+                        <li>Use the tabs above to navigate between different analyses</li>
+                        <li>Each tab contains comprehensive results for that analysis type</li>
+                        <li>Look for color-coded results: <span style="color: #28a745;">green = significant</span>, <span style="color: #dc3545;">red = not significant</span></li>
+                        <li>Plots and tables provide detailed insights into your data</li>
+                        <li>Each section maintains its independent functionality</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="result-section">
+        <h3>🎯 Key Features</h3>
+        <div class="row">
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <h5>📊 Comprehensive</h5>
+                    <p class="small">All analysis modules in one place</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <h5>🔄 Interactive</h5>
+                    <p class="small">Easy navigation between analyses</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <h5>📈 Visual</h5>
+                    <p class="small">Rich plots and visualizations</p>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="text-center p-3">
+                    <h5>📋 Detailed</h5>
+                    <p class="small">Complete statistical reporting</p>
+                </div>
+            </div>
+        </div>
+        </div>'
+  
+  return(content)
+}
+
+# Simple wrapper function for R users to generate unified dashboard easily
+generate_comprehensive_dashboard <- function(data_file = "dane.csv", output_path = "output/reports") {
+  
+  cat("=== COMPREHENSIVE STATISTICAL ANALYSIS DASHBOARD ===\n")
+  cat("Loading data from:", data_file, "\n")
+  
+  # Load required modules if not already loaded
+  if (!exists("fetch_dataset")) {
+    source("modules/data/fetch_dataset.R")
+  }
+  
+  # Load data
+  data <- tryCatch({
+    fetch_dataset(data_file)
+  }, error = function(e) {
+    cat("Error loading data:", e$message, "\n")
+    return(NULL)
+  })
+  
+  if (is.null(data)) {
+    cat("Failed to load data. Please check the file path.\n")
+    return(NULL)
+  }
+  
+  cat("Data loaded successfully:", nrow(data), "rows,", ncol(data), "columns\n")
+  
+  # Generate unified dashboard
+  dashboard_file <- generate_unified_dashboard(
+    data = data,
+    output_path = output_path,
+    title = paste("Comprehensive Analysis Dashboard -", basename(data_file))
+  )
+  
+  if (!is.null(dashboard_file)) {
+    cat("Dashboard generated successfully!\n")
+    cat("File location:", dashboard_file, "\n")
+    
+    # Try to open in browser if in interactive mode
+    if (interactive()) {
+      cat("Attempting to open dashboard in browser...\n")
+      browseURL(dashboard_file)
+    }
+    
+    return(dashboard_file)
+  } else {
+    cat("Failed to generate dashboard.\n")
+    return(NULL)
+  }
 } 

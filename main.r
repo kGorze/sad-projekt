@@ -64,6 +64,8 @@ parse_arguments <- function() {
                 help="Run statistical tests"),
     make_option(c("--enhanced_inferential"), action="store_true", default=FALSE,
                 help="Run enhanced inferential analysis (multiple regression, ANCOVA, interactions)"),
+    make_option(c("--unified_dashboard"), action="store_true", default=FALSE,
+                help="Generate unified dashboard with all available analyses in tabs"),
     make_option(c("--report"), action="store_true", default=FALSE,
                 help="Generate HTML report for the analysis"),
     make_option(c("--export"), action="store_true", default=FALSE,
@@ -222,6 +224,37 @@ run_analysis_with_args <- function(args) {
     }
   }
   
+  if (args$unified_dashboard) {
+    log_analysis_step("UNIFIED DASHBOARD", "Starting unified dashboard generation with all analyses")
+    cat("Generating unified dashboard with all available analyses...\n")
+    analysis_type <- "unified_dashboard"
+    
+    # Use the generate_unified_dashboard function
+    dashboard_file <- execute_with_warning_capture({
+      generate_unified_dashboard(
+        data = medical_data,
+        output_path = "output/reports",
+        title = "Comprehensive Statistical Analysis Dashboard"
+      )
+    })
+    
+    if (!is.null(dashboard_file)) {
+      log_analysis_step("UNIFIED DASHBOARD COMPLETED", paste("Dashboard generated:", basename(dashboard_file)))
+      cat("Unified dashboard generated successfully:", dashboard_file, "\n")
+      
+      # Return early for unified dashboard as it handles everything internally
+      return(list(
+        dashboard_file = dashboard_file,
+        analysis_type = analysis_type,
+        message = "Unified dashboard generated with all available analyses"
+      ))
+    } else {
+      cat("Error: Failed to generate unified dashboard\n")
+      log_error("Unified dashboard generation failed")
+      return(NULL)
+    }
+  }
+  
   # Export CSV files if requested
   exported_files <- NULL
   if (args$export && !is.null(analysis_results) && !is.null(analysis_type)) {
@@ -315,7 +348,9 @@ run_analysis_with_args <- function(args) {
   cat("  --comparative_analysis: Run comparative analysis\n")
   cat("  --correlation_analysis: Run correlation analysis\n")
   cat("  --descriptive_stats: Run descriptive statistics\n")
+  cat("  --enhanced_inferential: Run enhanced inferential analysis\n")
   cat("  --statistical_tests: Run statistical tests\n")
+  cat("  --unified_dashboard: Generate unified dashboard with all analyses in tabs\n")
   cat("  --report: Generate HTML report (use with any analysis option)\n")
   cat("  --export: Export analysis results to CSV files (use with any analysis option)\n")
   cat("\nExample usage:\n")
@@ -324,6 +359,8 @@ run_analysis_with_args <- function(args) {
   cat("  Rscript main.R --correlation_analysis --report --export\n")
   cat("  Rscript main.R --input dane2.csv --descriptive_stats --export\n")
   cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
+  cat("  Rscript main.R --unified_dashboard  # Generates comprehensive dashboard with all analyses\n")
+  cat("  Rscript main.R --input dane3.csv --unified_dashboard\n")
   
   return(NULL)
 }
