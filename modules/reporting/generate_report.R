@@ -89,6 +89,7 @@ create_analysis_specific_content <- function(analysis_results, analysis_type, in
     "correlation_analysis" = create_correlation_analysis_content(analysis_results, include_plots),
     "descriptive_stats" = create_descriptive_stats_content(analysis_results, include_plots),
     "statistical_tests" = create_statistical_tests_content(analysis_results, include_plots),
+    "enhanced_inferential" = create_enhanced_inferential_content(analysis_results, include_plots),
     # Default content for any analysis
     create_generic_analysis_content(analysis_results, include_plots)
   )
@@ -1186,6 +1187,171 @@ create_statistical_tests_content <- function(results, include_plots) {
     }
   } else {
     content <- paste0(content, '<p>No statistical test results available.</p>')
+  }
+  
+  content <- paste0(content, '</div></div></div>')
+  return(content)
+}
+
+# Create content for enhanced inferential analysis
+create_enhanced_inferential_content <- function(results, include_plots) {
+  content <- '<div class="row"><div class="col-12">'
+  
+  # Summary section
+  content <- paste0(content, '
+    <div class="result-section">
+        <h2>Enhanced Inferential Analysis Summary</h2>
+        <p>Advanced statistical modeling with multiple regression, ANCOVA, and interaction analysis.</p>')
+  
+  # Metadata overview
+  if (!is.null(results$metadata)) {
+    content <- paste0(content, '
+        <h3>Analysis Overview</h3>
+        <div class="interpretation">
+            <strong>Groups Analyzed:</strong> ', paste(results$metadata$groups, collapse = ", "), '<br>
+            <strong>Group Sizes:</strong> ', paste(names(results$metadata$group_sizes), "=", results$metadata$group_sizes, collapse = ", "), '<br>
+            <strong>Dependent Variables:</strong> ', results$metadata$dependent_variables, '<br>
+            <strong>Covariates:</strong> ', results$metadata$covariates, '<br>
+            <strong>Total Observations:</strong> ', results$metadata$total_observations, '<br>')
+    
+    # Add covariate centering information
+    if (!is.null(results$metadata$covariate_centering) && length(results$metadata$covariate_centering) > 0) {
+      content <- paste0(content, '<strong>Covariate Centering:</strong> ')
+      centering_info <- sapply(names(results$metadata$covariate_centering), function(cov) {
+        mean_val <- round(results$metadata$covariate_centering[[cov]]$original_mean, 2)
+        paste0(cov, " centered at ", mean_val)
+      })
+      content <- paste0(content, paste(centering_info, collapse = ", "))
+    }
+    
+    content <- paste0(content, '
+        </div>')
+  }
+  
+  # Model Comparison Results
+  if (!is.null(results$model_comparison)) {
+    content <- paste0(content, '
+        <h3>Model Selection Results</h3>
+        <p>Comparison of different statistical models for each dependent variable:</p>')
+    
+    for (var_name in names(results$model_comparison)) {
+      var_result <- results$model_comparison[[var_name]]
+      if (!is.null(var_result$best_model)) {
+        # Extract model comparison table
+        comparison_table <- var_result$comparison_table
+        best_model_name <- var_result$best_model$best_model_name
+        
+        content <- paste0(content, '
+          <div class="test-result significant">
+              <h4>', var_name, '</h4>
+              <strong>Best Model:</strong> ', best_model_name, '<br>
+              <strong>Selection Rationale:</strong> ', var_result$best_model$rationale, '<br>')
+        
+        # Add model metrics for best model
+        if (!is.null(comparison_table)) {
+          best_row <- comparison_table[comparison_table$Model == best_model_name, ]
+          if (nrow(best_row) > 0) {
+            content <- paste0(content, '
+              <strong>Model Metrics:</strong> AIC = ', round(best_row$AIC, 2), 
+              ', BIC = ', round(best_row$BIC, 2), 
+              ', Adj R² = ', round(best_row$Adj_R_squared, 3))
+          }
+        }
+        
+        content <- paste0(content, '</div>')
+      }
+    }
+  }
+  
+  # Interaction Analysis Results
+  if (!is.null(results$interaction_analysis)) {
+    content <- paste0(content, '
+        <h3>Significant Group × Covariate Interactions</h3>
+        <p>Testing for group × covariate interactions that significantly improve model fit:</p>')
+    
+    significant_interactions <- 0
+    for (var_name in names(results$interaction_analysis)) {
+      var_interactions <- results$interaction_analysis[[var_name]]
+      for (covariate in names(var_interactions)) {
+        interaction_data <- var_interactions[[covariate]]
+        if (!is.null(interaction_data$interaction_significant) && interaction_data$interaction_significant) {
+          significant_interactions <- significant_interactions + 1
+          r_sq_change <- if (!is.null(interaction_data$model_improvement$r_squared_change)) {
+            round(interaction_data$model_improvement$r_squared_change, 4)
+          } else {
+            "N/A"
+          }
+          
+          # Extract interaction coefficient if available
+          interaction_coeff_info <- ""
+          if (!is.null(interaction_data$coefficients$estimates)) {
+            coeff_table <- interaction_data$coefficients$estimates
+            interaction_terms <- grep(":", rownames(coeff_table), value = TRUE)
+            if (length(interaction_terms) > 0) {
+              for (term in interaction_terms) {
+                estimate <- round(coeff_table[term, "Estimate"], 4)
+                se <- round(coeff_table[term, "Std. Error"], 4)
+                interaction_coeff_info <- paste0(interaction_coeff_info, 
+                  '<br><em>Interaction coefficient:</em> β = ', estimate, ' (SE = ', se, ')')
+              }
+            }
+          }
+          
+          content <- paste0(content, '
+            <div class="test-result significant">
+                <strong>', var_name, ': Group × ', covariate, ' interaction</strong><br>
+                <em>p-value:</em> ', format.pval(interaction_data$interaction_p_value, digits = 4), '<br>
+                <em>R² change:</em> ', r_sq_change, interaction_coeff_info, '
+            </div>')
+        }
+      }
+    }
+    
+    if (significant_interactions == 0) {
+      content <- paste0(content, '<p><em>No significant group × covariate interactions detected.</em></p>')
+    }
+  }
+  
+  # Effect Sizes Summary
+  if (!is.null(results$effect_sizes)) {
+    content <- paste0(content, '
+        <h3>Effect Sizes Summary</h3>
+        <p>Summary of effect sizes for significant models:</p>')
+    
+    for (var_name in names(results$effect_sizes)) {
+      var_effects <- results$effect_sizes[[var_name]]
+      if (!is.null(var_effects)) {
+        content <- paste0(content, '
+          <div class="interpretation">
+              <strong>', var_name, ':</strong><br>')
+        
+        if (!is.null(var_effects$regression)) {
+          r_squared <- round(var_effects$regression$r_squared, 3)
+          interpretation <- var_effects$regression$interpretation
+          
+          # Enhanced interpretation based on variable type
+          clinical_interpretation <- ""
+          if (var_name %in% c("HGB", "HCT")) {
+            clinical_interpretation <- " - indicating potential treatment effects on oxygen-carrying capacity"
+          } else if (var_name %in% c("ERY", "PLT", "LEU", "MON")) {
+            clinical_interpretation <- " - suggesting group differences in hematological parameters"
+          } else if (var_name == "MCHC") {
+            clinical_interpretation <- " - reflecting changes in red blood cell concentration"
+          }
+          
+          content <- paste0(content, '
+              <em>Regression R²:</em> ', r_squared, ' (', interpretation, ')<br>
+              <em>Clinical relevance:</em> After adjusting for age and biomarkers, group membership explains ', 
+              round(r_squared * 100, 1), '% of variance in ', var_name, clinical_interpretation, '<br>')
+        }
+        
+        if (!is.null(var_effects$ancova)) {
+          content <- paste0(content, '<em>ANCOVA effects available</em><br>')
+        }
+        
+        content <- paste0(content, '</div>')
+      }
+    }
   }
   
   content <- paste0(content, '</div></div></div>')

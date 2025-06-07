@@ -1,0 +1,39 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG - ENHANCED DEBUGGING MODE
+Session started: 2025-06-07 17:50:46.638628
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --enhanced_inferential --report
+Log level: INFO
+================================================================================
+
+[2025-06-07 17:50:46] [INFO] STEP: DATA LOADING - Loading data from: dane.csv
+[2025-06-07 17:50:47] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 75 rows and 11 columns
+[2025-06-07 17:50:47] [INFO] STEP: ENHANCED INFERENTIAL ANALYSIS - Starting enhanced inferential analysis with covariates
+[2025-06-07 17:50:53] [INFO] STEP: ENHANCED INFERENTIAL ANALYSIS COMPLETED - Enhanced inferential analysis successfully completed
+[2025-06-07 17:50:53] [INFO] STEP: HTML REPORT GENERATION - Starting HTML report generation
+[2025-06-07 17:50:53] [INFO] STEP: HTML REPORT COMPLETED - Report saved to: enhanced_inferential_report_20250607_175053.html
+
+================================================================================
+ENHANCED SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.12 minutes
+Total analysis steps: 6
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 0
+Total console output entries: 0
+Session ended: 2025-06-07 17:50:53.71679
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (17:50:46)
+  2. DATA PREPARATION COMPLETED (17:50:47)
+  3. ENHANCED INFERENTIAL ANALYSIS (17:50:47)
+  4. ENHANCED INFERENTIAL ANALYSIS COMPLETED (17:50:53)
+  5. HTML REPORT GENERATION (17:50:53)
+  6. HTML REPORT COMPLETED (17:50:53)
+
+DEBUGGING RECOMMENDATIONS:
+  ✅ No R warnings - clean execution
+
+================================================================================

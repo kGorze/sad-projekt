@@ -33,29 +33,74 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   categorical_vars <- categorical_vars[categorical_vars != group_column]
   
   # Identify potential covariates
-  potential_covariates <- identify_covariates(data, numeric_vars, group_column)
+  potential_covariates <- tryCatch({
+    identify_covariates(data, numeric_vars, group_column)
+  }, error = function(e) {
+    cat("Warning: Could not identify covariates automatically. Using manual identification.\n")
+    # Manual covariate identification as fallback
+    manual_covariates <- c()
+    if ("wiek" %in% names(data)) manual_covariates <- c(manual_covariates, "wiek")
+    if ("hsCRP" %in% names(data)) manual_covariates <- c(manual_covariates, "hsCRP")
+    return(manual_covariates)
+  })
   
-  cat("- Analyzing", length(numeric_vars), "dependent variables\n")
-  cat("- Identified", length(potential_covariates), "potential covariates\n")
+  # CRITICAL FIX: Remove identified covariates from dependent variables list
+  # to avoid analyzing covariates as both dependent variables AND covariates
+  dependent_vars <- numeric_vars[!numeric_vars %in% potential_covariates]
+  
+  # Center continuous covariates for better interpretation of interactions
+  centered_data <- data
+  covariate_centering_info <- list()
+  
+  for (covariate in potential_covariates) {
+    if (covariate %in% names(data) && is.numeric(data[[covariate]])) {
+      original_mean <- mean(data[[covariate]], na.rm = TRUE)
+      centered_data[[paste0(covariate, "_centered")]] <- data[[covariate]] - original_mean
+      covariate_centering_info[[covariate]] <- list(
+        original_mean = original_mean,
+        centered_variable = paste0(covariate, "_centered")
+      )
+      cat("- Centered", covariate, "around mean =", round(original_mean, 2), "\n")
+    }
+  }
+  
+  cat("- Analyzing", length(dependent_vars), "dependent variables\n")
+  cat("- Identified", length(potential_covariates), "potential covariates:", paste(potential_covariates, collapse = ", "), "\n")
+  cat("- Dependent variables:", paste(dependent_vars, collapse = ", "), "\n")
   
   # Step 1: Multiple Linear Regression with Covariates
   cat("\n=== STEP 1: MULTIPLE LINEAR REGRESSION WITH COVARIATES ===\n")
-  mlr_results <- perform_multiple_linear_regression(data, numeric_vars, group_column, potential_covariates)
+  mlr_results <- tryCatch({
+    perform_multiple_linear_regression(centered_data, dependent_vars, group_column, potential_covariates)
+  }, error = function(e) {
+    cat("Warning: Multiple regression analysis failed:", e$message, "\n")
+    list()
+  })
   result$multiple_regression <- mlr_results
   
   # Step 2: ANCOVA Models
   cat("\n=== STEP 2: ANCOVA MODELS ===\n")
-  ancova_results <- perform_ancova_analysis(data, numeric_vars, group_column, potential_covariates)
+  ancova_results <- tryCatch({
+    perform_ancova_analysis(centered_data, dependent_vars, group_column, potential_covariates)
+  }, error = function(e) {
+    cat("Warning: ANCOVA analysis failed:", e$message, "\n")
+    list()
+  })
   result$ancova_analysis <- ancova_results
   
   # Step 3: Interaction Terms Analysis
   cat("\n=== STEP 3: INTERACTION TERMS ANALYSIS ===\n")
-  interaction_results <- perform_interaction_analysis(data, numeric_vars, group_column, potential_covariates)
+  interaction_results <- tryCatch({
+    perform_interaction_analysis(centered_data, dependent_vars, group_column, potential_covariates)
+  }, error = function(e) {
+    cat("Warning: Interaction analysis failed:", e$message, "\n")
+    list()
+  })
   result$interaction_analysis <- interaction_results
   
   # Step 4: Model Selection and Comparison
   cat("\n=== STEP 4: MODEL SELECTION AND COMPARISON ===\n")
-  model_comparison <- perform_model_comparison(data, numeric_vars, group_column, potential_covariates)
+  model_comparison <- perform_model_comparison(centered_data, dependent_vars, group_column, potential_covariates)
   result$model_comparison <- model_comparison
   
   # Step 5: Effect Sizes and Confidence Intervals
@@ -67,7 +112,7 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   if (include_plots) {
     cat("\n=== STEP 6: GENERATING VISUALIZATIONS ===\n")
     plots_output_path <- file.path("output", "plots", "enhanced_inferential")
-    plots_result <- create_inferential_plots(data, result, numeric_vars, group_column, plots_output_path)
+    plots_result <- create_inferential_plots(centered_data, result, dependent_vars, group_column, plots_output_path)
     result$plots <- plots_result$plots
     result$plot_files <- plots_result$plot_files
   }
@@ -77,8 +122,9 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
     total_observations = nrow(data),
     groups = unique(data[[group_column]]),
     group_sizes = table(data[[group_column]]),
-    dependent_variables = length(numeric_vars),
+    dependent_variables = length(dependent_vars),
     covariates = length(potential_covariates),
+    covariate_centering = covariate_centering_info,
     group_column = group_column,
     analysis_date = Sys.time()
   )
@@ -192,7 +238,11 @@ perform_multiple_linear_regression <- function(data, dependent_vars, group_colum
             summary = summary(model_full),
             r_squared = summary(model_full)$r.squared,
             adj_r_squared = summary(model_full)$adj.r.squared,
-            coefficients = tidy(model_full, conf.int = TRUE)
+            coefficients = if (requireNamespace("broom", quietly = TRUE)) {
+              broom::tidy(model_full, conf.int = TRUE)
+            } else {
+              summary(model_full)$coefficients
+            }
           ),
           model_comparison = anova_comparison,
           diagnostics = diagnostics,
@@ -208,7 +258,11 @@ perform_multiple_linear_regression <- function(data, dependent_vars, group_colum
             summary = summary(model_baseline),
             r_squared = summary(model_baseline)$r.squared,
             adj_r_squared = summary(model_baseline)$adj.r.squared,
-            coefficients = tidy(model_baseline, conf.int = TRUE)
+            coefficients = if (requireNamespace("broom", quietly = TRUE)) {
+              broom::tidy(model_baseline, conf.int = TRUE)
+            } else {
+              summary(model_baseline)$coefficients
+            }
           ),
           n_observations = nrow(clean_data),
           note = "No covariates available"
@@ -257,11 +311,23 @@ perform_ancova_analysis <- function(data, dependent_vars, group_column, covariat
       ancova_model <- lm(formula_ancova, data = clean_data)
       
       # Type III ANOVA (using car package)
-      ancova_anova <- Anova(ancova_model, type = "III")
+      ancova_anova <- if (requireNamespace("car", quietly = TRUE)) {
+        car::Anova(ancova_model, type = "III")
+      } else {
+        anova(ancova_model)
+      }
       
       # Estimated marginal means
-      emm_results <- emmeans(ancova_model, group_column)
-      emm_contrasts <- pairs(emm_results)
+      emm_results <- if (requireNamespace("emmeans", quietly = TRUE)) {
+        emmeans::emmeans(ancova_model, group_column)
+      } else {
+        NULL
+      }
+      emm_contrasts <- if (!is.null(emm_results) && requireNamespace("emmeans", quietly = TRUE)) {
+        emmeans::pairs(emm_results)
+      } else {
+        NULL
+      }
       
       # Model diagnostics
       diagnostics <- check_model_assumptions(ancova_model)
@@ -339,6 +405,17 @@ perform_interaction_analysis <- function(data, dependent_vars, group_column, cov
         interaction_summary <- summary(model_interaction)
         interaction_coeff <- grep(":", rownames(interaction_summary$coefficients), value = TRUE)
         
+        # Extract coefficient estimates and confidence intervals
+        interaction_summary <- summary(model_interaction)
+        interaction_coeff_table <- interaction_summary$coefficients
+        
+        # Get confidence intervals
+        conf_intervals <- tryCatch({
+          confint(model_interaction)
+        }, error = function(e) {
+          NULL
+        })
+        
         var_interactions[[covariate]] <- list(
           covariate = covariate,
           main_effects_model = model_main,
@@ -350,6 +427,10 @@ perform_interaction_analysis <- function(data, dependent_vars, group_column, cov
             r_squared_change = summary(model_interaction)$r.squared - summary(model_main)$r.squared,
             f_change = interaction_test$F[2],
             p_change = interaction_test$`Pr(>F)`[2]
+          ),
+          coefficients = list(
+            estimates = interaction_coeff_table,
+            confidence_intervals = conf_intervals
           )
         )
         
@@ -463,10 +544,18 @@ check_model_assumptions <- function(model) {
     shapiro_test <- if (length(residuals) <= 5000) shapiro.test(residuals) else NULL
     
     # Homoscedasticity (Breusch-Pagan test)
-    bp_test <- car::ncvTest(model)
+    bp_test <- if (requireNamespace("car", quietly = TRUE)) {
+      car::ncvTest(model)
+    } else {
+      list(p = NA)
+    }
     
     # Independence (Durbin-Watson test)
-    dw_test <- car::durbinWatsonTest(model)
+    dw_test <- if (requireNamespace("car", quietly = TRUE)) {
+      car::durbinWatsonTest(model)
+    } else {
+      list(dw = NA, p = NA)
+    }
     
     # Influential observations
     cooks_distance <- cooks.distance(model)
