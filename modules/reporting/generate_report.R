@@ -2137,7 +2137,7 @@ generate_unified_dashboard <- function(data, output_path = "output/reports", tit
   # Run all analyses and capture results
   tryCatch({
     cat("Running descriptive statistics analysis...\n")
-    all_analyses$descriptive <- perform_comprehensive_descriptive_analysis(data, group_column = "grupa", include_plots = TRUE)
+    all_analyses$descriptive <- generate_descriptive_stats(data, group_column = "grupa", include_plots = TRUE)
   }, error = function(e) {
     cat("Warning: Descriptive analysis failed -", e$message, "\n")
     all_analyses$descriptive <- NULL
@@ -2145,7 +2145,7 @@ generate_unified_dashboard <- function(data, output_path = "output/reports", tit
   
   tryCatch({
     cat("Running comparative analysis...\n")
-    all_analyses$comparative <- perform_comprehensive_comparative_analysis(data, group_column = "grupa", include_plots = TRUE)
+    all_analyses$comparative <- perform_group_comparisons(data, group_column = "grupa", include_plots = TRUE)
   }, error = function(e) {
     cat("Warning: Comparative analysis failed -", e$message, "\n")
     all_analyses$comparative <- NULL
@@ -2153,7 +2153,7 @@ generate_unified_dashboard <- function(data, output_path = "output/reports", tit
   
   tryCatch({
     cat("Running correlation analysis...\n")
-    all_analyses$correlation <- perform_comprehensive_correlation_analysis(data, group_column = "grupa", include_plots = TRUE)
+    all_analyses$correlation <- perform_correlation_analysis(data, group_column = "grupa", include_plots = TRUE)
   }, error = function(e) {
     cat("Warning: Correlation analysis failed -", e$message, "\n")
     all_analyses$correlation <- NULL
