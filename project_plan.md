@@ -105,8 +105,8 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **A. Remove Redundancy**
 
-* [ ] Build one “Assumptions dashboard” that holds all normality + variance tests; delete the duplicates now in Descriptive Stats and Comparative Analysis
-* [ ] Merge repeated group-wise descriptive tables into a single master summary; link to it instead of re-printing the full table everywhere&#x20;
+* [X] Build one “Assumptions dashboard” that holds all normality + variance tests; delete the duplicates now in Descriptive Stats and Comparative Analysis
+* [X] Merge repeated group-wise descriptive tables into a single master summary; link to it instead of re-printing the full table everywhere&#x20;
 
 **B. Strengthen Inferential Framework**
 

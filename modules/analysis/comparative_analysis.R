@@ -66,15 +66,28 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
   }
   result$effect_sizes <- effect_size_results
   
-  # Step 4: Linear regression analysis for numeric variables
-  cat("\n=== STEP 4: LINEAR REGRESSION ANALYSIS ===\n")
-  regression_results <- list()
-  for (var in numeric_vars) {
-    cat("Performing linear regression for", var, "...\n")
-    lm_result <- perform_linear_regression(data, var, group_column)
-    regression_results[[var]] <- lm_result
+  # Step 4: Enhanced Inferential Analysis (Multiple Regression & ANCOVA)
+  cat("\n=== STEP 4: ENHANCED INFERENTIAL ANALYSIS ===\n")
+  
+  # Source the enhanced inferential framework
+  if (file.exists("modules/analysis/enhanced_inferential_framework.R")) {
+    source("modules/analysis/enhanced_inferential_framework.R")
+    
+    # Perform enhanced inferential analysis
+    enhanced_inferential_results <- perform_enhanced_inferential_analysis(data, group_column, include_plots = FALSE)
+    result$enhanced_inferential <- enhanced_inferential_results
+    cat("- Enhanced inferential analysis completed\n")
+  } else {
+    # Fallback to basic regression if enhanced framework not available
+    regression_results <- list()
+    for (var in numeric_vars) {
+      cat("Performing basic linear regression for", var, "...\n")
+      lm_result <- perform_linear_regression(data, var, group_column)
+      regression_results[[var]] <- lm_result
+    }
+    result$regression_analysis <- regression_results
+    cat("- Basic regression analysis completed\n")
   }
-  result$regression_analysis <- regression_results
   
   # Step 5: Enhanced Post Hoc Analysis (if any significant omnibus tests)
   cat("\n=== STEP 5: ENHANCED POST HOC ANALYSIS ===\n")

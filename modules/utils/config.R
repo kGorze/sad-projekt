@@ -59,7 +59,7 @@ load_required_packages <- function(packages = NULL, quiet = TRUE) {
     "VIM", "mice", "Hmisc", 
     
     # Statistical analysis packages
-    "car", "dunn.test", "effsize", "psych", "broom", "nortest",
+    "car", "dunn.test", "effsize", "psych", "broom", "nortest", "emmeans", "performance", "effectsize",
     
     # Visualization packages
     "ggpubr", "gridExtra", "corrplot", "GGally", "ggcorrplot",

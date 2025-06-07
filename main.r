@@ -4,8 +4,10 @@
 # Usage: Rscript main.R --comparative_analysis --report
 # Usage: Rscript main.R --correlation_analysis --report
 # Usage: Rscript main.R --descriptive_stats --report
+# Usage: Rscript main.R --enhanced_inferential --report
 # Usage: Rscript main.R --comparative_analysis --export
 # Usage: Rscript main.R --correlation_analysis --report --export
+# Usage: Rscript main.R --enhanced_inferential --input dane2.csv --report --export
 # Usage: Rscript main.R --input dane2.csv --descriptive_stats --export
 # Usage: Rscript main.R --correlation_analysis --input mydata.csv --report --export
 
@@ -60,6 +62,8 @@ parse_arguments <- function() {
                 help="Run descriptive statistics analysis"),
     make_option(c("--statistical_tests"), action="store_true", default=FALSE,
                 help="Run statistical tests"),
+    make_option(c("--enhanced_inferential"), action="store_true", default=FALSE,
+                help="Run enhanced inferential analysis (multiple regression, ANCOVA, interactions)"),
     make_option(c("--report"), action="store_true", default=FALSE,
                 help="Generate HTML report for the analysis"),
     make_option(c("--export"), action="store_true", default=FALSE,
@@ -192,6 +196,28 @@ run_analysis_with_args <- function(args) {
     
     if (!is.null(analysis_results)) {
       log_analysis_step("STATISTICAL TESTS COMPLETED", "Statistical tests placeholder completed")
+    }
+  }
+  
+  if (args$enhanced_inferential) {
+    log_analysis_step("ENHANCED INFERENTIAL ANALYSIS", "Starting enhanced inferential analysis with covariates")
+    cat("Running enhanced inferential analysis (MLR, ANCOVA, interactions)...\n")
+    analysis_type <- "enhanced_inferential"
+    
+    # Source the enhanced inferential framework
+    source("modules/analysis/enhanced_inferential_framework.R")
+    
+    # Use the implemented enhanced inferential analysis function with warning capture
+    analysis_results <- execute_with_warning_capture({
+      perform_enhanced_inferential_analysis(
+        data = medical_data, 
+        group_column = "grupa", 
+        include_plots = TRUE
+      )
+    })
+    
+    if (!is.null(analysis_results)) {
+      log_analysis_step("ENHANCED INFERENTIAL ANALYSIS COMPLETED", "Enhanced inferential analysis successfully completed")
     }
   }
   
