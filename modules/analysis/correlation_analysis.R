@@ -1,5 +1,25 @@
 # Correlation Analysis Module
 # Comprehensive correlation analysis with multiple methods and advanced visualization
+#
+# Variable Nomenclature Standards:
+# - hsCRP: High-sensitivity C-reactive protein (mg/L)
+# - BMI: Body Mass Index (kg/m²)
+# - wiek: Age (years)
+# - plec: Gender (M/F)
+# - grupa: Study group assignment
+# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
+# - Correlation strength: negligible (<0.1), weak (0.1-0.3), moderate (0.3-0.5), strong (0.5-0.7), very strong (>0.7)
+#
+# Statistical Methods Documentation:
+# 1. CORRELATION METHOD SELECTION:
+#    - Pearson: Used when both variables are normally distributed (Shapiro-Wilk/KS test p > 0.05)
+#    - Spearman: Used when either variable is non-normal or relationship is non-linear
+# 2. MULTIPLE TESTING CORRECTION:
+#    - Benjamini-Hochberg (FDR) procedure applied to all correlation p-values
+#    - Controls False Discovery Rate at α = 0.05 level
+#    - More powerful than Bonferroni correction for exploratory analysis
+# 3. EFFECT SIZE INTERPRETATION:
+#    - Cohen's guidelines: r < 0.1 (negligible), 0.1-0.3 (small), 0.3-0.5 (medium), 0.5-0.7 (large), >0.7 (very large)
 
 # Load required libraries with error handling
 # NOTE: Packages are now loaded centrally in config.R - no individual loading needed
@@ -151,6 +171,11 @@ calculate_overall_correlations <- function(data, variables) {
   }
   
   # Apply Benjamini-Hochberg (FDR) correction to correlation p-values
+  # Rationale: Benjamini-Hochberg (BH) method chosen because:
+  # 1. Controls False Discovery Rate (FDR) rather than Family-Wise Error Rate (FWER)
+  # 2. More powerful than Bonferroni correction for multiple correlations
+  # 3. Appropriate for exploratory analysis where some false positives are acceptable
+  # 4. FDR = E[V/R] ≤ α, where V = false positives, R = total rejections
   if (length(pearson_p_raw) > 0) {
     pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
     spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
@@ -327,7 +352,7 @@ perform_correlation_significance_tests <- function(data, variables, group_column
             "There is a ", ifelse(cor_test$p.value < 0.05, "significant", "non-significant"),
             " ", interpretation$strength, " ", interpretation$direction,
             " correlation (", method, " r = ", round(cor_test$estimate, 3),
-            ", p = ", round(cor_test$p.value, 4), ")"
+            ", p = ", format.pval(cor_test$p.value, digits = 3), ")"
           )
         )
       }
@@ -410,10 +435,13 @@ determine_correlation_method <- function(x, y) {
   }
   
   # Use Pearson if both variables are normal, otherwise Spearman
+  # Statistical Decision Rationale:
+  # Pearson correlation: Assumes bivariate normality, measures linear relationships
+  # Spearman correlation: Non-parametric, measures monotonic relationships, robust to outliers
   if (x_normal && y_normal) {
-    return("pearson")
+    return("pearson")  # Both variables normal → parametric test appropriate
   } else {
-    return("spearman")
+    return("spearman")  # At least one variable non-normal → non-parametric test required
   }
 }
 

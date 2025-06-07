@@ -111,11 +111,31 @@ create_analysis_specific_content <- function(analysis_results, analysis_type, in
 create_comparative_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
-  # Summary section
+  # Summary section with statistical methods documentation
   content <- paste0(content, '
     <div class="result-section">
         <h2>Comparative Analysis Summary</h2>
-        <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>')
+        <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>
+        
+        <div class="alert alert-info">
+            <h4>Statistical Methods Documentation</h4>
+            <p><strong>Test Selection Decision Matrix:</strong></p>
+            <ul>
+                <li><strong>Normality Assessment:</strong> Shapiro-Wilk test (n≤50) or Anderson-Darling test (n>50)</li>
+                <li><strong>Homogeneity Assessment:</strong> Levene\'s test (robust to non-normality)</li>
+                <li><strong>Group Comparisons:</strong>
+                    <ul>
+                        <li>Normal + Homogeneous → One-way ANOVA + Tukey HSD post-hoc</li>
+                        <li>Normal + Heterogeneous → Welch\'s ANOVA (unequal variances)</li>
+                        <li>Non-normal → Kruskal-Wallis test + Dunn\'s post-hoc</li>
+                    </ul>
+                </li>
+                <li><strong>Effect Sizes:</strong> η² (eta-squared) for ANOVA, ε² (epsilon-squared) for Kruskal-Wallis, Cohen\'s d for pairwise comparisons</li>
+                <li><strong>Multiple Testing Correction:</strong> Benjamini-Hochberg (FDR) correction applied to correlation analyses; Bonferroni correction applied to post-hoc comparisons</li>
+                <li><strong>Significance Level:</strong> α = 0.05 for all statistical tests</li>
+            </ul>
+        </div>
+    </div>')
   
   # Metadata overview
   if (!is.null(results$metadata)) {
@@ -677,12 +697,33 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
 create_correlation_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
-  # Summary section
+  # Summary section with statistical methods documentation
   content <- paste0(content, '
     <div class="result-section">
         <h2>Correlation Analysis Summary</h2>
         <p>This analysis examines the strength and direction of linear relationships between continuous variables, 
-           using Pearson or Spearman correlation coefficients based on data characteristics.</p>')
+           using Pearson or Spearman correlation coefficients based on data characteristics.</p>
+           
+        <div class="alert alert-info">
+            <h4>Statistical Methods Documentation</h4>
+            <p><strong>Correlation Method Selection:</strong></p>
+            <ul>
+                <li><strong>Pearson Correlation:</strong> Used when both variables are normally distributed (parametric)</li>
+                <li><strong>Spearman Correlation:</strong> Used when either variable is non-normal or relationship is non-linear (non-parametric)</li>
+            </ul>
+            <p><strong>Multiple Testing Correction:</strong></p>
+            <ul>
+                <li><strong>Benjamini-Hochberg (FDR) procedure</strong> applied to all correlation p-values</li>
+                <li>Controls False Discovery Rate at α = 0.05 level</li>
+                <li>More powerful than Bonferroni correction for exploratory correlation analysis</li>
+                <li>Formula: FDR = E[False Positives / Total Rejections] ≤ α</li>
+            </ul>
+            <p><strong>Effect Size Guidelines (Cohen\'s conventions):</strong></p>
+            <ul>
+                <li>Negligible: |r| < 0.1, Weak: 0.1-0.3, Moderate: 0.3-0.5, Strong: 0.5-0.7, Very Strong: >0.7</li>
+            </ul>
+        </div>
+    </div>')
   
   # Metadata overview
   if (!is.null(results$metadata)) {

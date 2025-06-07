@@ -1,6 +1,29 @@
 # Enhanced Inferential Framework Module
 # Multiple linear regression and ANCOVA models with covariate adjustments
 # Implements advanced statistical modeling with interaction terms
+#
+# Variable Nomenclature Standards:
+# - hsCRP: High-sensitivity C-reactive protein (mg/L) - standardized biomarker name
+# - BMI: Body Mass Index (kg/m²)
+# - wiek: Age (years)
+# - plec: Gender (M/F)
+# - grupa: Study group assignment
+# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
+# - Effect sizes: η² (eta-squared) for ANOVA models, adjusted R² for regression models
+#
+# Advanced Statistical Modeling Documentation:
+# 1. MODEL SELECTION HIERARCHY:
+#    - Group-only model: outcome ~ group (baseline comparison)
+#    - Covariate-adjusted: outcome ~ group + covariates (ANCOVA approach)
+#    - Interaction model: outcome ~ group * covariates (if interactions significant)
+# 2. COVARIATE CENTERING:
+#    - Continuous covariates centered around sample mean for interpretability
+#    - Reduces multicollinearity in interaction terms
+#    - Intercept represents group means at average covariate values
+# 3. INTERACTION TESTING:
+#    - Systematic testing of group × covariate interactions
+#    - Retained only if p < 0.05 and improve model fit (AIC criterion)
+# 4. EFFECT SIZES: η² for ANCOVA, adjusted R² for regression, Cohen's f² for model comparisons
 
 # Load required libraries with error handling
 suppressPackageStartupMessages({
@@ -145,6 +168,7 @@ identify_covariates <- function(data, dependent_vars, group_column) {
   # Common covariate patterns in medical data
   age_patterns <- c("wiek", "age", "Age", "AGE", "anos", "alter")
   biomarker_patterns <- c("hsCRP", "hscrp", "CRP", "crp", "BMI", "bmi")
+  # Note: Standardized biomarker name is "hsCRP" (high-sensitivity C-reactive protein)
   
   # Identify age-like variables
   age_vars <- numeric_vars[sapply(numeric_vars, function(x) any(sapply(age_patterns, function(p) grepl(p, x, ignore.case = TRUE))))]
@@ -436,7 +460,7 @@ perform_interaction_analysis <- function(data, dependent_vars, group_column, cov
         
         if (interaction_test$`Pr(>F)`[2] < 0.05) {
           cat("  - Significant", group_column, "×", covariate, "interaction (p =", 
-              round(interaction_test$`Pr(>F)`[2], 4), ")\n")
+              format.pval(interaction_test$`Pr(>F)`[2], digits = 3), ")\n")
         }
         
       }, error = function(e) {

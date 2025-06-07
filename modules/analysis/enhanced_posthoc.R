@@ -1,5 +1,18 @@
 # Enhanced Post Hoc Analysis Module
 # Advanced post hoc testing with multiple correction methods and comprehensive reporting
+#
+# Post-Hoc Testing Decision Matrix:
+# 1. PARAMETRIC POST-HOC (after significant ANOVA):
+#    - Tukey HSD: Controls family-wise error rate, assumes equal variances
+#    - Bonferroni: More conservative, appropriate for planned comparisons
+#    - Holm: Sequential step-down method, less conservative than Bonferroni
+# 2. NON-PARAMETRIC POST-HOC (after significant Kruskal-Wallis):
+#    - Dunn's test: Recommended non-parametric follow-up, uses ranks
+#    - Pairwise Wilcoxon: Alternative non-parametric approach
+# 3. MULTIPLE TESTING CONTROL:
+#    - FWER methods: Bonferroni, Holm (control family-wise error rate)
+#    - FDR methods: Benjamini-Hochberg (control false discovery rate)
+# 4. EFFECT SIZES: Cohen's d for parametric, rank-biserial correlation for non-parametric
 
 # Source configuration
 source("modules/utils/config.R")
@@ -105,7 +118,7 @@ perform_comprehensive_tukey <- function(anova_result, data, variable, group_colu
     mean_difference = round(comparisons[, "diff"], 3),
     lower_ci = round(comparisons[, "lwr"], 3),
     upper_ci = round(comparisons[, "upr"], 3),
-    p_value = round(comparisons[, "p adj"], 4),
+          p_value = format.pval(comparisons[, "p adj"], digits = 3),
     significant = comparisons[, "p adj"] < 0.05,
     interpretation = ifelse(comparisons[, "p adj"] < 0.001, "***", 
                            ifelse(comparisons[, "p adj"] < 0.01, "**",
@@ -162,6 +175,9 @@ perform_bonferroni_posthoc <- function(data, variable, group_column) {
   }
   
   # Apply Bonferroni correction
+  # Rationale: Bonferroni method chosen for strict Type I error control
+  # Formula: p_adjusted = min(p_raw × m, 1), where m = number of comparisons
+  # Conservative but guarantees FWER ≤ α
   results$p_adjusted <- p.adjust(p_values, method = "bonferroni")
   results$significant <- results$p_adjusted < 0.05
   
@@ -373,8 +389,8 @@ perform_dunn_test_enhanced <- function(data, variable, group_column, method = "b
     results_df <- data.frame(
       comparison = dunn_result$comparisons,
       z_statistic = round(dunn_result$Z, 3),
-      p_value = round(dunn_result$P, 4),
-      p_adjusted = round(dunn_result$P.adjusted, 4),
+      p_value = format.pval(dunn_result$P, digits = 3),
+      p_adjusted = format.pval(dunn_result$P.adjusted, digits = 3),
       significant = dunn_result$P.adjusted < 0.05,
       stringsAsFactors = FALSE
     )

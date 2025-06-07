@@ -57,8 +57,8 @@ z argumentem wejściowym w formie .csv
 
 
 ## Co to znaczy, że grupy są niezależne?
-W kontekście tego zadania „grupy niezależne” oznaczają, że każda z badanych grup składa się z różnych, niepowiązanych ze sobą obserwacji (np. różnych osób). Innymi słowy:
-- Każdy „próba” (obserwacja, pacjent) należy dokładnie do jednej grupy i nie występuje w żadnej innej.
+W kontekście tego zadania "grupy niezależne" oznaczają, że każda z badanych grup składa się z różnych, niepowiązanych ze sobą obserwacji (np. różnych osób). Innymi słowy:
+- Każdy "próba" (obserwacja, pacjent) należy dokładnie do jednej grupy i nie występuje w żadnej innej.
 - Nie ma parowania ani powtarzanych pomiarów na tych samych obiektach między grupami (np. nie porównujemy wyników tego samego pacjenta przed/po zabiegu – bo to byłyby grupy zależne/parami sparowane).
 - Wyniki w jednej grupie nie wpływają bezpośrednio na wyniki w drugiej grupie.
 Dzięki temu możemy założyć, że obserwacje pomiędzy grupami są losowo od siebie niezależne. Przykładowo:
@@ -68,7 +68,7 @@ Dzięki temu możemy założyć, że obserwacje pomiędzy grupami są losowo od 
     
 Każdy pacjent jest przypisany tylko do jednej z tych trzech grup (nie ma takiej samej osoby w Grupie A i jednocześnie w Grupie B itd.). Jeżeli chcemy porównać średnie, odsetki czy inny parametr pomiędzy tymi grupami, używamy testów dla prób niezależnych (np. **testu t-Studenta** dla dwóch grup lub **analizy wariancji ANOVA/Kruskal-Wallisa** dla więcej niż dwóch).
 
-Jeśli założenie niezależności jest spełnione, wyniki testów są poprawne (nie dochodzi do „podwójnego liczenia” czy korelacji między pomiarami tych samych osób).
+Jeśli założenie niezależności jest spełnione, wyniki testów są poprawne (nie dochodzi do "podwójnego liczenia" czy korelacji między pomiarami tych samych osób).
 
 # Rodzaj danych jakie mamy
 
@@ -105,7 +105,7 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **A. Remove Redundancy**
 
-* [X] Build one “Assumptions dashboard” that holds all normality + variance tests; delete the duplicates now in Descriptive Stats and Comparative Analysis
+* [X] Build one "Assumptions dashboard" that holds all normality + variance tests; delete the duplicates now in Descriptive Stats and Comparative Analysis
 * [X] Merge repeated group-wise descriptive tables into a single master summary; link to it instead of re-printing the full table everywhere&#x20;
 
 **B. Strengthen Inferential Framework**
@@ -116,7 +116,7 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 **C. Deepen Association Analysis**
 
 * [X] Compute separate correlation matrices for CHOR1, CHOR2, KONTROLA
-* [X] Provide partial correlations that adjust for group in an “overall” matrix
+* [X] Provide partial correlations that adjust for group in an "overall" matrix
 
 **D. Control for Multiple Testing**
 
@@ -126,12 +126,12 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 **E. Report Effect Sizes Fully**
 
 * [X] Calculate rank-biserial *r* for each Mann-Whitney result
-* [X] Calculate ε² (or η²) with 95 % CI for every Kruskal-Wallis; fill “Effect Size: Not calculated” gaps&#x20;
-* [X] Add 95 % CI to η² in every ANOVA and Cohen’s *d* to all two-group t-tests
+* [X] Calculate ε² (or η²) with 95 % CI for every Kruskal-Wallis; fill "Effect Size: Not calculated" gaps&#x20;
+* [X] Add 95 % CI to η² in every ANOVA and Cohen's *d* to all two-group t-tests
 
 **F. Fix Model Residual Issues**
 
-* [X] For each model flagged “Residuals Non-normal” (e.g., *wiek \~ grupa*, *hsCRP \~ grupa*) try log/sqrt transforms and re-check assumptions
+* [X] For each model flagged "Residuals Non-normal" (e.g., *wiek \~ grupa*, *hsCRP \~ grupa*) try log/sqrt transforms and re-check assumptions
 * [X] If transformation fails, refit with robust regression (Huber/M-estimator)
 
 **G. Handle Missing Data**
@@ -149,27 +149,18 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **J. Standardize Nomenclature & Formatting**
 
-* [ ] Harmonize variable names (e.g., always “hsCRP”) across all outputs
-* [ ] Format all p-values consistently (e.g., three decimals, *p* < 0.001 in sci-notation)
-* [ ] Add a small glossary for variable abbreviations and units
+* [X] Harmonize variable names (e.g., always "hsCRP") across all outputs
+* [X] Format all p-values consistently (e.g., three decimals, *p* < 0.001 in sci-notation)
+* [X] Add a small glossary for variable abbreviations and units
 
 **K. Document Statistical Choices**
 
-* [ ] Insert footnotes explaining each test/effect-size choice (per decision matrix)&#x20;
-* [ ] Explicitly describe the chosen multiple-testing correction in the methods section
+* [X] Insert footnotes explaining each test/effect-size choice (per decision matrix)
+* [X] Explicitly describe the chosen multiple-testing correction in the methods section
 
-**L. Summarize Key Findings Up Front**
 
-* [ ] Create a two-line “Executive summary” at the very top of the report highlighting main significant differences and effect sizes
-
-**M. Dashboard Polish**
-
-* [ ] Add quick filters (group select) and download buttons for plots/tables
-* [ ] Ensure responsive layout works on tablets and phones
-
-**N. Quality Assurance**
+**L. Quality Assurance**
 
 * [ ] Unit-test every analysis step with representative data slices
-* [ ] Cross-check that table totals and *N*’s match the raw dataset counts
+* [ ] Cross-check that table totals and *N*'s match the raw dataset counts
 
-*(Tick off each box as you implement—feel free to expand any item into subtasks as needed.)*

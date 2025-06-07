@@ -1,6 +1,24 @@
 # Comparative Analysis Module
 # Functions for performing statistical comparisons between independent groups
 # Supports multiple groups (>2) with appropriate statistical tests
+#
+# Variable Nomenclature Standards:
+# - hsCRP: High-sensitivity C-reactive protein (mg/L)
+# - BMI: Body Mass Index (kg/m²)
+# - wiek: Age (years)
+# - plec: Gender (M/F)
+# - grupa: Study group assignment
+# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
+#
+# Statistical Test Selection Decision Matrix:
+# 1. NORMALITY: Shapiro-Wilk (n≤50) or Anderson-Darling (n>50) → Normal vs Non-normal
+# 2. HOMOGENEITY: Levene's test → Homogeneous vs Heterogeneous variances
+# 3. TEST SELECTION:
+#    - Normal + Homogeneous → One-way ANOVA (F-test) + Tukey HSD post-hoc
+#    - Normal + Heterogeneous → Welch's ANOVA (unequal variances)
+#    - Non-normal → Kruskal-Wallis test + Dunn's post-hoc with Bonferroni correction
+# 4. EFFECT SIZES: η² (eta-squared) for ANOVA, ε² (epsilon-squared) for Kruskal-Wallis, Cohen's d for pairwise
+# 5. MULTIPLE TESTING: Benjamini-Hochberg (FDR) correction applied to all correlation p-values
 
 # Load required libraries with error handling
 # NOTE: Packages are now loaded centrally in config.R - no individual loading needed
@@ -289,9 +307,9 @@ test_normality_overall <- function(variable) {
   
   interpretation <- ifelse(is_normal, 
                           paste("Data appears normally distributed (", test_name, " p =", 
-                                round(test_result$p.value, 4), ")"),
+                                format.pval(test_result$p.value, digits = 3), ")"),
                           paste("Data deviates from normal distribution (", test_name, " p =", 
-                                round(test_result$p.value, 4), ")"))
+                                format.pval(test_result$p.value, digits = 3), ")"))
   
   return(list(
     test = test_name,
@@ -517,9 +535,9 @@ assess_homogeneity <- function(data, variables, group_column) {
       
       interpretation <- ifelse(is_homogeneous,
                               paste("Variances appear homogeneous (Levene's test p =", 
-                                    round(levene_result$`Pr(>F)`[1], 4), ")"),
+                                    format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"),
                               paste("Variances are heterogeneous (Levene's test p =", 
-                                    round(levene_result$`Pr(>F)`[1], 4), ")"))
+                                    format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"))
       
       homogeneity_results[[var]] <- list(
         variable = var,
@@ -706,6 +724,11 @@ perform_anova <- function(data, variable, group_column) {
   }
   
   # Perform ANOVA
+  # Rationale: One-way ANOVA chosen because:
+  # 1. Data meets normality assumptions (tested via Shapiro-Wilk/Anderson-Darling)
+  # 2. Variances are homogeneous (tested via Levene's test)
+  # 3. Groups are independent (study design requirement)
+  # 4. Continuous dependent variable with ≥3 groups
   formula_str <- paste(variable, "~", group_column)
   anova_result <- aov(as.formula(formula_str), data = clean_data)
   anova_summary <- summary(anova_result)
@@ -729,9 +752,9 @@ perform_anova <- function(data, variable, group_column) {
   
   interpretation <- ifelse(p_value < 0.05,
                           paste("Significant difference between groups (F =", round(f_statistic, 3), 
-                                ", p =", round(p_value, 4), ")"),
+                                ", p =", format.pval(p_value, digits = 3), ")"),
                           paste("No significant difference between groups (F =", round(f_statistic, 3), 
-                                ", p =", round(p_value, 4), ")"))
+                                ", p =", format.pval(p_value, digits = 3), ")"))
   
   return(list(
     variable = variable,
@@ -762,16 +785,21 @@ perform_welch_anova <- function(data, variable, group_column) {
   }
   
   # Perform Welch's ANOVA
+  # Rationale: Welch's ANOVA chosen because:
+  # 1. Data meets normality assumptions but variances are heterogeneous
+  # 2. Welch's ANOVA does not assume equal variances (robust to heteroscedasticity)
+  # 3. More appropriate than standard ANOVA when Levene's test p < 0.05
+  # 4. Maintains Type I error rate under variance inequality
   formula_str <- paste(variable, "~", group_column)
   welch_result <- oneway.test(as.formula(formula_str), data = clean_data, var.equal = FALSE)
   
   interpretation <- ifelse(welch_result$p.value < 0.05,
                           paste("Significant difference between groups (Welch F =", 
                                 round(welch_result$statistic, 3), ", p =", 
-                                round(welch_result$p.value, 4), ")"),
+                                format.pval(welch_result$p.value, digits = 3), ")"),
                           paste("No significant difference between groups (Welch F =", 
                                 round(welch_result$statistic, 3), ", p =", 
-                                round(welch_result$p.value, 4), ")"))
+                                format.pval(welch_result$p.value, digits = 3), ")"))
   
   return(list(
     variable = variable,
@@ -857,9 +885,19 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   }
   
   # Perform Kruskal-Wallis test
+  # Rationale: Kruskal-Wallis test chosen because:
+  # 1. Data violates normality assumptions (Shapiro-Wilk/Anderson-Darling p < 0.05)
+  # 2. Non-parametric alternative to one-way ANOVA
+  # 3. Based on ranks, robust to outliers and non-normal distributions
+  # 4. Does not assume equal variances or specific distribution shape
+  # 5. Appropriate for ordinal or continuous data with ≥3 independent groups
   kw_result <- kruskal.test(clean_data[[variable]], clean_data[[group_column]])
   
   # Calculate epsilon-squared (ε²) effect size with 95% CI
+  # Rationale: ε² chosen for Kruskal-Wallis because:
+  # 1. Non-parametric equivalent to η² (eta-squared) for ANOVA
+  # 2. Measures proportion of variance explained by group differences
+  # 3. Interpretation: ε² < 0.01 (negligible), 0.01-0.06 (small), 0.06-0.14 (medium), >0.14 (large)
   effect_size_result <- calculate_kruskal_wallis_effect_size(clean_data, variable, group_column, kw_result)
   
   # Post-hoc tests if significant (Dunn's test)
@@ -871,10 +909,10 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   interpretation <- ifelse(kw_result$p.value < 0.05,
                           paste("Significant difference between groups (χ² =", 
                                 round(kw_result$statistic, 3), ", p =", 
-                                round(kw_result$p.value, 4), ")"),
+                                format.pval(kw_result$p.value, digits = 3), ")"),
                           paste("No significant difference between groups (χ² =", 
                                 round(kw_result$statistic, 3), ", p =", 
-                                round(kw_result$p.value, 4), ")"))
+                                format.pval(kw_result$p.value, digits = 3), ")"))
   
   return(list(
     variable = variable,
@@ -916,9 +954,9 @@ perform_chi_square <- function(data, variable, group_column) {
     
     interpretation <- ifelse(fisher_result$p.value < 0.05,
                             paste("Significant association (Fisher's exact test p =", 
-                                  round(fisher_result$p.value, 4), ")"),
+                                  format.pval(fisher_result$p.value, digits = 3), ")"),
                             paste("No significant association (Fisher's exact test p =", 
-                                  round(fisher_result$p.value, 4), ")"))
+                                  format.pval(fisher_result$p.value, digits = 3), ")"))
     
     return(list(
       variable = variable,
@@ -933,9 +971,9 @@ perform_chi_square <- function(data, variable, group_column) {
     
     interpretation <- ifelse(chi_result$p.value < 0.05,
                             paste("Significant association (χ² =", round(chi_result$statistic, 3), 
-                                  ", p =", round(chi_result$p.value, 4), ")"),
+                                  ", p =", format.pval(chi_result$p.value, digits = 3), ")"),
                             paste("No significant association (χ² =", round(chi_result$statistic, 3), 
-                                  ", p =", round(chi_result$p.value, 4), ")"))
+                                  ", p =", format.pval(chi_result$p.value, digits = 3), ")"))
     
     return(list(
       variable = variable,
@@ -1556,7 +1594,7 @@ perform_two_group_tests <- function(data, variable, group_column, test_type = "a
   results$interpretation <- paste0(
     "The difference between ", groups[1], " and ", groups[2], 
     " is ", significance, " (", results$test_name, 
-    ", p = ", round(results$p_value, 4), ")"
+    ", p = ", format.pval(results$p_value, digits = 3), ")"
   )
   
   return(results)

@@ -1,6 +1,15 @@
 # Descriptive Statistics Module
 # Functions for generating descriptive statistics and group characteristics
 # Supports independent groups analysis for medical data
+#
+# Variable Nomenclature Standards:
+# - hsCRP: High-sensitivity C-reactive protein (mg/L)
+# - BMI: Body Mass Index (kg/m²)  
+# - wiek: Age (years)
+# - plec: Gender (M/F)
+# - grupa: Study group assignment
+# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
+# - CV: Coefficient of Variation (%), IQR: Interquartile Range
 
 # Load required libraries with error handling
 # NOTE: Packages are now loaded centrally in config.R - no individual loading needed
@@ -752,10 +761,10 @@ perform_normality_tests <- function(data, variables, group_column = NULL) {
     kurtosis_val <- calculate_kurtosis(var_data)
     
     interpretation <- ifelse(is_normal, 
-                            paste("Data appears normally distributed (", test_name, " p =", 
-                                  round(test_result$p.value, 4), ")"),
-                            paste("Data deviates from normal distribution (", test_name, " p =", 
-                                  round(test_result$p.value, 4), ")"))
+                                    paste("Data appears normally distributed (", test_name, " p =",
+                                format.pval(test_result$p.value, digits = 3), ")"),
+        paste("Data deviates from normal distribution (", test_name, " p =",
+                                format.pval(test_result$p.value, digits = 3), ")"))
     
     normality_results[[var]] <- list(
       variable = var,
@@ -1075,7 +1084,7 @@ create_variable_properties_table <- function(data, numeric_vars, group_column, n
       
       # Check for borderline normality p-values
       if (!is.na(group_normality$p_value) && group_normality$p_value >= 0.04 && group_normality$p_value <= 0.06) {
-        borderline_cases <- paste(borderline_cases, "| Borderline normality p =", round(group_normality$p_value, 4))
+        borderline_cases <- paste(borderline_cases, "| Borderline normality p =", format.pval(group_normality$p_value, digits = 3))
       }
       
       # Check for high skewness (transformation candidate)
@@ -1098,7 +1107,7 @@ create_variable_properties_table <- function(data, numeric_vars, group_column, n
         Kurtosis = round(kurt_val, 3),
         Normal_Distribution = normal_status,
         Normality_Test = group_normality$test,
-        Normality_P_Value = round(group_normality$p_value, 4),
+        Normality_P_Value = if (!is.na(group_normality$p_value)) format.pval(group_normality$p_value, digits = 3) else NA,
         Outliers_Count = group_outliers$outlier_count,
         Outliers_Percent = round(group_outliers$outlier_percentage, 1),
         Homogeneity_Status = homog_status,

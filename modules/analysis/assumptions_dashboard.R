@@ -1,6 +1,27 @@
 # Assumptions Dashboard Module
 # Unified testing of statistical assumptions (normality, homogeneity of variance)
 # Eliminates duplication across descriptive stats and comparative analysis modules
+#
+# Variable Nomenclature Standards:
+# - hsCRP: High-sensitivity C-reactive protein (mg/L)
+# - BMI: Body Mass Index (kg/m²)
+# - wiek: Age (years)
+# - plec: Gender (M/F)
+# - grupa: Study group assignment
+# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
+# - Borderline p-values: 0.04 ≤ p ≤ 0.06 flagged for dual test approach
+#
+# Statistical Testing Framework:
+# 1. NORMALITY TESTS:
+#    - Shapiro-Wilk: n ≤ 50 (most powerful for small samples)
+#    - Anderson-Darling: n > 50 (more powerful than Kolmogorov-Smirnov)
+#    - Subsample approach: n > 5000 (computational efficiency)
+# 2. HOMOGENEITY TESTS:
+#    - Levene's test: Robust to non-normality (preferred)
+#    - Bartlett's test: Assumes normality (classical approach)
+#    - Fligner-Killeen: Non-parametric alternative
+# 3. BORDERLINE HANDLING: 0.04 ≤ p ≤ 0.06 triggers dual parametric/non-parametric analysis
+# 4. DECISION AUTOMATION: Flags guide automatic test selection in comparative analysis
 
 # Load required libraries with error handling
 # NOTE: Packages are now loaded centrally in config.R - no individual loading needed
@@ -215,7 +236,7 @@ determine_normality_flag <- function(p_value) {
 # Task H: Create enhanced interpretation with borderline flags
 create_enhanced_normality_interpretation <- function(test_name, p_value, normality_flag) {
   
-  p_formatted <- if (p_value < 0.001) "< 0.001" else as.character(round(p_value, 4))
+  p_formatted <- format.pval(p_value, digits = 3)
   
   base_text <- paste0(test_name, " p = ", p_formatted)
   
@@ -345,10 +366,10 @@ perform_levene_test <- function(data, variable, group_column) {
       is_homogeneous <- levene_result$`Pr(>F)`[1] > 0.05
       
       interpretation <- ifelse(is_homogeneous,
-                              paste("Variances appear homogeneous (Levene's test p =", 
-                                    round(levene_result$`Pr(>F)`[1], 4), ")"),
-                              paste("Variances are heterogeneous (Levene's test p =", 
-                                    round(levene_result$`Pr(>F)`[1], 4), ")"))
+                                      paste("Variances appear homogeneous (Levene's test p =",
+                                format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"),
+        paste("Variances are heterogeneous (Levene's test p =",
+                                format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"))
       
       return(list(
         test = "Levene",
@@ -384,10 +405,10 @@ perform_bartlett_test <- function(data, variable, group_column) {
     is_homogeneous <- bartlett_result$p.value > 0.05
     
     interpretation <- ifelse(is_homogeneous,
-                            paste("Variances appear homogeneous (Bartlett's test p =", 
-                                  round(bartlett_result$p.value, 4), ")"),
-                            paste("Variances are heterogeneous (Bartlett's test p =", 
-                                  round(bartlett_result$p.value, 4), ")"))
+                                    paste("Variances appear homogeneous (Bartlett's test p =",
+                                format.pval(bartlett_result$p.value, digits = 3), ")"),
+        paste("Variances are heterogeneous (Bartlett's test p =",
+                                format.pval(bartlett_result$p.value, digits = 3), ")"))
     
     return(list(
       test = "Bartlett",
@@ -415,10 +436,10 @@ perform_fligner_test <- function(data, variable, group_column) {
     is_homogeneous <- fligner_result$p.value > 0.05
     
     interpretation <- ifelse(is_homogeneous,
-                            paste("Variances appear homogeneous (Fligner-Killeen test p =", 
-                                  round(fligner_result$p.value, 4), ")"),
-                            paste("Variances are heterogeneous (Fligner-Killeen test p =", 
-                                  round(fligner_result$p.value, 4), ")"))
+                                    paste("Variances appear homogeneous (Fligner-Killeen test p =",
+                                format.pval(fligner_result$p.value, digits = 3), ")"),
+        paste("Variances are heterogeneous (Fligner-Killeen test p =",
+                                format.pval(fligner_result$p.value, digits = 3), ")"))
     
     return(list(
       test = "Fligner-Killeen",
@@ -528,12 +549,12 @@ create_assumptions_summary_table <- function(normality_results, homogeneity_resu
       N_Total = n_total,
       N_Missing = n_missing,
       Overall_Normal = overall_normal,
-      Normality_P = round(overall_p, 4),
+      Normality_P = format.pval(overall_p, digits = 3),
       Normality_Flag = overall_flag,  # Task H: Add normality flag
       Borderline = overall_borderline,  # Task H: Add borderline indicator
       Group_Normality = group_normal_summary,
       Homogeneity = homogeneous,
-      Homogeneity_P = round(homogeneity_p, 4),
+      Homogeneity_P = format.pval(homogeneity_p, digits = 3),
       Skewness = skewness,
       Kurtosis = kurtosis,
       stringsAsFactors = FALSE
