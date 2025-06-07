@@ -1,0 +1,460 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG - ENHANCED DEBUGGING MODE
+Session started: 2025-06-07 18:51:11.99111
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --correlation_analysis --report
+Log level: INFO
+================================================================================
+
+[2025-06-07 18:51:12] [INFO] STEP: DATA LOADING - Loading data from: dane.csv
+[2025-06-07 18:51:12] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 75 rows and 11 columns
+[2025-06-07 18:51:12] [INFO] STEP: CORRELATION ANALYSIS - Starting correlation analysis of variables
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] ties should not be present for the one-sample Kolmogorov-Smirnov test
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:13] [R_WARNING] Cannot compute exact p-value with ties
+[2025-06-07 18:51:17] [R_WARNING] The `panel.grid.y` theme element is not defined in the element hierarchy.
+[2025-06-07 18:51:18] [R_WARNING] The `panel.grid.y` theme element is not defined in the element hierarchy.
+[2025-06-07 18:51:18] [INFO] STEP: CORRELATION ANALYSIS COMPLETED - Correlation analysis successfully completed
+[2025-06-07 18:51:18] [INFO] STEP: HTML REPORT GENERATION - Starting HTML report generation
+[2025-06-07 18:51:18] [INFO] STEP: HTML REPORT COMPLETED - Report saved to: correlation_analysis_report_20250607_185118.html
+
+================================================================================
+ENHANCED SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.12 minutes
+Total analysis steps: 6
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 416
+Total console output entries: 0
+Session ended: 2025-06-07 18:51:18.968341
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (18:51:12)
+  2. DATA PREPARATION COMPLETED (18:51:12)
+  3. CORRELATION ANALYSIS (18:51:12)
+  4. CORRELATION ANALYSIS COMPLETED (18:51:18)
+  5. HTML REPORT GENERATION (18:51:18)
+  6. HTML REPORT COMPLETED (18:51:18)
+
+R WARNINGS ENCOUNTERED (DEBUGGING INFO):
+  342x: Cannot compute exact p-value with ties
+  72x: ties should not be present for the one-sample Kolmogorov-Smirnov test
+  2x: The `panel.grid.y` theme element is not defined in the element hierarchy.
+
+DEBUGGING RECOMMENDATIONS:
+  ⚠ High number of R warnings - investigate data quality
+
+================================================================================

@@ -110,18 +110,18 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **B. Strengthen Inferential Framework**
 
-* [ ] Add multiple linear regression / ANCOVA models to measure group effects after adjusting for covariates (e.g., age, hsCRP)&#x20;
-* [ ] Test interaction terms (e.g., group × age) and keep those that improve model fit
+* [X] Add multiple linear regression / ANCOVA models to measure group effects after adjusting for covariates (e.g., age, hsCRP)&#x20;
+* [X] Test interaction terms (e.g., group × age) and keep those that improve model fit
 
 **C. Deepen Association Analysis**
 
-* [ ] Compute separate correlation matrices for CHOR1, CHOR2, KONTROLA
-* [ ] Provide partial correlations that adjust for group in an “overall” matrix
+* [X] Compute separate correlation matrices for CHOR1, CHOR2, KONTROLA
+* [X] Provide partial correlations that adjust for group in an “overall” matrix
 
 **D. Control for Multiple Testing**
 
-* [ ] Apply Benjamini–Hochberg (FDR) correction to every correlation p-value
-* [ ] Use Holm (or BH) adjustment for all post-hoc comparisons (Tukey, Dunn)&#x20;
+* [X] Apply Benjamini–Hochberg (FDR) correction to every correlation p-value
+* [X] Use Holm (or BH) adjustment for all post-hoc comparisons (Tukey, Dunn)&#x20;
 
 **E. Report Effect Sizes Fully**
 

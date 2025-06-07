@@ -739,6 +739,11 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
     library(gridExtra)
   })
   
+  # Prevent unwanted Rplots.pdf creation by ensuring no graphics device is open
+  if (length(dev.list()) > 0) {
+    graphics.off()
+  }
+  
   # Create plots directory
   if (!dir.exists(output_path)) {
     dir.create(output_path, recursive = TRUE)
@@ -769,7 +774,8 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
           theme_minimal() +
           theme(axis.text.x = element_text(angle = 45, hjust = 1))
         
-        combined_plot <- grid.arrange(p1, p2, ncol = 2)
+        # Combine plots without auto-display to prevent unwanted Rplots.pdf creation
+        combined_plot <- gridExtra::arrangeGrob(p1, p2, ncol = 2)
         
         plot_filename <- file.path(output_path, paste0("model_comparison_", var, ".png"))
         ggsave(plot_filename, combined_plot, width = 12, height = 6, dpi = 300)

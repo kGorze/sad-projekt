@@ -283,13 +283,16 @@ run_analysis_with_args <- function(args) {
       log_analysis_step("HTML REPORT SKIPPED", "Report generation encountered technical issues but analysis completed successfully")
     }
     
-    # Return analysis results, report information, and exported files
-    return(list(
-      analysis_results = analysis_results,
-      report_file = report_file,
-      exported_files = exported_files,
-      analysis_type = analysis_type
-    ))
+      # Cleanup any unwanted graphics files before returning
+  cleanup_unwanted_graphics_files()
+  
+  # Return analysis results, report information, and exported files
+  return(list(
+    analysis_results = analysis_results,
+    report_file = report_file,
+    exported_files = exported_files,
+    analysis_type = analysis_type
+  ))
   }
   
   # If no report requested, just return analysis results
@@ -322,6 +325,24 @@ run_analysis_with_args <- function(args) {
   cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
   
   return(NULL)
+}
+
+# Function to cleanup unwanted graphics files
+cleanup_unwanted_graphics_files <- function() {
+  # Check for and remove Rplots.pdf if it exists
+  if (file.exists("Rplots.pdf")) {
+    tryCatch({
+      file.remove("Rplots.pdf")
+      cat("Removed unwanted Rplots.pdf file\n")
+    }, error = function(e) {
+      cat("Warning: Could not remove Rplots.pdf:", e$message, "\n")
+    })
+  }
+  
+  # Close any open graphics devices to prevent future unwanted files
+  if (length(dev.list()) > 0) {
+    graphics.off()
+  }
 }
 
 # Original main function for backward compatibility
@@ -407,16 +428,19 @@ main <- function(data_file = "dane.csv", repair_data = TRUE, validate_data = TRU
       readiness_status <- paste(readiness_issues, collapse = "; ")
     }
     
-    # Return the processed data and all results
-    return(list(
-      data = medical_data,
-      original_data = original_data,
-      inspection_results = inspection_results,
-      validation_results = validation_results,
-      repair_log = repair_log,
-      readiness_issues = readiness_issues,
-      readiness_status = readiness_status
-    ))
+      # Cleanup any unwanted graphics files
+  cleanup_unwanted_graphics_files()
+  
+  # Return the processed data and all results
+  return(list(
+    data = medical_data,
+    original_data = original_data,
+    inspection_results = inspection_results,
+    validation_results = validation_results,
+    repair_log = repair_log,
+    readiness_issues = readiness_issues,
+    readiness_status = readiness_status
+  ))
     
   }, error = function(e) {
     cat("Error in main function:", e$message, "\n")

@@ -543,6 +543,13 @@ create_correlation_analysis_content <- function(results, include_plots) {
     cor_matrix <- results$overall_correlations$pearson_matrix
     p_matrix <- results$overall_correlations$pearson_p_values
     
+    # Use FDR-corrected p-values if available
+    p_matrix_fdr <- if (!is.null(results$overall_correlations$pearson_p_values_fdr)) {
+      results$overall_correlations$pearson_p_values_fdr
+    } else {
+      p_matrix
+    }
+    
     content <- paste0(content, '<div class="table-responsive">
         <table class="table table-striped stats-table">
             <thead>
@@ -550,7 +557,7 @@ create_correlation_analysis_content <- function(results, include_plots) {
                     <th>Variable 1</th>
                     <th>Variable 2</th>
                     <th>Pearson r</th>
-                    <th>p-value</th>
+                    <th>p-value (FDR-corrected)</th>
                     <th>Strength</th>
                     <th>Significance</th>
                 </tr>
@@ -565,8 +572,9 @@ create_correlation_analysis_content <- function(results, include_plots) {
         var2 <- variables[j]
         r_val <- cor_matrix[i, j]
         p_val <- p_matrix[i, j]
+        p_val_fdr <- p_matrix_fdr[i, j]
         
-        # Determine strength and significance
+        # Determine strength and significance (using FDR-corrected p-values)
         abs_r <- abs(r_val)
         if (abs_r < 0.1) strength <- "negligible"
         else if (abs_r < 0.3) strength <- "weak"
@@ -574,15 +582,15 @@ create_correlation_analysis_content <- function(results, include_plots) {
         else if (abs_r < 0.7) strength <- "strong"
         else strength <- "very strong"
         
-        significance <- ifelse(p_val < 0.05, "significant", "not significant")
-        row_class <- ifelse(p_val < 0.05, "table-success", "table-light")
+        significance <- ifelse(p_val_fdr < 0.05, "significant", "not significant")
+        row_class <- ifelse(p_val_fdr < 0.05, "table-success", "table-light")
         
         content <- paste0(content, '
                 <tr class="', row_class, '">
                     <td>', var1, '</td>
                     <td>', var2, '</td>
                     <td>', round(r_val, 3), '</td>
-                    <td>', format.pval(p_val, digits = 4), '</td>
+                    <td>', format.pval(p_val_fdr, digits = 4), '</td>
                     <td>', strength, '</td>
                     <td>', significance, '</td>
                 </tr>')
@@ -609,7 +617,7 @@ create_correlation_analysis_content <- function(results, include_plots) {
               <strong>', cor_row$variable1, ' ↔ ', cor_row$variable2, '</strong><br>
               <strong>Correlation:</strong> r = ', round(cor_row$pearson_r, 3), 
               ' (', cor_row$strength, ' ', cor_row$direction, ')<br>
-              <strong>p-value:</strong> ', format.pval(cor_row$pearson_p, digits = 4), '
+              <strong>p-value (FDR-corrected):</strong> ', format.pval(cor_row$pearson_p_fdr, digits = 4), '
           </div>')
       }
     } else {
@@ -654,7 +662,9 @@ create_correlation_analysis_content <- function(results, include_plots) {
           • Correlation does not imply causation<br>
           • Pearson correlation measures linear relationships only<br>
           • Statistical significance (p < 0.05) indicates the correlation is unlikely due to chance<br>
-          • Effect size (correlation strength) is often more important than statistical significance
+          • Effect size (correlation strength) is often more important than statistical significance<br>
+          • P-values are corrected for multiple testing using the Benjamini-Hochberg (FDR) method<br>
+          • FDR correction controls the expected proportion of false discoveries among significant results
       </div>')
   
   content <- paste0(content, '</div></div></div>')

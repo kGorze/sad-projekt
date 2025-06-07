@@ -119,6 +119,12 @@ calculate_overall_correlations <- function(data, variables) {
   rownames(pearson_p_values) <- colnames(pearson_p_values) <- variables
   rownames(spearman_p_values) <- colnames(spearman_p_values) <- variables
   
+  # Store raw p-values first
+  pearson_p_raw <- c()
+  spearman_p_raw <- c()
+  pearson_indices <- list()
+  spearman_indices <- list()
+  
   for (i in 1:length(variables)) {
     for (j in 1:length(variables)) {
       if (i != j) {
@@ -126,9 +132,17 @@ calculate_overall_correlations <- function(data, variables) {
         pearson_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "pearson")
         pearson_p_values[i, j] <- pearson_test$p.value
         
+        # Store for FDR correction
+        pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
+        pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
+        
         # Spearman correlation test
         spearman_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "spearman")
         spearman_p_values[i, j] <- spearman_test$p.value
+        
+        # Store for FDR correction
+        spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
+        spearman_indices[[length(spearman_indices) + 1]] <- c(i, j)
       } else {
         pearson_p_values[i, j] <- NA
         spearman_p_values[i, j] <- NA
@@ -136,11 +150,36 @@ calculate_overall_correlations <- function(data, variables) {
     }
   }
   
+  # Apply Benjamini-Hochberg (FDR) correction to correlation p-values
+  if (length(pearson_p_raw) > 0) {
+    pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
+    spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
+    
+    # Create adjusted p-value matrices
+    pearson_p_values_fdr <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
+    spearman_p_values_fdr <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
+    rownames(pearson_p_values_fdr) <- colnames(pearson_p_values_fdr) <- variables
+    rownames(spearman_p_values_fdr) <- colnames(spearman_p_values_fdr) <- variables
+    
+    # Fill in the FDR-adjusted p-values
+    for (k in 1:length(pearson_indices)) {
+      i <- pearson_indices[[k]][1]
+      j <- pearson_indices[[k]][2]
+      pearson_p_values_fdr[i, j] <- pearson_p_adjusted[k]
+      spearman_p_values_fdr[i, j] <- spearman_p_adjusted[k]
+    }
+  } else {
+    pearson_p_values_fdr <- pearson_p_values
+    spearman_p_values_fdr <- spearman_p_values
+  }
+
   return(list(
     pearson_matrix = pearson_matrix,
     spearman_matrix = spearman_matrix,
     pearson_p_values = pearson_p_values,
     spearman_p_values = spearman_p_values,
+    pearson_p_values_fdr = pearson_p_values_fdr,
+    spearman_p_values_fdr = spearman_p_values_fdr,
     n_observations = n,
     variables = variables
   ))
@@ -175,16 +214,53 @@ calculate_group_correlations <- function(data, variables, group_column) {
       rownames(pearson_p) <- colnames(pearson_p) <- colnames(group_data)
       rownames(spearman_p) <- colnames(spearman_p) <- colnames(group_data)
       
+      # Store raw p-values for FDR correction
+      pearson_p_raw <- c()
+      spearman_p_raw <- c()
+      pearson_indices <- list()
+      spearman_indices <- list()
+      
       for (i in 1:ncol(group_data)) {
         for (j in 1:ncol(group_data)) {
           if (i != j) {
             pearson_test <- cor.test(group_data[[i]], group_data[[j]], method = "pearson")
             pearson_p[i, j] <- pearson_test$p.value
             
+            # Store for FDR correction
+            pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
+            pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
+            
             spearman_test <- cor.test(group_data[[i]], group_data[[j]], method = "spearman")
             spearman_p[i, j] <- spearman_test$p.value
+            
+            # Store for FDR correction
+            spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
+            spearman_indices[[length(spearman_indices) + 1]] <- c(i, j)
           }
         }
+      }
+      
+      # Apply Benjamini-Hochberg (FDR) correction to group correlation p-values
+      if (length(pearson_p_raw) > 0) {
+        pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
+        spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
+        
+        # Create adjusted p-value matrices
+        pearson_p_fdr <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
+        spearman_p_fdr <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
+        rownames(pearson_p_fdr) <- colnames(pearson_p_fdr) <- colnames(group_data)
+        rownames(spearman_p_fdr) <- colnames(spearman_p_fdr) <- colnames(group_data)
+        
+        # Fill in the FDR-adjusted p-values
+        for (k in 1:length(pearson_indices)) {
+          i <- pearson_indices[[k]][1]
+          j <- pearson_indices[[k]][2]
+          pearson_p_fdr[i, j] <- pearson_p_adjusted[k]
+          spearman_p_fdr[i, j] <- spearman_p_adjusted[k]
+        }
+      } else {
+        pearson_p_fdr <- pearson_p
+        spearman_p_fdr <- spearman_p
       }
       
       group_correlations[[as.character(group)]] <- list(
@@ -192,6 +268,8 @@ calculate_group_correlations <- function(data, variables, group_column) {
         spearman_matrix = spearman_cor,
         pearson_p_values = pearson_p,
         spearman_p_values = spearman_p,
+        pearson_p_values_fdr = pearson_p_fdr,
+        spearman_p_values_fdr = spearman_p_fdr,
         n_observations = n
       )
       
@@ -379,6 +457,13 @@ create_correlation_summary <- function(overall_correlations, correlation_tests, 
     pearson_mat <- overall_correlations$pearson_matrix
     pearson_p <- overall_correlations$pearson_p_values
     
+    # Use FDR-corrected p-values if available
+    pearson_p_corrected <- if (!is.null(overall_correlations$pearson_p_values_fdr)) {
+      overall_correlations$pearson_p_values_fdr
+    } else {
+      pearson_p
+    }
+    
     # Extract upper triangle (avoid duplicates and diagonal)
     upper_tri <- upper.tri(pearson_mat)
     correlations_df <- data.frame(
@@ -386,30 +471,41 @@ create_correlation_summary <- function(overall_correlations, correlation_tests, 
       variable2 = rep(colnames(pearson_mat), each = nrow(pearson_mat))[upper_tri],
       pearson_r = pearson_mat[upper_tri],
       pearson_p = pearson_p[upper_tri],
+      pearson_p_fdr = pearson_p_corrected[upper_tri],
       stringsAsFactors = FALSE
     )
     
-    # Add interpretation
+    # Add interpretation (using FDR-corrected p-values for significance)
     correlations_df$strength <- sapply(correlations_df$pearson_r, function(r) {
       interpret_correlation_strength(r)$strength
     })
     correlations_df$direction <- sapply(correlations_df$pearson_r, function(r) {
       interpret_correlation_strength(r)$direction
     })
-    correlations_df$significant <- correlations_df$pearson_p < 0.05
+    correlations_df$significant_uncorrected <- correlations_df$pearson_p < 0.05
+    correlations_df$significant_fdr <- correlations_df$pearson_p_fdr < 0.05
     
     # Sort by absolute correlation strength
     correlations_df <- correlations_df[order(abs(correlations_df$pearson_r), decreasing = TRUE), ]
     
     summary_info$overall_summary <- correlations_df
     
-    # Identify significant correlations
-    significant_cors <- correlations_df[correlations_df$significant & !is.na(correlations_df$significant), ]
+    # Identify significant correlations (using FDR correction)
+    significant_cors <- correlations_df[correlations_df$significant_fdr & !is.na(correlations_df$significant_fdr), ]
     summary_info$significant_correlations <- significant_cors
     
     # Count correlations by strength
     strength_counts <- table(correlations_df$strength)
     summary_info$strength_distribution <- strength_counts
+    
+    # Add multiple testing correction information
+    summary_info$multiple_testing_info <- list(
+      total_tests = nrow(correlations_df),
+      uncorrected_significant = sum(correlations_df$significant_uncorrected, na.rm = TRUE),
+      fdr_corrected_significant = sum(correlations_df$significant_fdr, na.rm = TRUE),
+      correction_method = "Benjamini-Hochberg (FDR)",
+      alpha_level = 0.05
+    )
   }
   
   # Group-wise correlation summaries
@@ -424,24 +520,35 @@ create_correlation_summary <- function(overall_correlations, correlation_tests, 
         pearson_mat <- group_data$pearson_matrix
         pearson_p <- group_data$pearson_p_values
         
+        # Use FDR-corrected p-values if available
+        pearson_p_corrected <- if (!is.null(group_data$pearson_p_values_fdr)) {
+          group_data$pearson_p_values_fdr
+        } else {
+          pearson_p
+        }
+        
         upper_tri <- upper.tri(pearson_mat)
         group_cors_df <- data.frame(
           variable1 = rep(rownames(pearson_mat), ncol(pearson_mat))[upper_tri],
           variable2 = rep(colnames(pearson_mat), each = nrow(pearson_mat))[upper_tri],
           pearson_r = pearson_mat[upper_tri],
           pearson_p = pearson_p[upper_tri],
+          pearson_p_fdr = pearson_p_corrected[upper_tri],
           stringsAsFactors = FALSE
         )
         
         group_cors_df$strength <- sapply(group_cors_df$pearson_r, function(r) {
           interpret_correlation_strength(r)$strength
         })
-        group_cors_df$significant <- group_cors_df$pearson_p < 0.05
+        group_cors_df$significant_uncorrected <- group_cors_df$pearson_p < 0.05
+        group_cors_df$significant_fdr <- group_cors_df$pearson_p_fdr < 0.05
         
         group_summaries[[group_name]] <- list(
           correlations = group_cors_df,
-          significant_count = sum(group_cors_df$significant, na.rm = TRUE),
-          n_observations = group_data$n_observations
+          significant_count_uncorrected = sum(group_cors_df$significant_uncorrected, na.rm = TRUE),
+          significant_count_fdr = sum(group_cors_df$significant_fdr, na.rm = TRUE),
+          n_observations = group_data$n_observations,
+          multiple_testing_correction = "Benjamini-Hochberg (FDR)"
         )
       }
     }
@@ -464,6 +571,11 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
   plot_files <- list()
   
   cat("Creating correlation visualizations...\n")
+  
+  # Prevent unwanted Rplots.pdf creation by ensuring no graphics device is open
+  if (length(dev.list()) > 0) {
+    graphics.off()
+  }
   
   # Prepare data for correlation analysis
   cor_data <- data[, variables, drop = FALSE]
@@ -836,8 +948,8 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                                      colhead = list(fg_params = list(cex = 0.9, fontface = "bold"))
                                    ))
     
-    # Create the plot with title
-    p_table_plot <- gridExtra::grid.arrange(
+    # Create the plot with title (without auto-display to prevent Rplots.pdf)
+    p_table_plot <- gridExtra::arrangeGrob(
       p_table,
       top = grid::textGrob(paste("Top 10 Strongest Correlations\n(Based on", nrow(cor_data), "complete observations)"), 
                           gp = grid::gpar(fontsize = 14, fontface = "bold"))
