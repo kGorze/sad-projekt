@@ -1,0 +1,10 @@
+variable,test_name,statistic,p_value,equal_variances,interpretation
+wiek,Levene Test,0.6218251560711415,0.5398219917100611,FALSE,Variances appear homogeneous (Levene's test p = 0.5398 )
+hsCRP,Levene Test,0.48894061979335407,0.6152970854411486,FALSE,Variances appear homogeneous (Levene's test p = 0.6153 )
+ERY,Levene Test,0.5959435113655475,0.5537374285378535,FALSE,Variances appear homogeneous (Levene's test p = 0.5537 )
+PLT,Levene Test,0.059509465906715006,0.942272908803591,FALSE,Variances appear homogeneous (Levene's test p = 0.9423 )
+HGB,Levene Test,1.0255639690317442,0.36391835632982783,FALSE,Variances appear homogeneous (Levene's test p = 0.3639 )
+HCT,Levene Test,2.186405275404967,0.11972202100980266,FALSE,Variances appear homogeneous (Levene's test p = 0.1197 )
+MCHC,Levene Test,1.0598535735731245,0.35184943799396917,FALSE,Variances appear homogeneous (Levene's test p = 0.3518 )
+MON,Levene Test,2.0403335693720464,0.13753809823727484,FALSE,Variances appear homogeneous (Levene's test p = 0.1375 )
+LEU,Levene Test,0.6674661176905128,0.5161520434529885,FALSE,Variances appear homogeneous (Levene's test p = 0.5162 )

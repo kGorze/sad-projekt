@@ -3,46 +3,7 @@
 # Supports independent groups analysis for medical data
 
 # Load required libraries with error handling
-if (!require(dplyr, quietly = TRUE)) {
-  install.packages("dplyr")
-  library(dplyr)
-}
-
-if (!require(ggplot2, quietly = TRUE)) {
-  install.packages("ggplot2")
-  library(ggplot2)
-}
-
-# Additional libraries for advanced analysis
-if (!require(ggpubr, quietly = TRUE)) {
-  install.packages("ggpubr", repos = "https://cran.r-project.org")
-  library(ggpubr)
-}
-
-if (!require(gridExtra, quietly = TRUE)) {
-  install.packages("gridExtra", repos = "https://cran.r-project.org")
-  library(gridExtra)
-}
-
-if (!require(corrplot, quietly = TRUE)) {
-  install.packages("corrplot", repos = "https://cran.r-project.org")
-  library(corrplot)
-}
-
-if (!require(GGally, quietly = TRUE)) {
-  install.packages("GGally", repos = "https://cran.r-project.org")
-  library(GGally)
-}
-
-if (!require(VIM, quietly = TRUE)) {
-  install.packages("VIM", repos = "https://cran.r-project.org")
-  library(VIM)
-}
-
-if (!require(psych, quietly = TRUE)) {
-  install.packages("psych", repos = "https://cran.r-project.org")
-  library(psych)
-}
+# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")
@@ -246,11 +207,12 @@ calculate_categorical_stats <- function(data, variables, group_column = NULL) {
       var_stats$variable <- var
       
       # Calculate percentages within groups
-      var_stats <- var_stats %>%
-        group_by(group) %>%
-        mutate(percentage = round(frequency / sum(frequency) * 100, 2)) %>%
-        ungroup() %>%
-        select(variable, category, group, frequency, percentage)
+      var_stats_grouped <- split(var_stats, var_stats$group)
+      var_stats_with_pct <- do.call(rbind, lapply(var_stats_grouped, function(group_data) {
+        group_data$percentage <- round(group_data$frequency / sum(group_data$frequency) * 100, 2)
+        return(group_data)
+      }))
+      var_stats <- var_stats_with_pct[, c("variable", "category", "group", "frequency", "percentage")]
     }
     
     categorical_stats_list[[var]] <- var_stats
@@ -323,6 +285,14 @@ create_summary_table <- function(data, group_column = NULL) {
 
 # Create advanced descriptive plots with comprehensive visualizations
 create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group_column = NULL, output_path = "output/plots/") {
+  
+  # Ensure required packages are available for plotting
+  suppressPackageStartupMessages({
+    library(ggplot2)
+    library(ggpubr) 
+    library(GGally)
+    library(dplyr)
+  })
   
   # Create plots directory if it doesn't exist
   if (!dir.exists(output_path)) {
@@ -560,14 +530,20 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
       
       tryCatch({
         if (!is.null(group_column)) {
-          # Calculate proportions
-          prop_data <- data %>%
-            group_by(.data[[group_column]], .data[[var]]) %>%
-            summarise(count = n(), .groups = 'drop') %>%
-            group_by(.data[[group_column]]) %>%
-            mutate(prop = count / sum(count) * 100)
+          # Calculate proportions using base R
+          temp_data <- aggregate(rep(1, nrow(data)), 
+                               by = list(group = data[[group_column]], var = data[[var]]), 
+                               FUN = length)
+          names(temp_data) <- c("group", "var", "count")
           
-          p <- ggplot(prop_data, aes(x = .data[[var]], y = prop, fill = .data[[group_column]])) +
+          # Calculate proportions within groups
+          prop_data <- do.call(rbind, lapply(split(temp_data, temp_data$group), function(group_data) {
+            group_data$prop <- group_data$count / sum(group_data$count) * 100
+            return(group_data)
+          }))
+          names(prop_data)[names(prop_data) == "var"] <- var
+          
+          p <- ggplot(prop_data, aes(x = .data[[var]], y = prop, fill = group)) +
             geom_col(position = "dodge", alpha = 0.8) +
             geom_text(aes(label = paste0(round(prop, 1), "%")), 
                      position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
@@ -580,10 +556,15 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
                   axis.text.x = element_text(angle = 45, hjust = 1)) +
             scale_fill_brewer(type = "qual", palette = "Set2")
         } else {
-          # Simple frequency plot
-          freq_data <- data %>%
-            count(.data[[var]]) %>%
-            mutate(prop = n / sum(n) * 100)
+          # Simple frequency plot using base R
+          freq_table <- table(data[[var]])
+          freq_data <- data.frame(
+            var_val = names(freq_table),
+            n = as.numeric(freq_table),
+            stringsAsFactors = FALSE
+          )
+          freq_data$prop <- freq_data$n / sum(freq_data$n) * 100
+          names(freq_data)[1] <- var
           
           p <- ggplot(freq_data, aes(x = .data[[var]], y = n)) +
             geom_col(fill = "steelblue", alpha = 0.8) +
@@ -962,10 +943,6 @@ create_variable_properties_table <- function(data, numeric_vars, group_column, n
     
     if (nrow(clean_data) >= 6 && length(unique(clean_data[[group_column]])) >= 2) {
       tryCatch({
-        if (!require(car, quietly = TRUE)) {
-          install.packages("car")
-          library(car)
-        }
         levene_result <- leveneTest(clean_data[[var]], clean_data[[group_column]])
         homogeneity_results[[var]] <- list(
           p_value = levene_result$`Pr(>F)`[1],
@@ -1030,9 +1007,9 @@ create_variable_properties_table <- function(data, numeric_vars, group_column, n
         list(outlier_count = 0, outlier_percentage = 0)
       }
       
-      # Homogeneity status
+      # Homogeneity status with proper error checking
       homog_info <- homogeneity_results[[var]]
-      homog_status <- if(is.na(homog_info$homogeneous)) {
+      homog_status <- if(is.null(homog_info) || is.null(homog_info$homogeneous) || is.na(homog_info$homogeneous)) {
         "Unknown"
       } else if(homog_info$homogeneous) {
         "Homogeneous"
@@ -1057,7 +1034,9 @@ create_variable_properties_table <- function(data, numeric_vars, group_column, n
       
       # Recommended statistical test - simplified logic for descriptive purposes
       recommended_test <- "See comparative analysis"
-      if(!is.na(group_normality$normal) && !is.na(homog_info$homogeneous)) {
+      homog_available <- !is.null(homog_info) && !is.null(homog_info$homogeneous) && !is.na(homog_info$homogeneous)
+      
+      if(!is.na(group_normality$normal) && homog_available) {
         if(group_outliers$outlier_percentage > 15) {
           recommended_test <- "Non-parametric (high outliers)"
         } else if(length(groups) == 2) {

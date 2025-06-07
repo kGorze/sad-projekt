@@ -1,32 +1,8 @@
 # Correlation Analysis Module
-# Functions for analyzing correlations within and between groups
-# Supports different correlation methods based on data characteristics
+# Comprehensive correlation analysis with multiple methods and advanced visualization
 
 # Load required libraries with error handling
-if (!require(dplyr, quietly = TRUE)) {
-  install.packages("dplyr")
-  library(dplyr)
-}
-
-if (!require(ggplot2, quietly = TRUE)) {
-  install.packages("ggplot2")
-  library(ggplot2)
-}
-
-if (!require(corrplot, quietly = TRUE)) {
-  install.packages("corrplot")
-  library(corrplot)
-}
-
-if (!require(GGally, quietly = TRUE)) {
-  install.packages("GGally")
-  library(GGally)
-}
-
-if (!require(ggcorrplot, quietly = TRUE)) {
-  install.packages("ggcorrplot")
-  library(ggcorrplot)
-}
+# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")

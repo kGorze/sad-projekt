@@ -1,0 +1,6 @@
+variable,test_name,statistic,p_value,effect_size,confidence_interval_lower,confidence_interval_upper,significant,interpretation
+HGB,posthoc,NA,NA,NA,NA,NA,FALSE,
+HCT,posthoc,NA,0.634145203949708,NA,NA,NA,FALSE,
+HCT,posthoc,NA,0.008880107568058238,NA,NA,NA,TRUE,
+HCT,posthoc,NA,0.07666773184091492,NA,NA,NA,FALSE,
+MCHC,posthoc,NA,NA,NA,NA,NA,FALSE,

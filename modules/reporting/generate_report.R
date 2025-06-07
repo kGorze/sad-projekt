@@ -1,39 +1,12 @@
 # Report Generation Module
-# Functions for creating comprehensive statistical analysis reports
-# Generates HTML reports with results, plots, and interpretations
+# Functions for generating comprehensive statistical reports in multiple formats
 
 # Load required libraries with error handling
-if (!require(rmarkdown, quietly = TRUE)) {
-  install.packages("rmarkdown", repos = "https://cran.r-project.org")
-  library(rmarkdown)
-}
-
-if (!require(knitr, quietly = TRUE)) {
-  install.packages("knitr", repos = "https://cran.r-project.org")
-  library(knitr)
-}
-
-if (!require(htmltools, quietly = TRUE)) {
-  install.packages("htmltools", repos = "https://cran.r-project.org")
-  library(htmltools)
-}
+# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
 
 if (!exists("%||%")) {
   `%||%` <- function(a, b) if (!is.null(a)) a else b
 }
-
-# Optional libraries - load if available, but don't require
-tryCatch({
-  library(DT)
-}, error = function(e) {
-  # DT not available, skip
-})
-
-tryCatch({
-  library(plotly)
-}, error = function(e) {
-  # plotly not available, skip
-})
 
 # Generate HTML report for any analysis module
 generate_html_report <- function(analysis_results, analysis_type, output_path = "output/reports", 

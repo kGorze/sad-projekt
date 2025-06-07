@@ -2,28 +2,10 @@
 # Functions for handling missing data, outliers, and data cleaning
 # Implements data preprocessing and quality improvement with intelligent pattern analysis
 
-# Load required packages for advanced data repair (with better error handling)
+# Load required packages for advanced data repair (using centralized loading)
 load_packages_safely <- function() {
-  # Set CRAN mirror if not set
-  if (length(getOption("repos")) == 0 || getOption("repos")["CRAN"] == "@CRAN@") {
-    options(repos = c(CRAN = "https://cran.rstudio.com/"))
-  }
-  
-  packages <- c("VIM", "mice", "Hmisc")
-  missing_packages <- c()
-  
-  for (pkg in packages) {
-    if (!require(pkg, quietly = TRUE, character.only = TRUE)) {
-      missing_packages <- c(missing_packages, pkg)
-    }
-  }
-  
-  if (length(missing_packages) > 0) {
-    cat("Note: Advanced packages not available:", paste(missing_packages, collapse = ", "), "\n")
-    cat("Some advanced features will be limited, but basic functionality will work.\n")
-  }
-  
-  return(length(missing_packages) == 0)
+  # Use centralized package loading from config.R
+  return(load_required_packages(c("VIM", "mice", "Hmisc"), quiet = TRUE))
 }
 
 # Load packages at startup

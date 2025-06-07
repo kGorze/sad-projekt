@@ -3,56 +3,7 @@
 # Supports multiple groups (>2) with appropriate statistical tests
 
 # Load required libraries with error handling
-if (!require(car, quietly = TRUE)) {
-  install.packages("car", repos = "https://cran.r-project.org")
-  library(car)
-}
-
-if (!require(dunn.test, quietly = TRUE)) {
-  install.packages("dunn.test", repos = "https://cran.r-project.org")
-  library(dunn.test)
-}
-
-if (!require(effsize, quietly = TRUE)) {
-  install.packages("effsize", repos = "https://cran.r-project.org")
-  library(effsize)
-}
-
-if (!require(dplyr, quietly = TRUE)) {
-  install.packages("dplyr", repos = "https://cran.r-project.org")
-  library(dplyr)
-}
-
-if (!require(ggplot2, quietly = TRUE)) {
-  install.packages("ggplot2", repos = "https://cran.r-project.org")
-  library(ggplot2)
-}
-
-# Additional libraries for advanced analysis
-if (!require(broom, quietly = TRUE)) {
-  install.packages("broom", repos = "https://cran.r-project.org")
-  library(broom)
-}
-
-if (!require(ggpubr, quietly = TRUE)) {
-  install.packages("ggpubr", repos = "https://cran.r-project.org")
-  library(ggpubr)
-}
-
-if (!require(gridExtra, quietly = TRUE)) {
-  install.packages("gridExtra", repos = "https://cran.r-project.org")
-  library(gridExtra)
-}
-
-if (!require(corrplot, quietly = TRUE)) {
-  install.packages("corrplot", repos = "https://cran.r-project.org")
-  library(corrplot)
-}
-
-if (!require(GGally, quietly = TRUE)) {
-  install.packages("GGally", repos = "https://cran.r-project.org")
-  library(GGally)
-}
+# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")
@@ -631,6 +582,13 @@ perform_dunn_test <- function(data, variable, group_column) {
 # Create advanced comparison plots with statistical visualizations
 create_comparative_plots <- function(data, numeric_vars, categorical_vars, group_column, output_path = "output/plots/") {
   
+  # Ensure required packages are available for plotting
+  suppressPackageStartupMessages({
+    library(ggplot2)
+    library(ggpubr) 
+    library(dplyr)
+  })
+  
   # Create plots directory if it doesn't exist
   if (!dir.exists(output_path)) {
     dir.create(output_path, recursive = TRUE)
@@ -687,10 +645,14 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   # 2. Density plots with group overlays
   for (var in numeric_vars[1:min(4, length(numeric_vars))]) {
     tryCatch({
+      # Calculate group means for vertical lines using base R
+      group_means <- aggregate(data[[var]], by = list(group = data[[group_column]]), 
+                              FUN = function(x) mean(x, na.rm = TRUE), na.action = na.pass)
+      names(group_means) <- c(group_column, "mean_val")
+      
       p <- ggplot(data, aes(x = .data[[var]], fill = .data[[group_column]])) +
         geom_density(alpha = 0.6) +
-        geom_vline(data = data %>% group_by(.data[[group_column]]) %>% 
-                   summarise(mean_val = mean(.data[[var]], na.rm = TRUE), .groups = 'drop'),
+        geom_vline(data = group_means,
                    aes(xintercept = mean_val, color = .data[[group_column]]), 
                    linetype = "dashed", size = 1) +
         labs(title = paste("Density Distribution of", var, "by Group"),
@@ -845,14 +807,20 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   for (var in categorical_vars) {
     if (length(unique(data[[var]])) <= 10) {
       tryCatch({
-        # Calculate proportions
-        prop_data <- data %>%
-          group_by(.data[[group_column]], .data[[var]]) %>%
-          summarise(count = n(), .groups = 'drop') %>%
-          group_by(.data[[group_column]]) %>%
-          mutate(prop = count / sum(count) * 100)
+        # Calculate proportions using base R
+        temp_data <- aggregate(rep(1, nrow(data)), 
+                             by = list(group = data[[group_column]], var = data[[var]]), 
+                             FUN = length)
+        names(temp_data) <- c("group", "var", "count")
         
-        p <- ggplot(prop_data, aes(x = .data[[var]], y = prop, fill = .data[[group_column]])) +
+        # Calculate proportions within groups
+        prop_data <- do.call(rbind, lapply(split(temp_data, temp_data$group), function(group_data) {
+          group_data$prop <- group_data$count / sum(group_data$count) * 100
+          return(group_data)
+        }))
+        names(prop_data)[names(prop_data) == "var"] <- var
+        
+        p <- ggplot(prop_data, aes(x = .data[[var]], y = prop, fill = group)) +
           geom_col(position = "dodge", alpha = 0.8) +
           geom_text(aes(label = paste0(round(prop, 1), "%")), 
                    position = position_dodge(width = 0.9), vjust = -0.5, size = 3) +
