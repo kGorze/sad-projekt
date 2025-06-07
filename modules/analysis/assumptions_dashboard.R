@@ -98,6 +98,7 @@ perform_comprehensive_normality_tests <- function(data, variables, group_column 
           test = "insufficient_data",
           p_value = NA,
           normal = FALSE,
+          borderline = FALSE,
           interpretation = "Insufficient data for normality testing"
         ),
         group_tests = NULL,
@@ -139,6 +140,7 @@ perform_optimal_normality_test <- function(variable_data) {
       test = "insufficient_data",
       p_value = NA,
       normal = FALSE,
+      borderline = FALSE,
       interpretation = "Insufficient data for normality testing"
     ))
   }
@@ -171,22 +173,60 @@ perform_optimal_normality_test <- function(variable_data) {
     test_name <- "Shapiro-Wilk (subsample of 5000)"
   }
   
-  is_normal <- test_result$p.value > 0.05
+  # Task H: Enhanced normality classification with borderline flags
+  p_value <- test_result$p.value
+  is_normal <- p_value > 0.05
+  is_borderline <- p_value > 0.01 & p_value <= 0.10  # Borderline range
   
-  interpretation <- ifelse(is_normal, 
-                          paste("Data appears normally distributed (", test_name, " p =", 
-                                round(test_result$p.value, 4), ")"),
-                          paste("Data deviates from normal distribution (", test_name, " p =", 
-                                round(test_result$p.value, 4), ")"))
+  # Create detailed classification
+  normality_flag <- determine_normality_flag(p_value)
+  
+  interpretation <- create_enhanced_normality_interpretation(test_name, p_value, normality_flag)
   
   return(list(
     test = test_name,
     statistic = test_result$statistic,
-    p_value = test_result$p.value,
+    p_value = p_value,
     normal = is_normal,
+    borderline = is_borderline,
+    normality_flag = normality_flag,
     interpretation = interpretation,
     sample_size = n
   ))
+}
+
+# Task H: Determine normality flag for automatic assumption flagging
+determine_normality_flag <- function(p_value) {
+  if (is.na(p_value)) {
+    return("UNKNOWN")
+  } else if (p_value > 0.10) {
+    return("CLEARLY_NORMAL")
+  } else if (p_value > 0.05) {
+    return("NORMAL")
+  } else if (p_value > 0.01) {
+    return("BORDERLINE_NON_NORMAL")  # Task H: Key borderline flag
+  } else if (p_value > 0.001) {
+    return("NON_NORMAL")
+  } else {
+    return("CLEARLY_NON_NORMAL")
+  }
+}
+
+# Task H: Create enhanced interpretation with borderline flags
+create_enhanced_normality_interpretation <- function(test_name, p_value, normality_flag) {
+  
+  p_formatted <- if (p_value < 0.001) "< 0.001" else as.character(round(p_value, 4))
+  
+  base_text <- paste0(test_name, " p = ", p_formatted)
+  
+  switch(normality_flag,
+    "CLEARLY_NORMAL" = paste0("✓ Clearly normal distribution (", base_text, ")"),
+    "NORMAL" = paste0("✓ Normal distribution (", base_text, ")"),
+    "BORDERLINE_NON_NORMAL" = paste0("⚠ BORDERLINE normality - requires attention (", base_text, ")"),
+    "NON_NORMAL" = paste0("✗ Non-normal distribution (", base_text, ")"),
+    "CLEARLY_NON_NORMAL" = paste0("✗ Clearly non-normal distribution (", base_text, ")"),
+    "UNKNOWN" = paste0("? Unable to determine normality (", base_text, ")")
+  )
 }
 
 # Group-wise normality testing
@@ -208,6 +248,7 @@ perform_group_normality_tests <- function(data, variable, group_column) {
         test = "insufficient_data",
         p_value = NA,
         normal = FALSE,
+        borderline = FALSE,
         interpretation = "Insufficient data for group normality testing"
       )
     }
@@ -444,17 +485,26 @@ create_assumptions_summary_table <- function(normality_results, homogeneity_resu
     n_total <- length(var_data)
     n_missing <- sum(is.na(data[[var]]))
     
-    # Normality information
+    # Task H: Enhanced normality information with borderline flags
     norm_result <- normality_results[[var]]
     overall_normal <- norm_result$overall_test$normal
     overall_p <- norm_result$overall_test$p_value
+    overall_flag <- norm_result$overall_test$normality_flag
+    overall_borderline <- norm_result$overall_test$borderline
     
-    # Group normality summary
+    # Group normality summary with borderline detection
     group_normal_summary <- "N/A"
     if (!is.null(norm_result$group_tests)) {
       group_normal_count <- sum(sapply(norm_result$group_tests, function(x) x$normal), na.rm = TRUE)
+      group_borderline_count <- sum(sapply(norm_result$group_tests, function(x) x$borderline), na.rm = TRUE)
       total_groups <- length(norm_result$group_tests)
-      group_normal_summary <- paste0(group_normal_count, "/", total_groups, " groups normal")
+      
+      if (group_borderline_count > 0) {
+        group_normal_summary <- paste0(group_normal_count, "/", total_groups, " normal, ", 
+                                     group_borderline_count, " borderline")
+      } else {
+        group_normal_summary <- paste0(group_normal_count, "/", total_groups, " groups normal")
+      }
     }
     
     # Homogeneity information
@@ -479,6 +529,8 @@ create_assumptions_summary_table <- function(normality_results, homogeneity_resu
       N_Missing = n_missing,
       Overall_Normal = overall_normal,
       Normality_P = round(overall_p, 4),
+      Normality_Flag = overall_flag,  # Task H: Add normality flag
+      Borderline = overall_borderline,  # Task H: Add borderline indicator
       Group_Normality = group_normal_summary,
       Homogeneity = homogeneous,
       Homogeneity_P = round(homogeneity_p, 4),
@@ -492,7 +544,7 @@ create_assumptions_summary_table <- function(normality_results, homogeneity_resu
   return(summary_table)
 }
 
-# Generate statistical test recommendations based on assumptions
+# Task H: Enhanced test recommendations with borderline normality flags
 generate_test_recommendations <- function(normality_results, homogeneity_results, data, variables, group_column) {
   
   if (is.null(group_column)) {
@@ -505,17 +557,34 @@ generate_test_recommendations <- function(normality_results, homogeneity_results
     norm_result <- normality_results[[var]]
     homo_result <- if (!is.null(homogeneity_results)) homogeneity_results[[var]] else NULL
     
-    # Determine normality status
+    # Task H: Enhanced normality assessment with borderline flags
     overall_normal <- norm_result$overall_test$normal
+    overall_borderline <- norm_result$overall_test$borderline
+    overall_flag <- norm_result$overall_test$normality_flag
+    
+    # Group-wise analysis with borderline detection
     group_normal_count <- 0
+    group_borderline_count <- 0
     total_groups <- 0
+    group_flags <- c()
     
     if (!is.null(norm_result$group_tests)) {
-      group_normal_count <- sum(sapply(norm_result$group_tests, function(x) x$normal), na.rm = TRUE)
-      total_groups <- length(norm_result$group_tests)
+      for (group_test in norm_result$group_tests) {
+        total_groups <- total_groups + 1
+        if (!is.na(group_test$normal) && group_test$normal) {
+          group_normal_count <- group_normal_count + 1
+        }
+        if (!is.na(group_test$borderline) && group_test$borderline) {
+          group_borderline_count <- group_borderline_count + 1
+        }
+        if (!is.null(group_test$normality_flag)) {
+          group_flags <- c(group_flags, group_test$normality_flag)
+        }
+      }
     }
     
     mostly_normal <- (group_normal_count / total_groups) >= 0.7
+    has_borderline <- overall_borderline || group_borderline_count > 0
     
     # Determine homogeneity status
     variances_homogeneous <- TRUE
@@ -524,19 +593,32 @@ generate_test_recommendations <- function(normality_results, homogeneity_results
       variances_homogeneous <- grepl("Homogeneous", homogeneity_recommendation)
     }
     
-    # Generate recommendations
-    if (overall_normal && mostly_normal && variances_homogeneous) {
+    # Task H: Enhanced recommendation logic with borderline handling
+    if (overall_normal && mostly_normal && variances_homogeneous && !has_borderline) {
       recommended_test <- "One-way ANOVA"
       post_hoc <- "Tukey HSD"
       rationale <- "Normal distribution and homogeneous variances"
+      assumption_flag <- "CLEAR"
+    } else if (overall_normal && mostly_normal && variances_homogeneous && has_borderline) {
+      recommended_test <- "One-way ANOVA with sensitivity check"
+      post_hoc <- "Tukey HSD + Kruskal-Wallis verification"
+      rationale <- "Normal distribution with borderline cases - verify with non-parametric"
+      assumption_flag <- "BORDERLINE_NORMAL"
     } else if ((overall_normal || mostly_normal) && !variances_homogeneous) {
       recommended_test <- "Welch's ANOVA"
       post_hoc <- "Games-Howell"
       rationale <- "Normal distribution but heterogeneous variances"
+      assumption_flag <- "VARIANCE_VIOLATION"
+    } else if (has_borderline && !overall_normal) {
+      recommended_test <- "Kruskal-Wallis test (borderline normality)"
+      post_hoc <- "Dunn's test with Bonferroni correction"
+      rationale <- "Borderline normality detected - non-parametric approach recommended"
+      assumption_flag <- "BORDERLINE_NON_NORMAL"
     } else {
       recommended_test <- "Kruskal-Wallis test"
       post_hoc <- "Dunn's test with Bonferroni correction"
       rationale <- "Non-normal distribution or other assumption violations"
+      assumption_flag <- "NON_NORMAL"
     }
     
     recommendations[[var]] <- list(
@@ -546,7 +628,13 @@ generate_test_recommendations <- function(normality_results, homogeneity_results
       rationale = rationale,
       normality_met = overall_normal && mostly_normal,
       homogeneity_met = variances_homogeneous,
-      sample_size = length(data[[var]][!is.na(data[[var]])])
+      sample_size = length(data[[var]][!is.na(data[[var]])]),
+      # Task H: New borderline flags
+      has_borderline = has_borderline,
+      overall_flag = overall_flag,
+      group_flags = group_flags,
+      assumption_flag = assumption_flag,
+      borderline_action = if (has_borderline) "Perform sensitivity analysis with both parametric and non-parametric tests" else "Standard analysis"
     )
   }
   

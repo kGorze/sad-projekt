@@ -370,15 +370,24 @@ perform_statistical_comparisons_updated <- function(data, numeric_vars, categori
       next
     }
     
-    # Perform the recommended test
+    # Task H: Enhanced test selection with borderline handling
     recommended_test <- var_recommendation$primary_test
+    has_borderline <- var_recommendation$has_borderline
+    assumption_flag <- var_recommendation$assumption_flag
     
     if (recommended_test == "One-way ANOVA") {
       test_result <- perform_anova(data, var, group_column)
+    } else if (recommended_test == "One-way ANOVA with sensitivity check") {
+      # Task H: Borderline case - perform both tests
+      test_result <- perform_anova_with_sensitivity_check(data, var, group_column)
     } else if (recommended_test == "Welch's ANOVA") {
       test_result <- perform_welch_anova(data, var, group_column)
     } else if (recommended_test == "Kruskal-Wallis test") {
       test_result <- perform_kruskal_wallis(data, var, group_column)
+    } else if (recommended_test == "Kruskal-Wallis test (borderline normality)") {
+      # Task H: Borderline non-normal case
+      test_result <- perform_kruskal_wallis(data, var, group_column)
+      test_result$borderline_note <- "Selected due to borderline normality"
     } else {
       test_result <- list(
         variable = var,
@@ -387,6 +396,13 @@ perform_statistical_comparisons_updated <- function(data, numeric_vars, categori
         interpretation = "Test not implemented"
       )
     }
+    
+    # Task H: Add borderline information to result
+    test_result$borderline_info <- list(
+      has_borderline = has_borderline,
+      assumption_flag = assumption_flag,
+      borderline_action = var_recommendation$borderline_action
+    )
     
     # Add recommendation info to result
     test_result$recommendation <- var_recommendation
@@ -403,6 +419,72 @@ perform_statistical_comparisons_updated <- function(data, numeric_vars, categori
   }
   
   return(list(test_results = test_results))
+}
+
+# Task H: ANOVA with sensitivity check for borderline normality cases
+perform_anova_with_sensitivity_check <- function(data, variable, group_column) {
+  
+  cat("  Performing ANOVA with sensitivity check for borderline normality...\n")
+  
+  # Perform both parametric and non-parametric tests
+  anova_result <- perform_anova(data, variable, group_column)
+  kruskal_result <- perform_kruskal_wallis(data, variable, group_column)
+  
+  # Compare p-values and create enhanced result
+  anova_p <- anova_result$p_value
+  kruskal_p <- kruskal_result$p_value
+  
+  # Determine consistency of results
+  both_significant <- anova_p < 0.05 && kruskal_p < 0.05
+  both_nonsignificant <- anova_p >= 0.05 && kruskal_p >= 0.05
+  conflicting <- !(both_significant || both_nonsignificant)
+  
+  # Create interpretation
+  if (both_significant) {
+    consistency <- "CONSISTENT - Both tests significant"
+    recommendation <- "Results robust across parametric and non-parametric approaches"
+    primary_conclusion <- "Significant group differences detected"
+  } else if (both_nonsignificant) {
+    consistency <- "CONSISTENT - Both tests non-significant"
+    recommendation <- "Results robust - no significant group differences"
+    primary_conclusion <- "No significant group differences detected"
+  } else {
+    consistency <- "CONFLICTING - Tests disagree"
+    if (anova_p < kruskal_p) {
+      recommendation <- "Parametric test more sensitive - consider normality assumption carefully"
+    } else {
+      recommendation <- "Non-parametric test more conservative - consider assumption violations"
+    }
+    primary_conclusion <- "Results sensitive to distributional assumptions - interpret with caution"
+  }
+  
+  # Return enhanced result structure
+  return(list(
+    variable = variable,
+    test_name = "ANOVA with Kruskal-Wallis sensitivity check",
+    # Primary result (use ANOVA as primary)
+    p_value = anova_p,
+    statistic = anova_result$statistic,
+    interpretation = anova_result$interpretation,
+    # Sensitivity check information
+    sensitivity_check = list(
+      anova = list(
+        test = "One-way ANOVA",
+        p_value = anova_p,
+        statistic = anova_result$statistic
+      ),
+      kruskal = list(
+        test = "Kruskal-Wallis",
+        p_value = kruskal_p,
+        statistic = kruskal_result$statistic
+      ),
+      consistency = consistency,
+      recommendation = recommendation,
+      primary_conclusion = primary_conclusion
+    ),
+    # Task H specific
+    borderline_handling = "Dual test approach due to borderline normality assumptions"
+  ))
 }
 
 # Assess homogeneity of variances

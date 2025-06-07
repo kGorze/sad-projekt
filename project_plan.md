@@ -136,12 +136,12 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **G. Handle Missing Data**
 
-* [ ] Review missing-value summary (4 % overall) and decide on imputation route
-* [ ] Run mean/median and multiple-imputation sensitivity analyses; document impact
+* [X] Review missing-value summary (4 % overall) and decide on imputation route
+* [X] Run mean/median and multiple-imputation sensitivity analyses; document impact
 
 **H. Automate Assumption Flags**
 
-* [ ] Code an automatic flag for borderline normality (e.g., MON Shapiro p = 0.0435) that feeds directly into test-selection rules&#x20;
+* [X] Code an automatic flag for borderline normality (e.g., MON Shapiro p = 0.0435) that feeds directly into test-selection rules&#x20;
 
 **I. Visual & UX Enhancements**
 
