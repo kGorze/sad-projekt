@@ -125,14 +125,14 @@ Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują
 
 **E. Report Effect Sizes Fully**
 
-* [ ] Calculate rank-biserial *r* for each Mann-Whitney result
-* [ ] Calculate ε² (or η²) with 95 % CI for every Kruskal-Wallis; fill “Effect Size: Not calculated” gaps&#x20;
-* [ ] Add 95 % CI to η² in every ANOVA and Cohen’s *d* to all two-group t-tests
+* [X] Calculate rank-biserial *r* for each Mann-Whitney result
+* [X] Calculate ε² (or η²) with 95 % CI for every Kruskal-Wallis; fill “Effect Size: Not calculated” gaps&#x20;
+* [X] Add 95 % CI to η² in every ANOVA and Cohen’s *d* to all two-group t-tests
 
 **F. Fix Model Residual Issues**
 
-* [ ] For each model flagged “Residuals Non-normal” (e.g., *wiek \~ grupa*, *hsCRP \~ grupa*) try log/sqrt transforms and re-check assumptions
-* [ ] If transformation fails, refit with robust regression (Huber/M-estimator)
+* [X] For each model flagged “Residuals Non-normal” (e.g., *wiek \~ grupa*, *hsCRP \~ grupa*) try log/sqrt transforms and re-check assumptions
+* [X] If transformation fails, refit with robust regression (Huber/M-estimator)
 
 **G. Handle Missing Data**
 

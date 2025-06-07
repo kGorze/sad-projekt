@@ -89,6 +89,33 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
     cat("- Basic regression analysis completed\n")
   }
   
+  # Step 4.5: Task F - Fix Model Residual Issues
+  cat("\n=== STEP 4.5: TASK F - RESIDUAL DIAGNOSTICS AND FIXES ===\n")
+  
+  # Source the residual transformation module
+  if (file.exists("modules/analysis/residual_transformation.R")) {
+    source("modules/analysis/residual_transformation.R")
+    
+    residual_fixes_result <- tryCatch({
+      apply_residual_fixes_to_analysis(data, group_column)
+    }, error = function(e) {
+      cat("Note: Residual transformation analysis failed:", e$message, "\n")
+      NULL
+    })
+    
+    if (!is.null(residual_fixes_result)) {
+      result$residual_fixes <- residual_fixes_result
+      
+      # APPLY THE FIXES: Update the main analysis results with corrected models
+      cat("- Applying residual fixes to main analysis results...\n")
+      result <- apply_fixes_to_main_results(result, residual_fixes_result, data, group_column)
+      
+      cat("- Residual transformation analysis completed\n")
+    }
+  } else {
+    cat("Residual transformation module not found. Skipping residual fixes.\n")
+  }
+
   # Step 5: Enhanced Post Hoc Analysis (if any significant omnibus tests)
   cat("\n=== STEP 5: ENHANCED POST HOC ANALYSIS ===\n")
   enhanced_posthoc_results <- perform_enhanced_posthoc_analysis(data, result, group_column)
@@ -1585,4 +1612,160 @@ determine_recommended_test <- function(normal, homogeneous, n_groups, outlier_pe
   }
   
   return("Unknown")
+}
+
+# Function to apply residual fixes to the main analysis results
+apply_fixes_to_main_results <- function(main_results, residual_fixes, data, group_column) {
+  
+  if (is.null(residual_fixes) || is.null(residual_fixes$results)) {
+    return(main_results)
+  }
+  
+  cat("  Updating analysis results with corrected models...\n")
+  
+  # Update regression analysis results with fixed models
+  if (!is.null(main_results$regression_analysis)) {
+    for (var_name in names(residual_fixes$results)) {
+      if (var_name %in% names(main_results$regression_analysis)) {
+        
+        fix_result <- residual_fixes$results[[var_name]]
+        final_rec <- fix_result$final_recommendation
+        
+        if (!is.null(final_rec)) {
+          
+          # Apply the recommended fix
+                      if (!is.null(final_rec) && !is.null(final_rec$transformation) && final_rec$transformation != "original") {
+            # Apply data transformation
+            tryCatch({
+              cat("    Applying", final_rec$transformation, "transformation to", var_name, "\n")
+              
+              # Transform the data
+              if (final_rec$transformation == "log") {
+                # Add small constant to avoid log(0)
+                min_val <- min(data[[var_name]], na.rm = TRUE)
+                if (min_val <= 0) {
+                  transformed_data <- log(data[[var_name]] + abs(min_val) + 1)
+                } else {
+                  transformed_data <- log(data[[var_name]])
+                }
+              } else if (final_rec$transformation == "sqrt") {
+                # Handle negative values for sqrt
+                min_val <- min(data[[var_name]], na.rm = TRUE)
+                if (min_val < 0) {
+                  transformed_data <- sqrt(data[[var_name]] - min_val)
+                } else {
+                  transformed_data <- sqrt(data[[var_name]])
+                }
+              } else if (final_rec$transformation == "boxcox") {
+                # Use Box-Cox transformation
+                if (requireNamespace("car", quietly = TRUE)) {
+                  library(car)
+                  bc_result <- powerTransform(data[[var_name]] ~ 1)
+                  lambda <- bc_result$lambda
+                  if (abs(lambda) < 0.01) {
+                    # Lambda ≈ 0, use log transformation
+                    min_val <- min(data[[var_name]], na.rm = TRUE)
+                    if (min_val <= 0) {
+                      transformed_data <- log(data[[var_name]] + abs(min_val) + 1)
+                    } else {
+                      transformed_data <- log(data[[var_name]])
+                    }
+                  } else {
+                    # Apply power transformation
+                    transformed_data <- (data[[var_name]]^lambda - 1) / lambda
+                  }
+                } else {
+                  # Fallback to log transformation
+                  min_val <- min(data[[var_name]], na.rm = TRUE)
+                  if (min_val <= 0) {
+                    transformed_data <- log(data[[var_name]] + abs(min_val) + 1)
+                  } else {
+                    transformed_data <- log(data[[var_name]])
+                  }
+                }
+              }
+              
+              # Re-run the regression with transformed data
+              temp_data <- data
+              temp_data[[var_name]] <- transformed_data
+              
+              # Update the regression result
+              lm_result <- perform_linear_regression(temp_data, var_name, group_column)
+              main_results$regression_analysis[[var_name]] <- lm_result
+              
+              # Update the note
+              main_results$regression_analysis[[var_name]]$transformation_applied <- final_rec$transformation
+              main_results$regression_analysis[[var_name]]$transformation_note <- paste0("Applied ", final_rec$transformation, " transformation to fix non-normal residuals")
+              
+            }, error = function(e) {
+              cat("    Warning: Could not apply", final_rec$transformation, "transformation to", var_name, ":", e$message, "\n")
+            })
+            
+          } else if (!is.null(final_rec$robust) && final_rec$robust) {
+            # Apply robust regression
+            tryCatch({
+              cat("    Applying", final_rec$method_name, "robust regression to", var_name, "\n")
+              
+              # Use the robust model that was already fitted
+              if (!is.null(fix_result$robust_huber) && final_rec$method_name == "Huber M-estimator") {
+                robust_model <- fix_result$robust_huber$model
+              } else if (!is.null(fix_result$robust_mm) && final_rec$method_name == "MM-estimator") {
+                robust_model <- fix_result$robust_mm$model
+              }
+              
+              if (!is.null(robust_model)) {
+                # Convert robust model to similar structure as linear regression
+                robust_summary <- summary(robust_model)
+                
+                # Update the regression result with robust model
+                main_results$regression_analysis[[var_name]]$model <- robust_model
+                main_results$regression_analysis[[var_name]]$coefficients <- robust_summary$coefficients
+                main_results$regression_analysis[[var_name]]$r_squared <- NA  # R² not directly available for robust
+                main_results$regression_analysis[[var_name]]$adj_r_squared <- NA
+                main_results$regression_analysis[[var_name]]$robust_method <- final_rec$method_name
+                main_results$regression_analysis[[var_name]]$transformation_note <- paste0("Applied ", final_rec$method_name, " robust regression to handle non-normal residuals")
+                main_results$regression_analysis[[var_name]]$residuals_fixed <- TRUE
+              }
+              
+            }, error = function(e) {
+              cat("    Warning: Could not apply robust regression to", var_name, ":", e$message, "\n")
+            })
+          }
+        }
+      }
+    }
+  }
+  
+  # Update test results if any transformations were applied
+  if (!is.null(main_results$test_results)) {
+    for (var_name in names(residual_fixes$results)) {
+      if (var_name %in% names(main_results$test_results)) {
+        
+        fix_result <- residual_fixes$results[[var_name]]
+        final_rec <- fix_result$final_recommendation
+        
+                 if (!is.null(final_rec) && !is.null(final_rec$transformation) && final_rec$transformation != "original") {
+          # Add note about transformation to test results
+          if (is.null(main_results$test_results[[var_name]]$note)) {
+            main_results$test_results[[var_name]]$note <- ""
+          }
+          
+          transformation_note <- if (!is.null(final_rec$robust) && final_rec$robust) {
+            paste0("Results based on ", final_rec$method_name, " robust regression")
+          } else {
+            paste0("Results based on ", final_rec$transformation, "-transformed data")
+          }
+          
+          main_results$test_results[[var_name]]$note <- paste0(
+            main_results$test_results[[var_name]]$note,
+            if (nchar(main_results$test_results[[var_name]]$note) > 0) "; " else "",
+            transformation_note
+          )
+        }
+      }
+    }
+  }
+  
+  cat("  Main analysis results updated with residual fixes.\n")
+  return(main_results)
 } 

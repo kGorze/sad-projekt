@@ -380,6 +380,151 @@ create_comparative_analysis_content <- function(results, include_plots) {
     }
   }
   
+  # Task F: Residual Transformation Results
+  if (!is.null(results$residual_fixes) && !is.null(results$residual_fixes$results)) {
+    tryCatch({
+      content <- paste0(content, '
+          <h3>Task F: Model Residual Diagnostics and Fixes</h3>
+          <div class="alert alert-info">
+              <strong>Objective:</strong> Identify and fix models with non-normal residuals through data transformations or robust regression methods.
+          </div>')
+      
+      residual_data <- results$residual_fixes
+    
+    # Summary statistics
+    if (!is.null(residual_data$summary)) {
+      summary_data <- residual_data$summary
+      content <- paste0(content, '
+        <div class="interpretation">
+            <strong>Residual Analysis Summary:</strong><br>
+            • Models with normal residuals: ', summary_data$normal_count, '<br>
+            • Fixed by transformation: ', summary_data$fixed_by_transformation, '<br>
+            • Fixed by robust regression: ', summary_data$fixed_by_robust, '<br>
+            • Still problematic: ', summary_data$still_problematic, '
+        </div>')
+    }
+    
+    # Detailed results for each variable
+    if (!is.null(residual_data$results)) {
+      for (var_name in names(residual_data$results)) {
+        var_result <- residual_data$results[[var_name]]
+        
+        # Determine overall status
+        original_normal <- if (!is.null(var_result$original) && !is.null(var_result$original$residuals_normal)) {
+          var_result$original$residuals_normal
+        } else {
+          FALSE
+        }
+        
+        status_class <- if (original_normal) "normal-residuals" else "non-normal-residuals"
+        
+        content <- paste0(content, '
+        <div class="test-result">
+            <h4>', var_name, ' ~ ', results$metadata$group_column, '</h4>')
+        
+        # Original model results
+        if (!is.null(var_result$original)) {
+          orig <- var_result$original
+          residual_class <- if (orig$residuals_normal) "normal-residuals" else "non-normal-residuals"
+          
+          content <- paste0(content, '
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="', residual_class, '" style="margin: 5px; padding: 10px; border-radius: 5px; border-left: 5px solid ', 
+                    ifelse(orig$residuals_normal, '#28a745', '#dc3545'), ';">
+                        <strong>Original Model</strong><br>
+                        <strong>Residual Normality:</strong> ', 
+                        ifelse(orig$residuals_normal, 
+                               paste0("✓ Normal (p = ", round(orig$normality_p, 4), ")"),
+                               paste0("⚠ Non-normal (p = ", round(orig$normality_p, 4), ")")), '<br>
+                        <strong>R²:</strong> ', round(orig$r_squared, 4), '
+                    </div>
+                </div>')
+        }
+        
+        # Final recommendation
+        if (!is.null(var_result$final_recommendation)) {
+          final <- var_result$final_recommendation
+          
+          recommendation_text <- ""
+          recommendation_class <- "alert-secondary"
+          
+          if (final$transformation == "original") {
+            recommendation_text <- "✓ Use original model (residuals are normal)"
+            recommendation_class <- "alert-success"
+          } else if (!is.null(final$robust) && final$robust) {
+            recommendation_text <- paste0("🛡 Use ", final$method_name, " (robust regression)")
+            recommendation_class <- "alert-primary"
+          } else {
+            recommendation_text <- paste0("🔧 Use ", final$transformation, " transformation")
+            recommendation_class <- "alert-info"
+          }
+          
+          content <- paste0(content, '
+                <div class="col-md-6">
+                    <div class="alert ', recommendation_class, '" style="margin: 5px;">
+                        <strong>Recommended Solution:</strong><br>
+                        ', recommendation_text, '
+                    </div>
+                </div>')
+        }
+        
+        content <- paste0(content, '
+            </div>')
+        
+        # Transformation details if available
+        transformations_tested <- c()
+        if (!is.null(var_result$log_transformed)) transformations_tested <- c(transformations_tested, "log")
+        if (!is.null(var_result$sqrt_transformed)) transformations_tested <- c(transformations_tested, "sqrt")
+        if (!is.null(var_result$boxcox_transformed)) transformations_tested <- c(transformations_tested, "box-cox")
+        
+        robust_methods_tested <- c()
+        if (!is.null(var_result$robust_huber)) robust_methods_tested <- c(robust_methods_tested, "Huber M-estimator")
+        if (!is.null(var_result$robust_mm)) robust_methods_tested <- c(robust_methods_tested, "MM-estimator")
+        
+        if (length(transformations_tested) > 0 || length(robust_methods_tested) > 0) {
+          content <- paste0(content, '
+            <div class="mt-2">
+                <small class="text-muted">
+                    <strong>Methods tested:</strong> ')
+          
+          if (length(transformations_tested) > 0) {
+            content <- paste0(content, 'Transformations: ', paste(transformations_tested, collapse = ", "))
+          }
+          
+          if (length(robust_methods_tested) > 0) {
+            if (length(transformations_tested) > 0) content <- paste0(content, '; ')
+            content <- paste0(content, 'Robust methods: ', paste(robust_methods_tested, collapse = ", "))
+          }
+          
+          content <- paste0(content, '
+                </small>
+            </div>')
+        }
+        
+        content <- paste0(content, '</div>')
+      }
+    }
+    
+    # Methodology explanation
+    content <- paste0(content, '
+                 <div class="interpretation">
+             <strong>Methodology:</strong><br>
+             1. <strong>Residual normality testing:</strong> Shapiro-Wilk test on regression residuals<br>
+             2. <strong>Transformation attempts:</strong> Log, square root, and Box-Cox transformations<br>
+             3. <strong>Robust regression fallback:</strong> Huber M-estimator and MM-estimator for persistent issues<br>
+             4. <strong>Solution selection:</strong> Best method based on residual normality and model fit
+         </div>')
+    }, error = function(e) {
+      cat("Warning: Could not generate residual transformation section in report:", e$message, "\n")
+      content <- paste0(content, '
+          <h3>Task F: Model Residual Diagnostics and Fixes</h3>
+          <div class="alert alert-warning">
+              <strong>Note:</strong> Residual transformation analysis was completed but could not be displayed in report.
+          </div>')
+    })
+  }
+
   # Analysis metadata
   if (!is.null(results$metadata)) {
     content <- paste0(content, '
