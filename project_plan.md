@@ -87,21 +87,16 @@ Jeśli istnieją istotne statystyczne różnice pomiędzy grupami to zaraportowa
 Zaraportowanie pomiędzy którymi parametrami w obrębie jakich grup występują istotne statystycznie korelacje oraz określenie siły i kierunku korelacji.
 
 # Wizaualizacja danych
+Całośc wykresow jest generowna poprzez r, zapisywana jako png i dodawana jako statyczny obraz na strone.
+W zaleznosci od modulu w raporcie znajduja sie różne wykresy
+
 
 # Generowanie raportu podsumowującego
-
-
-
-
-
-
-
+Program składa się z czterech modułów do analizy
 
 
 
 ## To do 
-
-### 🗒️ Comprehensive To-Do List
 
 **A. Remove Redundancy**
 

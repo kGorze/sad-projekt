@@ -314,23 +314,38 @@ run_analysis_with_args <- function(args) {
       cat(sprintf("  Generating %s report...\n", analysis_name))
       
       if (!is.null(all_results[[analysis_name]])) {
+        # Create simple filename directly (without timestamp) to avoid duplicates
+        simple_name <- paste0(analysis_name, ".html")
+        simple_filepath <- file.path(dashboard_dir, simple_name)
+        
         report_file <- tryCatch({
-          generate_html_report(
-            analysis_results = all_results[[analysis_name]],
-            analysis_type = analysis_name,
-            output_path = dashboard_dir,
-            title = paste("Statistical Analysis Report -", stringr::str_to_title(gsub("_", " ", analysis_name))),
-            include_plots = TRUE
+          # Generate HTML content manually to avoid automatic timestamp naming
+          if (!exists("create_html_report_content")) {
+            source("modules/reporting/generate_report.R")
+          }
+          
+          title <- paste("Statistical Analysis Report -", stringr::str_to_title(gsub("_", " ", analysis_name)))
+          plot_base_path <- file.path("..", "..")  # For unified dashboard
+          
+          html_content <- create_html_report_content(
+            all_results[[analysis_name]], 
+            analysis_name, 
+            title, 
+            TRUE,  # include_plots
+            plot_base_path
           )
+          
+          # Write directly to simple filename
+          writeLines(html_content, simple_filepath)
+          
+          cat("HTML report generated:", simple_filepath, "\n")
+          simple_filepath
         }, error = function(e) {
           cat(sprintf("  Warning: %s report generation failed: %s\n", analysis_name, e$message))
           NULL
         })
         
         if (!is.null(report_file)) {
-          # Create a simple filename for the navigation
-          simple_name <- paste0(analysis_name, ".html")
-          file.copy(report_file, file.path(dashboard_dir, simple_name), overwrite = TRUE)
           report_files[[analysis_name]] <- simple_name
           cat(sprintf("  ✓ %s report generated\n", analysis_name))
         }
