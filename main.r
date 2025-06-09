@@ -775,6 +775,68 @@ run_analysis_with_args <- function(args) {
     ))
   }
   
+  # Check if only export is requested (without analysis)
+  if (args$export && is.null(analysis_results)) {
+    log_analysis_step("DATA EXPORT", "Starting export of cleaned/validated data")
+    cat("Exporting cleaned and validated data to CSV files...\n")
+    
+    # Create output directory if it doesn't exist
+    if (!dir.exists("output/tables")) {
+      dir.create("output/tables", recursive = TRUE)
+    }
+    
+    # Generate timestamp for unique filename
+    timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+    
+    # Export the cleaned data
+    cleaned_data_file <- file.path("output/tables", paste0("cleaned_data_", timestamp, ".csv"))
+    write.csv(medical_data, cleaned_data_file, row.names = FALSE)
+    cat("Cleaned data exported to:", cleaned_data_file, "\n")
+    
+    # Export original data for comparison if available
+    if (exists("data_prep_result") && !is.null(data_prep_result$original_data)) {
+      original_data_file <- file.path("output/tables", paste0("original_data_", timestamp, ".csv"))
+      write.csv(data_prep_result$original_data, original_data_file, row.names = FALSE)
+      cat("Original data exported to:", original_data_file, "\n")
+    }
+    
+    # Export data preparation summary
+    if (exists("data_prep_result") && !is.null(data_prep_result$repair_log)) {
+      # Create a summary of data preparation steps
+      prep_summary <- data.frame(
+        step = c("original_rows", "original_cols", "cleaned_rows", "cleaned_cols", 
+                "missing_values_before", "missing_values_after", "readiness_status"),
+        value = c(
+          if(!is.null(data_prep_result$original_data)) nrow(data_prep_result$original_data) else nrow(medical_data),
+          if(!is.null(data_prep_result$original_data)) ncol(data_prep_result$original_data) else ncol(medical_data),
+          nrow(medical_data),
+          ncol(medical_data),
+          if(!is.null(data_prep_result$original_data)) sum(is.na(data_prep_result$original_data)) else "unknown",
+          sum(is.na(medical_data)),
+          if(!is.null(data_prep_result$readiness_status)) data_prep_result$readiness_status else "processed"
+        ),
+        stringsAsFactors = FALSE
+      )
+      
+      prep_summary_file <- file.path("output/tables", paste0("data_preparation_summary_", timestamp, ".csv"))
+      write.csv(prep_summary, prep_summary_file, row.names = FALSE)
+      cat("Data preparation summary exported to:", prep_summary_file, "\n")
+    }
+    
+    log_analysis_step("DATA EXPORT COMPLETED", "Data export completed successfully")
+    cat("Data export completed! Files saved to output/tables/\n")
+    cat("Use any analysis option (--descriptive_stats, --correlation_analysis, etc.) to perform statistical analysis.\n")
+    
+    return(list(
+      exported_files = list(
+        cleaned_data = cleaned_data_file,
+        original_data = if(exists("original_data_file")) original_data_file else NULL,
+        preparation_summary = if(exists("prep_summary_file")) prep_summary_file else NULL
+      ),
+      analysis_type = "data_export"
+    ))
+  }
+  
   # If no analysis specified, show help
   cat("No analysis specified. Available options:\n")
   cat("  --comparative_analysis: Run comparative analysis\n")
@@ -784,7 +846,7 @@ run_analysis_with_args <- function(args) {
   cat("  --unified_dashboard: Generate unified dashboard with all analyses\n")
   cat("  --statistical_tests: Run statistical tests\n")
   cat("  --report: Generate HTML report (use with any analysis option)\n")
-  cat("  --export: Export analysis results to CSV files (use with any analysis option)\n")
+  cat("  --export: Export cleaned data to CSV files (works without analysis option)\n")
   cat("  --input <file>: Specify input data file (default: dane.csv)\n")
   cat("\nExample usage:\n")
   cat("  Rscript main.R --comparative_analysis --report\n")
@@ -794,6 +856,7 @@ run_analysis_with_args <- function(args) {
   cat("  Rscript main.R --input dane2.csv --descriptive_stats --export\n")
   cat("  Rscript main.R --correlation_analysis --input mydata.csv --report --export\n")
   cat("  Rscript main.R --unified_dashboard --input clinical_data.xlsx\n")
+  cat("  Rscript main.R --input dane2.csv --export  # Export cleaned data only\n")
   
   return(NULL)
 }
