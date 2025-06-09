@@ -176,7 +176,10 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
   content <- paste0(content, generate_dynamic_missing_data_section(results))
   
   # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
-  content <- paste0(content, generate_power_sensitivity_analysis(results))
+  # Only include power analysis if explicitly requested in the analysis
+  if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
+    content <- paste0(content, generate_power_sensitivity_analysis(results))
+  }
   
   # Distribution Analysis Results
   if (!is.null(results$distribution_analysis)) {
@@ -1659,7 +1662,10 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
   content <- paste0(content, generate_interaction_documentation(results))
   
   # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
-  content <- paste0(content, generate_power_sensitivity_analysis(results))
+  # Only include power analysis if explicitly requested in the analysis
+  if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
+    content <- paste0(content, generate_power_sensitivity_analysis(results))
+  }
   
   # Effect Sizes Summary
   if (!is.null(results$effect_sizes)) {
@@ -2815,17 +2821,48 @@ generate_transformation_verification <- function(results) {
   
   # Check if transformation data is available
   if (is.null(results$assumptions_analysis) || 
-      is.null(results$assumptions_analysis$normality_tests) ||
-      is.null(results$test_recommendations)) {
-    return("")
+      is.null(results$assumptions_analysis$normality_tests)) {
+    return('
+    <h2 id="transformation-verification">Transformation Workflow Verification</h2>
+    <div class="alert alert-warning">
+        <p>Could not perform transformation workflow verification: normality test data not available.</p>
+    </div>')
+  }
+  
+  # Try to get test recommendations from different possible locations
+  test_recommendations <- NULL
+  if (!is.null(results$assumptions_analysis$test_recommendations)) {
+    test_recommendations <- results$assumptions_analysis$test_recommendations
+  } else if (!is.null(results$test_recommendations)) {
+    test_recommendations <- results$test_recommendations
+  }
+  
+  if (is.null(test_recommendations)) {
+    return('
+    <h2 id="transformation-verification">Transformation Workflow Verification</h2>
+    <div class="alert alert-warning">
+        <p>Test recommendations not available for transformation verification.</p>
+        <p><strong>Debug info:</strong> Available result keys: ', paste(names(results), collapse = ", "), '</p>
+        <p><strong>Assumptions keys:</strong> ', paste(names(results$assumptions_analysis), collapse = ", "), '</p>
+    </div>')
   }
   
   content <- '
-    <h2 id="transformation-verification">🔄 Transformation Workflow Verification</h2>
-    <p>Verification that variables flagged as non-normal after transformation correctly trigger robust alternative tests.</p>'
+    <h2 id="transformation-verification">Transformation Workflow Verification</h2>
+    <div class="alert alert-info">
+        <h4>What This Section Does:</h4>
+        <p>This section verifies that our statistical analysis pipeline correctly handles non-normal data by:</p>
+        <ul>
+            <li><strong>Detecting non-normal distributions</strong> through normality tests</li>
+            <li><strong>Attempting data transformations</strong> (log, square-root, Box-Cox) when appropriate</li>
+            <li><strong>Re-testing normality</strong> after transformation</li>
+            <li><strong>Selecting appropriate tests</strong> based on final data characteristics</li>
+            <li><strong>Ensuring robust alternatives</strong> (non-parametric tests) are used when transformations fail</li>
+        </ul>
+        <p><strong>Goal:</strong> Verify that non-normal variables correctly trigger robust statistical methods instead of inappropriate parametric tests.</p>
+    </div>'
   
   normality_tests <- results$assumptions_analysis$normality_tests
-  test_recommendations <- results$assumptions_analysis$test_recommendations
   
   # Create verification table
   content <- paste0(content, '
@@ -2877,12 +2914,39 @@ generate_transformation_verification <- function(results) {
       '<span style="color: red; font-weight: bold;">Non-normal</span>'
     }
     
-    # Check for transformation indicators
+    # Check for transformation indicators (improved detection)
     transformation_applied <- "None detected"
-    if (grepl("log|sqrt|Box-Cox", norm_test$overall_test$test, ignore.case = TRUE)) {
-      transformation_applied <- "Detected"
-    } else if (grepl("log|sqrt|transform", var_name, ignore.case = TRUE)) {
-      transformation_applied <- "Variable name suggests transformation"
+    post_transform_normality <- "N/A - No transformation attempted"
+    
+    # Check residual fixes results for transformations
+    if (!is.null(results$residual_fixes) && !is.null(results$residual_fixes$results[[var_name]])) {
+      residual_result <- results$residual_fixes$results[[var_name]]
+      if (!is.null(residual_result$final_recommendation)) {
+        final_rec <- residual_result$final_recommendation
+        if (!is.null(final_rec$transformation) && final_rec$transformation != "original") {
+          transformation_applied <- paste0(tools::toTitleCase(final_rec$transformation), " transformation")
+          # Get post-transformation normality if available
+          if (!is.null(final_rec$post_transform_normal)) {
+            post_transform_normality <- ifelse(final_rec$post_transform_normal, 
+                                             "Normal distribution achieved", 
+                                             "Still non-normal after transformation")
+          } else {
+            post_transform_normality <- "Post-transformation normality not tested"
+          }
+        } else if (!is.null(final_rec$robust) && final_rec$robust) {
+          transformation_applied <- paste0("Robust regression (", final_rec$method_name, ")")
+          post_transform_normality <- "Robust method applied instead of transformation"
+        }
+      }
+    }
+    
+    # Fallback checks for other transformation indicators
+    if (transformation_applied == "None detected") {
+      if (grepl("log|sqrt|Box-Cox", norm_test$overall_test$test, ignore.case = TRUE)) {
+        transformation_applied <- "Transformation detected in test name"
+      } else if (grepl("log|sqrt|transform", var_name, ignore.case = TRUE)) {
+        transformation_applied <- "Variable name suggests transformation"
+      }
     }
     
     # Get recommended test
@@ -2950,10 +3014,9 @@ generate_transformation_verification <- function(results) {
                 <tr class="', row_class, '">
                     <td><strong>', var_name, '</strong></td>
                     <td>', normality_status, '</td>
-                    <td>', transformation_applied, '</td>
-                    <td>', ifelse(!is.null(norm_test$overall_test$interpretation), 
-                                 substr(norm_test$overall_test$interpretation, 1, 50), "N/A"), '</td>
-                    <td>', recommended_test, '</td>
+                    <td><small>', transformation_applied, '</small></td>
+                    <td><small>', post_transform_normality, '</small></td>
+                    <td><small>', recommended_test, '</small></td>
                     <td>', verification_status, '</td>
                     <td><small>', rationale, '</small></td>
                 </tr>')
@@ -3170,35 +3233,130 @@ generate_power_sensitivity_analysis <- function(results) {
   
   content <- '
     <h2 id="power-sensitivity-analysis">Power and Sensitivity Analysis</h2>
-    <p>Post-hoc power analysis and minimal detectable effect calculations for significant findings, with emphasis on HGB and HCT robustness.</p>'
+    <p>Post-hoc power analysis and minimal detectable effect calculations for significant findings to assess statistical robustness.</p>'
   
   # Collect significant findings from test results
   significant_findings <- list()
   
-  # Check comparative analysis results
+  # DEBUG: Add information about what variables were analyzed
+  all_analyzed_vars <- c()
+  significant_vars <- c()
+  
+  # Check comparative analysis results and extract proper effect sizes
   if (!is.null(results$test_results)) {
     for (var_name in names(results$test_results)) {
+      all_analyzed_vars <- c(all_analyzed_vars, var_name)
       test_result <- results$test_results[[var_name]]
-      if (!is.null(test_result$p_value) && !is.na(test_result$p_value) && test_result$p_value < 0.05) {
+      
+      # Include significant results (p < 0.05) and marginally significant (0.05 ≤ p < 0.10) for power analysis
+      if (!is.null(test_result$p_value) && !is.na(test_result$p_value) && test_result$p_value < 0.10) {
+        
+        if (test_result$p_value < 0.05) {
+          significant_vars <- c(significant_vars, var_name)
+        }
+        
+        # Extract effect size from different possible sources
+        effect_size <- NULL
+        effect_type <- "unknown"
+        statistic <- test_result$statistic
+        
+        # First check direct effect size in test result
+        if (!is.null(test_result$effect_size) && !is.na(test_result$effect_size)) {
+          effect_size <- test_result$effect_size
+          if (!is.null(test_result$effect_size_name)) {
+            if (grepl("eta", test_result$effect_size_name, ignore.case = TRUE)) {
+              effect_type <- "eta_squared"
+            } else if (grepl("epsilon", test_result$effect_size_name, ignore.case = TRUE)) {
+              effect_type <- "epsilon_squared"
+            } else if (grepl("Cramer", test_result$effect_size_name, ignore.case = TRUE)) {
+              effect_type <- "cramers_v"
+            } else {
+              effect_type <- "eta_squared"  # Default for ANOVA/Kruskal-Wallis
+            }
+          } else {
+            effect_type <- "eta_squared"
+          }
+        }
+        
+        # If no effect size found, try to get Cohen's d from effect_sizes structure
+        if (is.null(effect_size) && !is.null(results$effect_sizes) && !is.null(results$effect_sizes[[var_name]])) {
+          effect_data <- results$effect_sizes[[var_name]]
+          
+          # Check for Cohen's d - extract from the nested structure
+          if (!is.null(effect_data$effect_sizes)) {
+            cohens_values <- c()
+            for (comparison_name in names(effect_data$effect_sizes)) {
+              comparison_data <- effect_data$effect_sizes[[comparison_name]]
+              if (!is.null(comparison_data$cohens_d) && !is.na(comparison_data$cohens_d)) {
+                cohens_values <- c(cohens_values, comparison_data$cohens_d)
+              }
+            }
+            if (length(cohens_values) > 0) {
+              # Take the largest absolute Cohen's d value from pairwise comparisons
+              effect_size <- cohens_values[which.max(abs(cohens_values))]
+              effect_type <- "cohens_d"
+            }
+          }
+        }
+        
         significant_findings[[var_name]] <- list(
           variable = var_name,
           test_type = test_result$test_name,
           p_value = test_result$p_value,
-          effect_size = test_result$effect_size,
-          effect_size_type = if (!is.null(test_result$effect_size_interpretation)) "eta_squared" else "unknown",
+          effect_size = effect_size,
+          effect_size_type = effect_type,
+          statistic = statistic,
+          significance_level = if (test_result$p_value < 0.05) "significant" else "marginal",
           source = "comparative_analysis"
         )
       }
     }
   }
   
-  # Check enhanced inferential results
+  # Also check for results in alternative comparative_analysis structure
+  if (!is.null(results$comparative_analysis) && !is.null(results$comparative_analysis$test_results)) {
+    for (var_name in names(results$comparative_analysis$test_results)) {
+      all_analyzed_vars <- c(all_analyzed_vars, var_name)
+      test_result <- results$comparative_analysis$test_results[[var_name]]
+      if (!is.null(test_result$p_value) && !is.na(test_result$p_value) && test_result$p_value < 0.05) {
+        significant_vars <- c(significant_vars, var_name)
+        
+        # Extract effect size
+        effect_size <- test_result$effect_size
+        effect_type <- "eta_squared"
+        
+        # If no direct effect size, try Cohen's d
+        if (is.null(effect_size) && !is.null(results$effect_sizes) && !is.null(results$effect_sizes[[var_name]])) {
+          effect_data <- results$effect_sizes[[var_name]]
+          if (!is.null(effect_data$cohens_d)) {
+            cohens_values <- unlist(effect_data$cohens_d)
+            if (length(cohens_values) > 0) {
+              effect_size <- cohens_values[which.max(abs(cohens_values))]
+              effect_type <- "cohens_d"
+            }
+          }
+        }
+        
+        significant_findings[[var_name]] <- list(
+          variable = var_name,
+          test_type = test_result$test_name,
+          p_value = test_result$p_value,
+          effect_size = effect_size,
+          effect_size_type = effect_type,
+          source = "comparative_analysis"
+        )
+      }
+    }
+  }
+  
+  # Check effect sizes from enhanced inferential analysis for regression results
   if (!is.null(results$effect_sizes)) {
     for (var_name in names(results$effect_sizes)) {
       effect_data <- results$effect_sizes[[var_name]]
+      
+      # Check regression R² values
       if (!is.null(effect_data$regression) && !is.null(effect_data$regression$r_squared)) {
-        # Consider R² > 0.1 as meaningful effect
-        if (effect_data$regression$r_squared > 0.1) {
+        if (effect_data$regression$r_squared > 0.02) {  # Small R² threshold
           significant_findings[[paste0(var_name, "_regression")]] <- list(
             variable = var_name,
             test_type = "Multiple Regression",
@@ -3211,9 +3369,50 @@ generate_power_sensitivity_analysis <- function(results) {
     }
   }
   
+  # Remove duplicates and create analysis summary
+  all_analyzed_vars <- unique(all_analyzed_vars)
+  significant_vars <- unique(significant_vars)
+  
+  # Count marginal and non-significant variables
+  marginal_vars <- c()
+  non_significant_vars <- c()
+  
+  for (var_name in all_analyzed_vars) {
+    if (var_name %in% names(significant_findings)) {
+      finding <- significant_findings[[var_name]]
+      if (!is.null(finding$significance_level) && finding$significance_level == "marginal") {
+        marginal_vars <- c(marginal_vars, var_name)
+      }
+    } else {
+      non_significant_vars <- c(non_significant_vars, var_name)
+    }
+  }
+  
+  marginal_vars <- unique(marginal_vars)
+  non_significant_vars <- unique(setdiff(all_analyzed_vars, c(significant_vars, marginal_vars)))
+  
+  # Add comprehensive analysis summary
+  content <- paste0(content, '
+    <div class="alert alert-info">
+        <h4>Variable Analysis Summary</h4>
+        <p><strong>Total Variables Analyzed:</strong> ', length(all_analyzed_vars), 
+        ' (', paste(all_analyzed_vars, collapse = ", "), ')</p>
+        <p><strong>Significant Variables (p < 0.05):</strong> ', length(significant_vars), 
+        if(length(significant_vars) > 0) paste0(' (', paste(significant_vars, collapse = ", "), ')') else '',
+        '</p>',
+        if(length(marginal_vars) > 0) paste0(
+          '<p><strong>Marginally Significant Variables (0.05 ≤ p < 0.10):</strong> ', length(marginal_vars), 
+          ' (', paste(marginal_vars, collapse = ", "), ') - <em>included in power analysis</em></p>'
+        ) else '',
+        if(length(non_significant_vars) > 0) paste0(
+          '<p><strong>Non-significant Variables (p ≥ 0.10):</strong> ', length(non_significant_vars), 
+          ' (', paste(non_significant_vars, collapse = ", "), ') - <em>excluded from power analysis</em></p>'
+        ) else '',
+    '</div>')
+  
   if (length(significant_findings) == 0) {
     content <- paste0(content, '
-      <div class="alert alert-info">
+      <div class="alert alert-warning">
           <h4>No Significant Findings for Power Analysis</h4>
           <p>No statistically significant results were identified for post-hoc power analysis. 
           This may indicate that the current study is underpowered to detect meaningful effects.</p>
@@ -3223,6 +3422,7 @@ generate_power_sensitivity_analysis <- function(results) {
               <li>Consider prospective power analysis for future studies</li>
               <li>Evaluate whether effect sizes of clinical interest are detectable with current sample size</li>
               <li>Assess whether Type II error (false negative) may explain null findings</li>
+              <li>Consider analyzing effect sizes for non-significant results (may still have meaningful effects)</li>
           </ul>
       </div>')
     return(content)
@@ -3241,16 +3441,63 @@ generate_power_sensitivity_analysis <- function(results) {
     NULL
   }
   
-  # Priority analysis for HGB and HCT
-  priority_vars <- c("HGB", "HCT")
-  priority_found <- any(sapply(significant_findings, function(x) x$variable %in% priority_vars))
+  # Dynamic priority analysis - identify variables with strongest effects
+  effect_strengths <- sapply(significant_findings, function(x) {
+    if (!is.null(x$effect_size) && !is.na(x$effect_size)) {
+      abs(x$effect_size)
+    } else {
+      0
+    }
+  })
   
-  if (priority_found) {
+  if (length(effect_strengths) > 0 && max(effect_strengths) > 0) {
+    # Find top variables by effect size (show up to 5, not just 3)
+    top_indices <- order(effect_strengths, decreasing = TRUE)[1:min(5, length(effect_strengths))]
+    priority_vars <- sapply(significant_findings[top_indices], function(x) x$variable)
+    priority_effects <- effect_strengths[top_indices]
+    
+    # Create detailed priority information
+    priority_details <- sapply(1:length(priority_vars), function(i) {
+      effect_val <- round(priority_effects[i], 3)
+      var_name <- priority_vars[i]
+      finding <- significant_findings[[names(significant_findings)[top_indices[i]]]]
+      effect_type <- finding$effect_size_type
+      
+      # Format effect size with type
+      effect_display <- if (effect_type == "cohens_d") {
+        paste0("d = ", effect_val)
+      } else if (effect_type == "eta_squared") {
+        paste0("η² = ", effect_val)
+      } else if (effect_type == "epsilon_squared") {
+        paste0("ε² = ", effect_val)
+      } else if (effect_type == "cramers_v") {
+        paste0("V = ", effect_val)
+      } else {
+        paste0("ES = ", effect_val)
+      }
+      
+      paste0("<strong>", var_name, "</strong> (", effect_display, ")")
+    })
+    
+    if (length(priority_vars) > 0) {
+      content <- paste0(content, '
+        <div class="alert alert-primary">
+            <h4>Priority Variables Analysis</h4>
+            <p><strong>Focus:</strong> Variables with strongest statistical effects (ranked by effect size):</p>
+            <ul>',
+            paste0('<li>', priority_details, '</li>', collapse = ''),
+            '</ul>
+            <p><em>Note:</em> Effect sizes indicate practical significance beyond statistical significance. 
+            Larger effect sizes suggest more robust and interpretable findings.</p>
+        </div>')
+    }
+  } else {
+    priority_vars <- c()  # No priority variables if no effect sizes available
     content <- paste0(content, '
-      <div class="alert alert-primary">
-          <h4>🩸 Priority Variables: HGB and HCT Analysis</h4>
-          <p><strong>Clinical Significance:</strong> Hemoglobin (HGB) and Hematocrit (HCT) are critical oxygen-transport parameters. 
-          Robust effect detection in these variables is essential for clinical interpretation.</p>
+      <div class="alert alert-warning">
+          <h4>Effect Size Information</h4>
+          <p>Effect sizes could not be calculated for the significant findings. 
+          This may limit the power analysis accuracy. Consider reviewing the analysis methodology.</p>
       </div>')
   }
   
@@ -3265,7 +3512,7 @@ generate_power_sensitivity_analysis <- function(results) {
                     <th>Achieved Power</th>
                     <th>MDE (80% Power)</th>
                     <th>Sample Size Adequacy</th>
-                    <th>Clinical Robustness</th>
+                                         <th>Statistical Robustness</th>
                 </tr>
             </thead>
             <tbody>')
@@ -3284,8 +3531,8 @@ generate_power_sensitivity_analysis <- function(results) {
        if (power_analysis$achieved_power >= 0.8) "table-info" else "table-light"
      }
      
-     # Clinical interpretation
-     clinical_robustness <- generate_clinical_robustness_assessment(var_name, power_analysis)
+     # Statistical robustness interpretation
+     statistical_robustness <- generate_statistical_robustness_assessment(var_name, power_analysis)
      
      content <- paste0(content, '
                  <tr class="', row_class, '">
@@ -3296,7 +3543,7 @@ generate_power_sensitivity_analysis <- function(results) {
                      <td>', format_power_display(power_analysis$achieved_power), '</td>
                      <td>', format_mde_display(power_analysis$mde), '</td>
                      <td>', power_analysis$sample_adequacy, '</td>
-                     <td><small>', clinical_robustness, '</small></td>
+                     <td><small>', statistical_robustness, '</small></td>
                  </tr>')
    }
    
@@ -3327,21 +3574,22 @@ generate_power_sensitivity_analysis <- function(results) {
          <h5>Key Insights:</h5>
          <ul>')
    
-   # Special assessment for HGB/HCT if present
-   hgb_hct_findings <- significant_findings[sapply(significant_findings, function(x) x$variable %in% priority_vars)]
-   if (length(hgb_hct_findings) > 0) {
-     hgb_hct_power <- sapply(hgb_hct_findings, function(x) {
+   # Special assessment for priority variables if present
+   priority_findings <- significant_findings[sapply(significant_findings, function(x) x$variable %in% priority_vars)]
+   if (length(priority_findings) > 0) {
+     priority_power <- sapply(priority_findings, function(x) {
        power_analysis <- calculate_post_hoc_power(x, total_n, group_sizes)
        power_analysis$achieved_power
      })
      
-     avg_hgb_hct_power <- round(mean(hgb_hct_power), 3)
+     avg_priority_power <- round(mean(priority_power), 3)
      
      content <- paste0(content, '
-             <li><strong>HGB/HCT Robustness:</strong> Average achieved power = ', 
-             round(avg_hgb_hct_power * 100, 1), '% - ', 
-             ifelse(avg_hgb_hct_power >= 0.8, 
-                    'Results are statistically robust for clinical interpretation',
+             <li><strong>Priority Variables Robustness:</strong> Average achieved power = ', 
+             round(avg_priority_power * 100, 1), '% for top effect variables (', 
+             paste(priority_vars, collapse = ", "), ') - ', 
+             ifelse(avg_priority_power >= 0.8, 
+                    'Results are statistically robust for interpretation',
                     'Results may require replication with larger sample size'), '</li>')
    }
    
@@ -3352,10 +3600,10 @@ generate_power_sensitivity_analysis <- function(results) {
                     ifelse(power_percentage >= 60,
                            'Moderate confidence - consider replication studies',
                            'Limited confidence - results may be vulnerable to Type I error')), '</li>
-             <li><strong>Clinical Translation:</strong> ', 
-             ifelse(any(sapply(significant_findings, function(x) x$variable %in% priority_vars)),
-                    'Key biomarkers (HGB/HCT) show detectable effects suitable for clinical application',
-                    'Effects detected may require validation in larger clinical cohorts'), '</li>
+             <li><strong>Effect Translation:</strong> ', 
+             ifelse(length(priority_vars) > 0,
+                    paste0('Variables with strongest effects (', paste(priority_vars, collapse = ", "), ') show detectable differences suitable for interpretation'),
+                    'Effects detected may require validation in larger studies'), '</li>
          </ul>
          
          <h5>Methodological Notes:</h5>
@@ -3371,124 +3619,248 @@ generate_power_sensitivity_analysis <- function(results) {
 # Helper functions for power analysis
 calculate_post_hoc_power <- function(finding, total_n, group_sizes) {
   
-  # Default values for missing information
-  if (is.null(total_n)) total_n <- 75  # Default based on typical study size
-  if (is.null(group_sizes)) group_sizes <- c(25, 25, 25)  # Balanced groups assumption
+  # Use actual data from metadata - no hardcoded defaults
+  if (is.null(total_n) || is.null(group_sizes)) {
+    return(list(
+      achieved_power = NA,
+      mde = NA,
+      sample_adequacy = "Unknown - insufficient metadata",
+      total_n = total_n,
+      min_group_size = NA,
+      error = "Missing sample size information from analysis metadata"
+    ))
+  }
   
   effect_size <- finding$effect_size
   effect_type <- finding$effect_size_type
   test_type <- finding$test_type
   
-  # Calculate achieved power based on effect size type
+  # Ensure we have actual effect size from the analysis
+  if (is.null(effect_size) || is.na(effect_size)) {
+    return(list(
+      achieved_power = NA,
+      mde = NA,
+      sample_adequacy = "Unknown - effect size not calculated",
+      total_n = total_n,
+      min_group_size = min(group_sizes),
+      error = "No effect size available from analysis results"
+    ))
+  }
+  
+  # Calculate achieved power using proper statistical formulas
   achieved_power <- tryCatch({
-    if (effect_type == "eta_squared" || grepl("ANOVA|Kruskal", test_type)) {
-      # For ANOVA-type tests, use eta-squared
-      if (is.null(effect_size) || is.na(effect_size)) {
-        0.5  # Conservative estimate
-      } else {
-        # Convert eta-squared to achieved power approximation
-        # Using approximation: power ≈ 1 - (1-η²)^(n/k) where k is groups
-        k <- length(group_sizes)
-        if (k > 1) {
-          power_approx <- 1 - (1 - effect_size)^(total_n / k)
-          min(0.95, max(0.05, power_approx))
-        } else {
-          0.5
-        }
-      }
+    if (effect_type == "cohens_d") {
+      # For Cohen's d, use proper power calculation for t-test
+      d <- abs(effect_size)
+      n_per_group <- mean(group_sizes)
+      
+      # Power calculation for two-sample t-test with Cohen's d
+      # Using proper non-centrality parameter and t-distribution
+      df <- sum(group_sizes) - length(group_sizes)  # Total N - number of groups
+      ncp <- d * sqrt(n_per_group / 2)  # Non-centrality parameter
+      
+      # Critical value for two-tailed test at α = 0.05
+      t_crit <- qt(0.975, df)
+      
+      # Power = P(|t| > t_crit | H1 is true) using non-central t-distribution
+      power_calc <- 1 - pt(t_crit, df, ncp) + pt(-t_crit, df, ncp)
+      min(0.999, max(0.001, power_calc))
+      
+    } else if (effect_type %in% c("eta_squared", "epsilon_squared")) {
+      # For ANOVA eta-squared or Kruskal-Wallis epsilon-squared
+      eta_sq <- effect_size
+      k <- length(group_sizes)  # number of groups
+      total_n <- sum(group_sizes)
+      
+      # Convert eta² to f²
+      f_squared <- eta_sq / (1 - eta_sq)
+      
+      # Calculate F statistic from effect size
+      df_between <- k - 1
+      df_within <- total_n - k
+      
+      # Non-centrality parameter for F distribution
+      ncp <- f_squared * total_n
+      
+      # Critical F value
+      f_crit <- qf(0.95, df_between, df_within)
+      
+      # Power using non-central F distribution
+      power_calc <- 1 - pf(f_crit, df_between, df_within, ncp)
+      min(0.999, max(0.001, power_calc))
+      
+    } else if (effect_type == "cramers_v") {
+      # For chi-square Cramer's V
+      v <- effect_size
+      chi_sq <- v^2 * total_n  # Convert Cramer's V back to chi-square
+      
+      # Degrees of freedom (assuming 2x3 or 3x3 table - adjust as needed)
+      df <- 2  # Conservative estimate
+      
+      # Critical chi-square value
+      chi_crit <- qchisq(0.95, df)
+      
+      # Power using non-central chi-square distribution
+      power_calc <- 1 - pchisq(chi_crit, df, ncp = chi_sq)
+      min(0.999, max(0.001, power_calc))
+      
     } else if (effect_type == "r_squared") {
-      # For regression models
-      if (is.null(effect_size) || is.na(effect_size)) {
-        0.5
+      # For regression R²
+      r_sq <- effect_size
+      k_predictors <- 1  # Assuming group comparison (1 predictor)
+      df_error <- total_n - k_predictors - 1
+      
+      # Convert R² to F statistic
+      f_stat <- (r_sq / (1 - r_sq)) * (df_error / k_predictors)
+      
+      # Critical F value
+      f_crit <- qf(0.95, k_predictors, df_error)
+      
+      # Power calculation
+      power_calc <- if (f_stat > f_crit) {
+        # Use non-central F distribution for power
+        ncp <- f_stat * k_predictors
+        1 - pf(f_crit, k_predictors, df_error, ncp)
       } else {
-        # Cohen's convention: small R² = 0.02, medium = 0.13, large = 0.26
-        if (effect_size >= 0.26) 0.9
-        else if (effect_size >= 0.13) 0.8
-        else if (effect_size >= 0.02) 0.6
-        else 0.3
+        0.05  # If observed F < critical F, power is approximately α
       }
+      
+      min(0.999, max(0.001, power_calc))
+      
     } else {
-      # For other effect types (Cohen's d, etc.)
-      if (is.null(effect_size) || is.na(effect_size)) {
-        0.5
-      } else {
-        # Convert to approximate power based on effect size magnitude
-        abs_effect <- abs(effect_size)
-        if (abs_effect >= 0.8) 0.9
-        else if (abs_effect >= 0.5) 0.8
-        else if (abs_effect >= 0.2) 0.6
-        else 0.3
-      }
+      # For unknown effect types, cannot calculate power
+      NA
     }
   }, error = function(e) {
-    0.5  # Default moderate power estimate
+    NA  # Return NA if calculation fails
   })
   
-  # Calculate Minimal Detectable Effect (MDE) for 80% power
+  # Calculate proper MDE for 80% power based on effect type and actual sample sizes
   mde <- tryCatch({
-    if (effect_type == "eta_squared") {
-      # MDE for eta-squared with 80% power
-      0.06  # Medium effect size threshold
+    if (effect_type == "cohens_d") {
+      # MDE for Cohen's d with 80% power (two-sample t-test)
+      n_per_group <- mean(group_sizes)
+      df <- sum(group_sizes) - length(group_sizes)
+      
+      # For 80% power, solve for d such that power = 0.8
+      # Using approximation: d ≈ (t_crit_80 + t_crit_alpha) / sqrt(n_per_group/2)
+      t_crit_alpha <- qt(0.975, df)  # Critical value for α = 0.05
+      t_crit_power <- qt(0.8, df)    # Value for 80% power
+      
+      mde_d <- (t_crit_alpha + t_crit_power) / sqrt(n_per_group / 2)
+      mde_d
+      
+    } else if (effect_type %in% c("eta_squared", "epsilon_squared")) {
+      # MDE for eta-squared with 80% power (ANOVA)
+      k <- length(group_sizes)
+      total_n <- sum(group_sizes)
+      df_between <- k - 1
+      df_within <- total_n - k
+      
+      # For 80% power, solve for f² such that power = 0.8
+      f_crit <- qf(0.95, df_between, df_within)
+      
+      # Approximate MDE using power = 0.8 and F distribution
+      # This is a simplified approximation
+      f_squared_mde <- f_crit / total_n * 4  # Rough approximation
+      eta_squared_mde <- f_squared_mde / (1 + f_squared_mde)
+      
+      max(0.01, min(0.5, eta_squared_mde))  # Reasonable bounds
+      
+    } else if (effect_type == "cramers_v") {
+      # MDE for Cramer's V with 80% power
+      df <- 2  # Conservative estimate
+      chi_crit <- qchisq(0.95, df)
+      
+      # For 80% power, approximate MDE
+      chi_mde <- chi_crit * 1.5  # Rough approximation for 80% power
+      v_mde <- sqrt(chi_mde / total_n)
+      
+      max(0.01, min(0.8, v_mde))
+      
     } else if (effect_type == "r_squared") {
-      0.13  # Medium R² according to Cohen
+      # MDE for R² with 80% power (regression)
+      k_predictors <- 1
+      df_error <- total_n - k_predictors - 1
+      
+      # Critical F value for α = 0.05
+      f_crit <- qf(0.95, k_predictors, df_error)
+      
+      # For 80% power, approximate MDE
+      f_stat_mde <- f_crit * 2  # Rough approximation
+      r_squared_mde <- (f_stat_mde * k_predictors) / (f_stat_mde * k_predictors + df_error)
+      
+      max(0.01, min(0.5, r_squared_mde))
+      
     } else {
-      0.5   # Medium Cohen's d
+      # For unknown effect types
+      NA
     }
   }, error = function(e) {
-    0.5
+    NA
   })
   
-  # Sample size adequacy assessment
+  # Sample size adequacy assessment based on actual group sizes
   min_group_size <- min(group_sizes)
-  sample_adequacy <- if (min_group_size >= 30) {
-    "Adequate"
-  } else if (min_group_size >= 20) {
-    "Moderate"  
-  } else if (min_group_size >= 10) {
-    "Limited"
+  total_sample <- sum(group_sizes)
+  
+  # Assess adequacy based on effect type and sample sizes
+  sample_adequacy <- if (effect_type == "cohens_d") {
+    # For t-tests, focus on minimum group size
+    if (min_group_size >= 30) "Adequate"
+    else if (min_group_size >= 20) "Moderate"
+    else if (min_group_size >= 15) "Limited"
+    else "Insufficient"
+  } else if (effect_type %in% c("eta_squared", "epsilon_squared")) {
+    # For ANOVA, consider total sample and groups
+    k_groups <- length(group_sizes)
+    min_per_group <- total_sample / k_groups
+    if (min_per_group >= 20 && total_sample >= 60) "Adequate"
+    else if (min_per_group >= 15 && total_sample >= 45) "Moderate"
+    else if (min_per_group >= 10 && total_sample >= 30) "Limited"
+    else "Insufficient"
+  } else if (effect_type == "cramers_v") {
+    # For chi-square, focus on total sample
+    if (total_sample >= 100) "Adequate"
+    else if (total_sample >= 50) "Moderate"
+    else if (total_sample >= 30) "Limited"
+    else "Insufficient"
   } else {
-    "Insufficient"
+    # Generic assessment
+    if (min_group_size >= 25) "Adequate"
+    else if (min_group_size >= 15) "Moderate"
+    else if (min_group_size >= 10) "Limited"
+    else "Insufficient"
   }
   
   return(list(
     achieved_power = achieved_power,
     mde = mde,
     sample_adequacy = sample_adequacy,
-    total_n = total_n,
-    min_group_size = min_group_size
+    total_n = total_sample,
+    min_group_size = min_group_size,
+    group_sizes = group_sizes,
+    effect_type = effect_type
   ))
 }
 
-generate_clinical_robustness_assessment <- function(var_name, power_analysis) {
+generate_statistical_robustness_assessment <- function(var_name, power_analysis) {
   
   power_level <- power_analysis$achieved_power
   adequacy <- power_analysis$sample_adequacy
   
-  # Variable-specific clinical interpretation
-  if (var_name %in% c("HGB", "HCT")) {
-    if (power_level >= 0.8) {
-      "Robust for clinical decision-making. Effect size detectable with high confidence."
-    } else if (power_level >= 0.6) {
-      "Moderate clinical reliability. Consider validation in larger cohort."
-    } else {
-      "Limited clinical applicability. Requires replication before clinical use."
-    }
-  } else if (var_name %in% c("ERY", "PLT", "LEU")) {
-    if (power_level >= 0.8) {
-      "Reliable for laboratory interpretation and follow-up studies."
-    } else if (power_level >= 0.6) {
-      "Suggestive findings warrant further investigation."
-    } else {
-      "Preliminary findings require confirmation."
-    }
+  # Handle NA power values
+  if (is.null(power_level) || is.na(power_level)) {
+    return("Power calculation unavailable - interpretation limited.")
+  }
+  
+  # Generic statistical interpretation based solely on power level
+  if (power_level >= 0.8) {
+    "Statistically robust finding suitable for publication and further analysis."
+  } else if (power_level >= 0.6) {
+    "Moderate evidence - findings warrant replication in larger sample."
   } else {
-    if (power_level >= 0.8) {
-      "Statistically robust finding suitable for publication."
-    } else if (power_level >= 0.6) {
-      "Moderate evidence requiring replication."
-    } else {
-      "Weak evidence - interpret with caution."
-    }
+    "Limited statistical power - interpret with caution and consider replication."
   }
 }
 
@@ -3516,7 +3888,7 @@ format_effect_size_display <- function(finding) {
 format_power_display <- function(power) {
   
   if (is.null(power) || is.na(power)) {
-    return("Unknown")
+    return('<span class="text-muted">Not calculated</span>')
   }
   
   power_percent <- round(power * 100, 1)
@@ -3534,12 +3906,13 @@ format_power_display <- function(power) {
 format_mde_display <- function(mde) {
   
   if (is.null(mde) || is.na(mde)) {
-    return("Unknown")
+    return('<span class="text-muted">Not calculated</span>')
   }
   
   # Format MDE with interpretation
-  paste0(round(mde, 3), '<br><small class="text-muted">(', 
-         if (mde <= 0.2) "Small" else if (mde <= 0.5) "Medium" else "Large", 
-         ' effect)</small>')
+  mde_value <- round(mde, 3)
+  magnitude <- if (mde <= 0.2) "Small" else if (mde <= 0.5) "Medium" else "Large"
+  
+  paste0(mde_value, '<br><small class="text-muted">(', magnitude, ' effect)</small>')
 }
     

@@ -32,7 +32,7 @@ source("modules/analysis/enhanced_posthoc.R")
 # Centralized modules are loaded in main.R
 
 # Main function: Comprehensive comparative analysis
-perform_group_comparisons <- function(data, group_column = "grupa", include_plots = TRUE) {
+perform_group_comparisons <- function(data, group_column = "grupa", include_plots = TRUE, include_power_analysis = TRUE) {
   
   # Create analysis result object
   result <- create_analysis_result("comparative_analysis")
@@ -229,7 +229,8 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
     numeric_variables = length(numeric_vars),
     categorical_variables = length(categorical_vars),
     group_column = group_column,
-    analysis_date = Sys.time()
+    analysis_date = Sys.time(),
+    include_power_analysis = include_power_analysis
   )
   
   cat("\nComparative analysis completed successfully.\n")
@@ -1720,10 +1721,10 @@ perform_linear_regression <- function(data, dependent_var, group_column) {
 }
 
 # Convenience function for quick comparative analysis with report
-quick_comparative_analysis <- function(data, group_column = "grupa", generate_report = TRUE) {
+quick_comparative_analysis <- function(data, group_column = "grupa", generate_report = TRUE, include_power_analysis = TRUE) {
   
   # Run comparative analysis with fixed output path
-  result <- perform_group_comparisons(data, group_column, include_plots = TRUE)
+  result <- perform_group_comparisons(data, group_column, include_plots = TRUE, include_power_analysis = include_power_analysis)
   
   # Generate report if requested
   if (generate_report) {
