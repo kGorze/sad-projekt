@@ -40,7 +40,8 @@ source("modules/reporting/export_results.R")
 source("modules/analysis/assumptions_dashboard.R")
 
 # Main function: Enhanced inferential analysis with covariates
-perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", include_plots = TRUE) {
+perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", include_plots = TRUE, 
+                                                include_interactions = "auto") {
   
   # Create analysis result object
   result <- create_analysis_result("enhanced_inferential")
@@ -59,12 +60,23 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   potential_covariates <- tryCatch({
     identify_covariates(data, numeric_vars, group_column)
   }, error = function(e) {
-    cat("Warning: Could not identify covariates automatically. Using manual identification.\n")
-    # Manual covariate identification as fallback
-    manual_covariates <- c()
-    if ("wiek" %in% names(data)) manual_covariates <- c(manual_covariates, "wiek")
-    if ("hsCRP" %in% names(data)) manual_covariates <- c(manual_covariates, "hsCRP")
-    return(manual_covariates)
+    cat("Warning: Could not identify covariates automatically. Using simple variance-based identification.\n")
+    # Fallback: identify variables with highest variance as potential covariates
+    numeric_vars_clean <- numeric_vars[numeric_vars != group_column]
+    if (length(numeric_vars_clean) > 0) {
+      variances <- sapply(numeric_vars_clean, function(var) {
+        if (var %in% names(data) && is.numeric(data[[var]])) {
+          var(data[[var]], na.rm = TRUE)
+        } else {
+          0
+        }
+      })
+      # Take top 2-3 variables with highest variance (likely meaningful covariates)
+      top_vars <- names(sort(variances, decreasing = TRUE))[1:min(3, length(variances))]
+      return(top_vars[!is.na(top_vars)])
+    } else {
+      return(c())
+    }
   })
   
   # CRITICAL FIX: Remove identified covariates from dependent variables list
@@ -111,14 +123,22 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   })
   result$ancova_analysis <- ancova_results
   
-  # Step 3: Interaction Terms Analysis
-  cat("\n=== STEP 3: INTERACTION TERMS ANALYSIS ===\n")
-  interaction_results <- tryCatch({
-    perform_interaction_analysis(centered_data, dependent_vars, group_column, potential_covariates)
-  }, error = function(e) {
-    cat("Warning: Interaction analysis failed:", e$message, "\n")
-    list()
-  })
+  # Step 3: Interaction Terms Analysis (conditional)
+  interaction_results <- list()
+  should_include_interactions <- decide_interaction_inclusion(include_interactions, centered_data, potential_covariates)
+  
+  if (should_include_interactions) {
+    cat("\n=== STEP 3: INTERACTION TERMS ANALYSIS ===\n")
+    interaction_results <- tryCatch({
+      perform_interaction_analysis(centered_data, dependent_vars, group_column, potential_covariates)
+    }, error = function(e) {
+      cat("Warning: Interaction analysis failed:", e$message, "\n")
+      list()
+    })
+  } else {
+    cat("\n=== STEP 3: SKIPPING INTERACTION ANALYSIS ===\n")
+    cat("Reason: ", attr(should_include_interactions, "reason"), "\n")
+  }
   result$interaction_analysis <- interaction_results
   
   # Step 4: Model Selection and Comparison
@@ -156,6 +176,45 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   return(result)
 }
 
+# Decide whether to include interaction analysis
+decide_interaction_inclusion <- function(include_interactions, data, covariates) {
+  
+  if (include_interactions == TRUE) {
+    return(structure(TRUE, reason = "Explicitly requested"))
+  }
+  
+  if (include_interactions == FALSE) {
+    return(structure(FALSE, reason = "Explicitly disabled"))
+  }
+  
+  # Auto decision logic
+  n_total <- nrow(data)
+  n_covariates <- length(covariates)
+  
+  # Criteria for automatic inclusion
+  sufficient_sample_size <- n_total >= 75  # Rule of thumb: 15+ obs per parameter
+  has_covariates <- n_covariates > 0
+  adequate_power <- n_total >= (n_covariates * 20)  # Conservative power estimate
+  
+  if (!has_covariates) {
+    return(structure(FALSE, reason = "No covariates available"))
+  }
+  
+  if (!sufficient_sample_size) {
+    return(structure(FALSE, reason = paste0("Insufficient sample size (n=", n_total, 
+                                          ", recommended n>=75 for interaction analysis)")))
+  }
+  
+  if (!adequate_power) {
+    return(structure(FALSE, reason = paste0("Inadequate power (n=", n_total, 
+                                          " with ", n_covariates, " covariates)")))
+  }
+  
+  # Include interactions if all criteria met
+  return(structure(TRUE, reason = paste0("Auto-included: adequate sample size (n=", n_total, 
+                                       ") with ", n_covariates, " covariate(s)")))
+}
+
 # Identify potential covariates (age, biomarkers, etc.)
 identify_covariates <- function(data, dependent_vars, group_column) {
   
@@ -165,47 +224,38 @@ identify_covariates <- function(data, dependent_vars, group_column) {
   
   potential_covariates <- list()
   
-  # Common covariate patterns in medical data
-  age_patterns <- c("wiek", "age", "Age", "AGE", "anos", "alter")
-  biomarker_patterns <- c("hsCRP", "hscrp", "CRP", "crp", "BMI", "bmi")
-  # Note: Standardized biomarker name is "hsCRP" (high-sensitivity C-reactive protein)
+  # Flexible covariate patterns - automatically detect any meaningful continuous variables
+  # Remove hardcoded medical-specific patterns and use statistical criteria instead
   
-  # Identify age-like variables
-  age_vars <- numeric_vars[sapply(numeric_vars, function(x) any(sapply(age_patterns, function(p) grepl(p, x, ignore.case = TRUE))))]
-  if (length(age_vars) > 0) {
-    potential_covariates$age <- age_vars[1]  # Take first match
-    cat("- Identified age covariate:", age_vars[1], "\n")
-  }
+  # Statistical-based covariate identification (no hardcoded patterns)
+  # Use statistical criteria to identify meaningful covariates from ANY dataset
+  data_clean <- data[complete.cases(data[c(group_column, numeric_vars)]), ]
   
-  # Identify biomarker variables
-  biomarker_vars <- numeric_vars[sapply(numeric_vars, function(x) any(sapply(biomarker_patterns, function(p) grepl(p, x, ignore.case = TRUE))))]
-  if (length(biomarker_vars) > 0) {
-    potential_covariates$biomarkers <- biomarker_vars
-    cat("- Identified biomarker covariates:", paste(biomarker_vars, collapse = ", "), "\n")
-  }
-  
-  # Identify other continuous variables as potential covariates
-  other_covariates <- numeric_vars[!numeric_vars %in% c(age_vars, biomarker_vars)]
-  if (length(other_covariates) > 0) {
-    # Filter based on correlation with group membership (if group is factor with numeric encoding)
-    data_clean <- data[complete.cases(data[c(group_column, other_covariates)]), ]
-    if (nrow(data_clean) > 0) {
-      group_numeric <- as.numeric(as.factor(data_clean[[group_column]]))
-      correlations <- sapply(other_covariates, function(var) {
-        if (var %in% names(data_clean)) {
-          abs(cor(data_clean[[var]], group_numeric, use = "complete.obs"))
-        } else {
-          0
+  if (nrow(data_clean) > 0) {
+    group_numeric <- as.numeric(as.factor(data_clean[[group_column]]))
+    
+    # Calculate correlations and variability for all numeric variables
+    covariate_candidates <- c()
+    for (var in numeric_vars) {
+      if (var %in% names(data_clean)) {
+        # Statistical criteria for covariate selection:
+        # 1. Moderate correlation with groups (suggests potential confounding)
+        # 2. Sufficient variability (CV > 5%)
+        # 3. Not too highly correlated with groups (< 0.7 to avoid collinearity)
+        
+        correlation <- abs(cor(data_clean[[var]], group_numeric, use = "complete.obs"))
+        cv <- sd(data_clean[[var]], na.rm = TRUE) / mean(data_clean[[var]], na.rm = TRUE) * 100
+        
+        # Flexible criteria - no medical assumptions
+        if (correlation > 0.05 && correlation < 0.7 && cv > 5) {
+          covariate_candidates <- c(covariate_candidates, var)
+          cat("- Identified potential covariate:", var, 
+              "(r =", round(correlation, 3), ", CV =", round(cv, 1), "%)\n")
         }
-      })
-      
-      # Select variables with moderate correlation (0.1 < |r| < 0.7) as potential covariates
-      relevant_covariates <- other_covariates[correlations > 0.1 & correlations < 0.7]
-      if (length(relevant_covariates) > 0) {
-        potential_covariates$other <- relevant_covariates
-        cat("- Identified other potential covariates:", paste(relevant_covariates, collapse = ", "), "\n")
       }
     }
+    
+    potential_covariates$statistical <- covariate_candidates
   }
   
   # Flatten the list
@@ -820,10 +870,12 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
 }
 
 # Convenience function for quick enhanced inferential analysis
-quick_enhanced_inferential <- function(data, group_column = "grupa", generate_report = TRUE) {
+quick_enhanced_inferential <- function(data, group_column = "grupa", generate_report = TRUE, 
+                                     include_interactions = "auto") {
   
   # Run enhanced inferential analysis
-  result <- perform_enhanced_inferential_analysis(data, group_column, include_plots = TRUE)
+  result <- perform_enhanced_inferential_analysis(data, group_column, include_plots = TRUE, 
+                                                 include_interactions = include_interactions)
   
   # Generate report if requested
   if (generate_report) {

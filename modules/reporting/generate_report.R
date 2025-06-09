@@ -150,7 +150,7 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
     <div class="result-section">
         <h2>Comparative Analysis Summary</h2>
         <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>
-
+        
     </div>')
   
   # Metadata overview
@@ -178,7 +178,7 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
   # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
   # Only include power analysis if explicitly requested in the analysis
   if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
-    content <- paste0(content, generate_power_sensitivity_analysis(results))
+  content <- paste0(content, generate_power_sensitivity_analysis(results))
   }
   
   # Distribution Analysis Results
@@ -734,7 +734,7 @@ create_correlation_analysis_content <- function(results, include_plots, plot_bas
         <h2>Correlation Analysis Summary</h2>
         <p>This analysis examines the strength and direction of linear relationships between continuous variables, 
            using Pearson or Spearman correlation coefficients based on data characteristics.</p>
-
+           
     </div>')
   
   # Metadata overview
@@ -780,19 +780,19 @@ create_correlation_analysis_content <- function(results, include_plots, plot_bas
       content <- paste0(content, '
         <h4>', current_var, ' - Correlations with Other Variables</h4>
         <div class="table-responsive">
-            <table class="table table-striped stats-table">
-                <thead>
-                    <tr>
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
                         <th>Correlated Variable</th>
-                        <th>Pearson r</th>
+                    <th>Pearson r</th>
                         <th>p-value (FDR)</th>
-                        <th>Strength</th>
+                    <th>Strength</th>
                         <th>Direction</th>
-                        <th>Significance</th>
-                    </tr>
-                </thead>
-                <tbody>')
-      
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>')
+    
       # Get correlations for current variable with all others
       var_correlations <- list()
       for (other_index in 1:length(variables)) {
@@ -802,18 +802,18 @@ create_correlation_analysis_content <- function(results, include_plots, plot_bas
           p_val_fdr <- p_matrix_fdr[var_index, other_index]
           
           # Determine strength
-          abs_r <- abs(r_val)
-          if (abs_r < 0.1) strength <- "negligible"
-          else if (abs_r < 0.3) strength <- "weak"
-          else if (abs_r < 0.5) strength <- "moderate"
-          else if (abs_r < 0.7) strength <- "strong"
-          else strength <- "very strong"
-          
+        abs_r <- abs(r_val)
+        if (abs_r < 0.1) strength <- "negligible"
+        else if (abs_r < 0.3) strength <- "weak"
+        else if (abs_r < 0.5) strength <- "moderate"
+        else if (abs_r < 0.7) strength <- "strong"
+        else strength <- "very strong"
+        
           # Determine direction
           direction <- ifelse(r_val > 0, "positive", "negative")
           
           # Significance
-          significance <- ifelse(p_val_fdr < 0.05, "significant", "not significant")
+        significance <- ifelse(p_val_fdr < 0.05, "significant", "not significant")
           
           var_correlations[[other_var]] <- list(
             r = r_val,
@@ -970,9 +970,9 @@ create_correlation_analysis_content <- function(results, include_plots, plot_bas
                          <td>', corr_data$direction, '</td>
                          <td>', corr_data$significance, '</td>
                      </tr>')
-           }
-           
-           content <- paste0(content, '</tbody></table></div>')
+    }
+    
+    content <- paste0(content, '</tbody></table></div>')
            
            # Add interpretation for this variable in this group
            sig_correlations <- var_correlations[sapply(var_correlations, function(x) x$significance == "significant")]
@@ -994,9 +994,9 @@ create_correlation_analysis_content <- function(results, include_plots, plot_bas
            </div>')
        }
      }
-   }
-   
-   # Significant Correlations Summary
+  }
+  
+  # Significant Correlations Summary
   content <- paste0(content, '
       <h3>Significant Correlations Summary</h3>')
   
@@ -1529,7 +1529,7 @@ create_descriptive_stats_content <- function(results, include_plots, plot_base_p
     }
   }
   
-
+  
   content <- paste0(content, '</div></div></div>')
   return(content)
 }
@@ -1664,7 +1664,7 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
   # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
   # Only include power analysis if explicitly requested in the analysis
   if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
-    content <- paste0(content, generate_power_sensitivity_analysis(results))
+  content <- paste0(content, generate_power_sensitivity_analysis(results))
   }
   
   # Effect Sizes Summary
@@ -1684,19 +1684,21 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
           r_squared <- round(var_effects$regression$r_squared, 3)
           interpretation <- var_effects$regression$interpretation
           
-          # Enhanced interpretation based on variable type
+          # Generic interpretation based on effect size magnitude only
           clinical_interpretation <- ""
-          if (var_name %in% c("HGB", "HCT")) {
-            clinical_interpretation <- " - indicating potential treatment effects on oxygen-carrying capacity"
-          } else if (var_name %in% c("ERY", "PLT", "LEU", "MON")) {
-            clinical_interpretation <- " - suggesting group differences in hematological parameters"
-          } else if (var_name == "MCHC") {
-            clinical_interpretation <- " - reflecting changes in red blood cell concentration"
+          if (r_squared >= 0.14) {
+            clinical_interpretation <- " - indicating substantial group differences"
+          } else if (r_squared >= 0.06) {
+            clinical_interpretation <- " - suggesting moderate group differences"
+          } else if (r_squared >= 0.01) {
+            clinical_interpretation <- " - indicating small but detectable group differences"
+          } else {
+            clinical_interpretation <- " - indicating minimal group differences"
           }
           
           content <- paste0(content, '
               <em>Regression R²:</em> ', r_squared, ' (', interpretation, ')<br>
-              <em>Clinical relevance:</em> After adjusting for age and biomarkers, group membership explains ', 
+              <em>Statistical relevance:</em> After adjusting for covariates, group membership explains ', 
               round(r_squared * 100, 1), '% of variance in ', var_name, clinical_interpretation, '<br>')
         }
         
@@ -2587,9 +2589,9 @@ generate_centralized_assumptions_section <- function(results) {
             </tbody>
         </table>
     </div>')
-    
+  
     # Add explanations for statistical tests and post-hoc methods
-    content <- paste0(content, '
+  content <- paste0(content, '
     <div class="interpretation">
         <h4>Statistical Tests Explained:</h4>
         <div style="font-size: 0.9em; line-height: 1.4em;">
@@ -2730,27 +2732,11 @@ generate_interaction_documentation <- function(results) {
 # Generate clinical interpretation for specific interactions
 generate_clinical_interaction_interpretation <- function(variable, covariate, coefficient) {
   
-  # Standardized interpretations based on variable types
-  base_interpretation <- switch(variable,
-    "HGB" = "hemoglobin levels",
-    "HCT" = "hematocrit values", 
-    "ERY" = "red blood cell count",
-    "PLT" = "platelet count",
-    "LEU" = "white blood cell count",
-    "MON" = "monocyte count",
-    "MCHC" = "mean corpuscular hemoglobin concentration",
-    "the outcome variable"
-  )
+  # Generic interpretations - no variable-specific assumptions
+  base_interpretation <- paste0("values of ", variable)
   
-  covariate_description <- switch(covariate,
-    "wiek" = "patient age",
-    "wiek_centered" = "patient age",
-    "hsCRP" = "C-reactive protein levels",
-    "hsCRP_centered" = "C-reactive protein levels", 
-    "BMI" = "body mass index",
-    "BMI_centered" = "body mass index",
-    covariate
-  )
+  # Generic covariate description - remove medical assumptions
+  covariate_description <- gsub("_centered$", "", covariate)
   
   # Direction interpretation
   direction_text <- if (!is.na(coefficient)) {
@@ -2774,24 +2760,10 @@ generate_clinical_interaction_interpretation <- function(variable, covariate, co
                   ' (interaction coefficient = ', round(coefficient, 4), ').</p>'),
            ''),
     
-    '<p><strong>Clinical Implications:</strong> ',
-    switch(variable,
-      "HGB" = paste0('Treatment effects on oxygen-carrying capacity may vary by ', covariate_description, 
-                     '. Consider ', covariate_description, '-stratified treatment protocols.'),
-      "HCT" = paste0('Hematocrit responses may be ', covariate_description, '-dependent. ', 
-                     'Monitor patients with extreme ', covariate_description, ' values more closely.'),
-      "ERY" = paste0('Red blood cell production responses vary by ', covariate_description, 
-                     '. Age-specific or biomarker-stratified treatment approaches may be warranted.'),
-      "PLT" = paste0('Platelet count changes show ', covariate_description, '-dependent patterns. ',
-                     'Consider bleeding risk stratification by ', covariate_description, '.'),
-      "LEU" = paste0('Immune response patterns vary by ', covariate_description, 
-                     '. Monitor infection risk in vulnerable subgroups.'),
-      "MON" = paste0('Monocyte responses are ', covariate_description, '-dependent, suggesting ',
-                     'individualized inflammatory monitoring strategies.'),
-      "MCHC" = paste0('Red blood cell concentration changes vary by ', covariate_description, 
-                      '. Consider hemoglobin optimization strategies tailored to patient characteristics.'),
-      paste0('Treatment effects are ', covariate_description, '-dependent, suggesting personalized approach needed.')
-    ), '</p>',
+    '<p><strong>Statistical Implications:</strong> ',
+    paste0('The relationship between group membership and ', variable, ' varies significantly based on ', 
+           covariate_description, ' levels. This suggests that ', covariate_description, 
+           ' should be considered when interpreting group differences for this variable.'), '</p>',
     
     '<p><strong>Statistical Recommendation:</strong> Include the interaction term in final models for this variable to provide accurate effect estimates across the full range of ', covariate_description, '.</p>'
   )
@@ -2942,10 +2914,10 @@ generate_transformation_verification <- function(results) {
     
     # Fallback checks for other transformation indicators
     if (transformation_applied == "None detected") {
-      if (grepl("log|sqrt|Box-Cox", norm_test$overall_test$test, ignore.case = TRUE)) {
+    if (grepl("log|sqrt|Box-Cox", norm_test$overall_test$test, ignore.case = TRUE)) {
         transformation_applied <- "Transformation detected in test name"
-      } else if (grepl("log|sqrt|transform", var_name, ignore.case = TRUE)) {
-        transformation_applied <- "Variable name suggests transformation"
+    } else if (grepl("log|sqrt|transform", var_name, ignore.case = TRUE)) {
+      transformation_applied <- "Variable name suggests transformation"
       }
     }
     
@@ -3122,105 +3094,105 @@ generate_dynamic_missing_data_section <- function(results) {
       <h2 id="missing-data-statement">Missing Data Assessment</h2>
       <p>Current missing data status and imputation sensitivity analysis for the active dataset.</p>'
     
-    # Missing data present
-    missing_pct <- round(missing_data_info$missing_percentage, 2)
-    alert_class <- if (missing_pct < 5) "alert-info" else if (missing_pct < 15) "alert-warning" else "alert-danger"
-    
-    content <- paste0(content, '
-      <div class="', alert_class, '">
-          <h4><span style="color: orange; font-weight: bold;">Missing Data Present</span></h4>
-          <p><strong>Current Status:</strong> The active dataset contains <strong>', missing_data_info$total_missing, 
-          ' missing values</strong> (', missing_pct, '% of total data points).</p>
-          ', ifelse(!is.null(total_obs), 
-                   paste0('<p><strong>Total Observations:</strong> ', total_obs, ' cases</p>'), ''), '
-          
-          <h5>Missing Data Pattern Analysis:</h5>')
-    
-    # Add variable-specific missing data if available
-    if (!is.null(variable_missing_info) && nrow(variable_missing_info) > 0) {
-      content <- paste0(content, '
-          <div class="table-responsive mt-3">
-              <table class="table table-striped table-sm">
-                  <thead>
-                      <tr><th>Variable</th><th>Missing Count</th><th>Missing %</th><th>Impact Assessment</th></tr>
-                  </thead>
-                  <tbody>')
+      # Missing data present
+      missing_pct <- round(missing_data_info$missing_percentage, 2)
+      alert_class <- if (missing_pct < 5) "alert-info" else if (missing_pct < 15) "alert-warning" else "alert-danger"
       
-      for (i in 1:nrow(variable_missing_info)) {
-        var_row <- variable_missing_info[i, ]
-        var_missing_pct <- if (!is.null(total_obs) && total_obs > 0) {
-          round((var_row$Missing / total_obs) * 100, 1)
-        } else {
-          "Unknown"
-        }
+      content <- paste0(content, '
+        <div class="', alert_class, '">
+          <h4><span style="color: orange; font-weight: bold;">Missing Data Present</span></h4>
+            <p><strong>Current Status:</strong> The active dataset contains <strong>', missing_data_info$total_missing, 
+            ' missing values</strong> (', missing_pct, '% of total data points).</p>
+            ', ifelse(!is.null(total_obs), 
+                     paste0('<p><strong>Total Observations:</strong> ', total_obs, ' cases</p>'), ''), '
+            
+            <h5>Missing Data Pattern Analysis:</h5>')
+      
+      # Add variable-specific missing data if available
+      if (!is.null(variable_missing_info) && nrow(variable_missing_info) > 0) {
+        content <- paste0(content, '
+            <div class="table-responsive mt-3">
+                <table class="table table-striped table-sm">
+                    <thead>
+                        <tr><th>Variable</th><th>Missing Count</th><th>Missing %</th><th>Impact Assessment</th></tr>
+                    </thead>
+                    <tbody>')
         
-        impact <- if (var_missing_pct != "Unknown") {
-          if (as.numeric(var_missing_pct) < 5) "Low impact"
-          else if (as.numeric(var_missing_pct) < 15) "Moderate impact"
-          else "High impact - consider exclusion"
-        } else {
-          "Assessment needed"
+        for (i in 1:nrow(variable_missing_info)) {
+          var_row <- variable_missing_info[i, ]
+          var_missing_pct <- if (!is.null(total_obs) && total_obs > 0) {
+            round((var_row$Missing / total_obs) * 100, 1)
+          } else {
+            "Unknown"
+          }
+          
+          impact <- if (var_missing_pct != "Unknown") {
+            if (as.numeric(var_missing_pct) < 5) "Low impact"
+            else if (as.numeric(var_missing_pct) < 15) "Moderate impact"
+            else "High impact - consider exclusion"
+          } else {
+            "Assessment needed"
+          }
+          
+          content <- paste0(content, '
+                        <tr>
+                            <td><strong>', var_row$Variable, '</strong></td>
+                            <td>', var_row$Missing, '</td>
+                            <td>', var_missing_pct, '%</td>
+                            <td><small>', impact, '</small></td>
+                        </tr>')
         }
         
         content <- paste0(content, '
-                      <tr>
-                          <td><strong>', var_row$Variable, '</strong></td>
-                          <td>', var_row$Missing, '</td>
-                          <td>', var_missing_pct, '%</td>
-                          <td><small>', impact, '</small></td>
-                      </tr>')
+                    </tbody>
+                </table>
+            </div>')
       }
       
       content <- paste0(content, '
-                  </tbody>
-              </table>
-          </div>')
-    }
-    
-    content <- paste0(content, '
-          <h5>Imputation and Sensitivity Strategy:</h5>
-          <ul>
-              <li><strong>Current Approach:</strong> ', 
-              ifelse(missing_pct < 5, 
-                     'Complete case analysis - missing data minimal',
-                     ifelse(missing_pct < 15,
-                            'Multiple imputation recommended for sensitivity analysis',
-                            'Comprehensive missing data analysis required')), '</li>
-              <li><strong>Bias Assessment:</strong> ', 
-              ifelse(missing_pct < 5, 
-                     'Low risk of missing data bias',
-                     ifelse(missing_pct < 15,
-                            'Moderate bias risk - monitor pattern randomness',
-                            'High bias risk - investigate missingness mechanism')), '</li>
-              <li><strong>Statistical Impact:</strong> ', 
-              ifelse(missing_pct < 5,
-                     'Minimal impact on statistical power and validity',
-                     ifelse(missing_pct < 15,
-                            'Moderate impact - conduct sensitivity analyses',
-                            'Substantial impact - consider alternative analytical approaches')), '</li>
-          </ul>
-          
-          <p><strong>Recommendation:</strong> ', 
-          ifelse(missing_pct < 5,
-                 'Proceed with complete case analysis. Missing data is minimal and unlikely to substantially bias results.',
-                 ifelse(missing_pct < 15,
-                        'Conduct sensitivity analysis using multiple imputation methods to assess robustness of findings.',
-                        'Implement comprehensive missing data analysis including MCAR/MAR testing and multiple imputation strategies.')), '</p>
-      </div>')
+            <h5>Imputation and Sensitivity Strategy:</h5>
+            <ul>
+                <li><strong>Current Approach:</strong> ', 
+                ifelse(missing_pct < 5, 
+                       'Complete case analysis - missing data minimal',
+                       ifelse(missing_pct < 15,
+                              'Multiple imputation recommended for sensitivity analysis',
+                              'Comprehensive missing data analysis required')), '</li>
+                <li><strong>Bias Assessment:</strong> ', 
+                ifelse(missing_pct < 5, 
+                       'Low risk of missing data bias',
+                       ifelse(missing_pct < 15,
+                              'Moderate bias risk - monitor pattern randomness',
+                              'High bias risk - investigate missingness mechanism')), '</li>
+                <li><strong>Statistical Impact:</strong> ', 
+                ifelse(missing_pct < 5,
+                       'Minimal impact on statistical power and validity',
+                       ifelse(missing_pct < 15,
+                              'Moderate impact - conduct sensitivity analyses',
+                              'Substantial impact - consider alternative analytical approaches')), '</li>
+            </ul>
+            
+            <p><strong>Recommendation:</strong> ', 
+            ifelse(missing_pct < 5,
+                   'Proceed with complete case analysis. Missing data is minimal and unlikely to substantially bias results.',
+                   ifelse(missing_pct < 15,
+                          'Conduct sensitivity analysis using multiple imputation methods to assess robustness of findings.',
+                          'Implement comprehensive missing data analysis including MCAR/MAR testing and multiple imputation strategies.')), '</p>
+        </div>')
   
-    # Add timestamp and dataset identification
-    content <- paste0(content, '
-      <div class="alert alert-light mt-3">
+  # Add timestamp and dataset identification
+  content <- paste0(content, '
+    <div class="alert alert-light mt-3">
           <h5>Assessment Metadata</h5>
-          <p><strong>Assessment Date:</strong> ', format(Sys.time(), "%Y-%m-%d %H:%M:%S"), '<br>
-          <strong>Dataset Version:</strong> Current active dataset<br>
+        <p><strong>Assessment Date:</strong> ', format(Sys.time(), "%Y-%m-%d %H:%M:%S"), '<br>
+        <strong>Dataset Version:</strong> Current active dataset<br>
           <strong>Assessment Scope:</strong> Variables with missing data patterns</p>
-          
-          <p><em><strong>Note:</strong> This assessment is automatically updated based on the current dataset. 
-          Missing data patterns may change if data preprocessing, variable selection, or imputation methods are modified.</em></p>
-      </div>')
-    
-    return(content)
+        
+        <p><em><strong>Note:</strong> This assessment is automatically updated based on the current dataset. 
+        Missing data patterns may change if data preprocessing, variable selection, or imputation methods are modified.</em></p>
+    </div>')
+  
+  return(content)
     
   } else {
     # No missing data or no information available - return empty string
@@ -3392,8 +3364,8 @@ generate_power_sensitivity_analysis <- function(results) {
   non_significant_vars <- unique(setdiff(all_analyzed_vars, c(significant_vars, marginal_vars)))
   
   # Add comprehensive analysis summary
-  content <- paste0(content, '
-    <div class="alert alert-info">
+    content <- paste0(content, '
+      <div class="alert alert-info">
         <h4>Variable Analysis Summary</h4>
         <p><strong>Total Variables Analyzed:</strong> ', length(all_analyzed_vars), 
         ' (', paste(all_analyzed_vars, collapse = ", "), ')</p>
@@ -3480,8 +3452,8 @@ generate_power_sensitivity_analysis <- function(results) {
     })
     
     if (length(priority_vars) > 0) {
-      content <- paste0(content, '
-        <div class="alert alert-primary">
+    content <- paste0(content, '
+      <div class="alert alert-primary">
             <h4>Priority Variables Analysis</h4>
             <p><strong>Focus:</strong> Variables with strongest statistical effects (ranked by effect size):</p>
             <ul>',
@@ -3636,7 +3608,7 @@ calculate_post_hoc_power <- function(finding, total_n, group_sizes) {
   test_type <- finding$test_type
   
   # Ensure we have actual effect size from the analysis
-  if (is.null(effect_size) || is.na(effect_size)) {
+      if (is.null(effect_size) || is.na(effect_size)) {
     return(list(
       achieved_power = NA,
       mde = NA,
@@ -3855,11 +3827,11 @@ generate_statistical_robustness_assessment <- function(var_name, power_analysis)
   }
   
   # Generic statistical interpretation based solely on power level
-  if (power_level >= 0.8) {
+    if (power_level >= 0.8) {
     "Statistically robust finding suitable for publication and further analysis."
-  } else if (power_level >= 0.6) {
+    } else if (power_level >= 0.6) {
     "Moderate evidence - findings warrant replication in larger sample."
-  } else {
+    } else {
     "Limited statistical power - interpret with caution and consider replication."
   }
 }
