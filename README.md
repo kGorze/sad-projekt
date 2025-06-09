@@ -66,3 +66,64 @@ i łączy je poprzez indeks. **Wszystkie wykresy są zapisywane również jako o
 
 4. Analiza wpływów testuje dla każdej z dziewięciu zmiennych dwa proste modele: sam wyraz wolny („intercept”) versus „group-only”. Kryterium AIC/BIC i skorygowane R² wskazało, że dla większości parametrów (wiek, hsCRP, ERY, PLT, MON, LEU) najlepszy jest model bez efektu grupy. Różnice między CHOR1, CHOR2 i kontrolą nie poprawiają dopasowania. Jedynie HGB (Adj R² $\approx$ 0,17), HCT (0,07) i MCHC (0,13) korzystają z modelu „group-only”, potwierdzając wcześniejsze wyniki ANOVA. Nie stwierdzono interakcji grupa $\times$ kowariaty, co oznacza jednolity efekt grupy w całej próbie. Łącznie wskazuje to na selektywny, lecz stabilny wpływ choroby na parametry erytrocytarne.
 
+
+## Architektura projektu
+
+### Główny skrypt main.r
+
+Plik main.r ładuje wszystkie wymienione moduły i definiuje interfejs wiersza poleceń, dzięki któremu można uruchamiać poszczególne analizy:
+
+```R
+source("modules/utils/config.R")
+source("modules/utils/logging.R")
+source("modules/utils/statistical_helpers.R")
+source("modules/data/fetch_dataset.R")
+source("modules/data/inspect_data.R")
+source("modules/data/validate_data.R")
+source("modules/data/repair_dataset.R")
+source("modules/analysis/assumptions_dashboard.R")
+source("modules/analysis/master_descriptive_summary.R")
+source("modules/analysis/descriptive_stats.R")
+source("modules/analysis/comparative_analysis.R")
+source("modules/analysis/correlation_analysis.R")
+source("modules/reporting/generate_report.R")
+source("modules/reporting/export_results.R")
+```
+
+
+### Struktura modułów
+
+modules/
+- analysis/     implementacja głównych analiz statystycznych
+- data/         wczytywanie, inspekcja i naprawa danych
+- reporting/    generowanie raportów i eksport wyników
+- utils/        konfiguracja, logowanie i funkcje pomocnicze
+
+
+### Pliki w modules/analysis
+descriptive_stats.R, comparative_analysis.R, correlation_analysis.R – główne moduły analityczne realizujące odpowiednio statystyki opisowe, porównania grup oraz analizy korelacji.
+
+enhanced_inferential_framework.R – moduł rozszerzonej analizy inferencyjnej (ANCOVA, regresja, interakcje).
+
+assumptions_dashboard.R, master_descriptive_summary.R, enhanced_posthoc.R, residual_transformation.R – wspierające funkcje dotyczące testów założeń, podsumowania opisowego, analizy post‑hoc oraz diagnostyki reszt.
+
+### Pliki w modules/data
+fetch_dataset.R – wczytuje plik CSV, wykrywa kodowanie i konwertuje typy danych
+
+inspect_data.R, validate_data.R – sprawdzają strukturę i poprawność zbioru.
+
+repair_dataset.R – wykonuje analizę braków, imputację, wykrywanie/outlierów i generuje raport z czyszczenia danych
+
+### Pliki w modules/reporting
+generate_report.R – tworzy raporty HTML dla dowolnego modułu analizy, łącząc wyniki i wykresy
+
+export_results.R – zapisuje tabele i dane wyjściowe do katalogu output/tables.
+
+### Pliki w modules/utils
+config.R – przechowuje globalne ustawienia analizy (poziom istotności, parametry wykresów itp.)
+
+logging.R – obsługa logów wykonywanych kroków i błędów podczas analizy
+
+plotting_utils.R – narzędzia do zarządzania urządzeniami graficznymi oraz bezpiecznego zapisu wykresów
+
+statistical_helpers.R – funkcje statystyczne wykorzystywane w analizach (np. liczenie skośności, kurtozy, z-score)

@@ -678,4 +678,3 @@ generate_test_recommendations <- function(normality_results, homogeneity_results
   return(recommendations)
 }
 
-# Helper functions now loaded from modules/utils/statistical_helpers.R
