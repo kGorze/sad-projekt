@@ -1,8 +1,6 @@
-# Data Repair Module
-# Functions for handling missing data, outliers, and data cleaning
-# Implements data preprocessing and quality improvement with intelligent pattern analysis
+# Data preprocessing and quality improvement
 
-# Load required packages for advanced data repair (using centralized loading)
+# Advanced data repair package loading
 load_packages_safely <- function() {
   # Use centralized package loading from config.R
   return(load_required_packages(c("VIM", "mice", "Hmisc"), quiet = TRUE))
@@ -15,20 +13,20 @@ has_advanced_packages <- load_packages_safely()
 repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr", 
                           missing_method = "regression", outlier_action = "winsorize") {
   
-  cat("\n=== STARTING INTELLIGENT DATA REPAIR PROCESS ===\n")
+  cat("\n=== STARTING DATA REPAIR PROCESS ===\n")
   
   # Store original data for comparison
   original_data <- data
   repair_log <- list()
   
-  # Step 1: Comprehensive missing data analysis
-  cat("\n1. COMPREHENSIVE MISSING DATA ANALYSIS\n")
+  # Step 1: Missing data analysis
+  cat("\n1. MISSING DATA ANALYSIS\n")
   cat("======================================\n")
   
   missing_analysis <- analyze_missing_patterns(data)
   repair_log$missing_analysis <- missing_analysis
   
-  # Step 2: Intelligent missing data handling
+      # Step 2: Missing data handling
   if (any(missing_analysis$missing_percentages > missing_threshold * 100) || 
       (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0)) {
     
@@ -51,7 +49,7 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
       )
       
     } else {
-      cat("\n2. INTELLIGENT MISSING DATA HANDLING\n")
+      cat("\n2. MISSING DATA HANDLING\n")
       cat("====================================\n")
       
       # Choose method based on analysis
@@ -106,7 +104,7 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
   # Step 6: Generate comprehensive report
   repair_report <- generate_cleaning_report(original_data, data, repair_log)
   
-  cat("\n=== INTELLIGENT DATA REPAIR COMPLETED ===\n")
+  cat("\n=== DATA REPAIR COMPLETED ===\n")
   
   return(list(
     data = data,
@@ -117,7 +115,7 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
 
 # Analyze missing data patterns
 analyze_missing_patterns <- function(data) {
-  cat("=== INTELLIGENT MISSING DATA ANALYSIS ===\n")
+  cat("=== MISSING DATA ANALYSIS ===\n")
   
   missing_counts <- sapply(data, function(x) sum(is.na(x)))
   missing_percentages <- round(100 * missing_counts / nrow(data), 2)
@@ -161,8 +159,8 @@ analyze_missing_patterns <- function(data) {
   
   medical_context <- analyze_medical_missing_context(data)
   
-  # 4. INTELLIGENT RECOMMENDATIONS
-  cat("\n4. INTELLIGENT RECOMMENDATIONS\n")
+  # 4. RECOMMENDATIONS
+  cat("\n4. RECOMMENDATIONS\n")
   cat("------------------------------\n")
   
   recommendations <- generate_missing_data_recommendations(

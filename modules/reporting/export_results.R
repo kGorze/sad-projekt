@@ -1,8 +1,4 @@
-# Export Results Module
-# Functions for exporting statistical analysis results in various formats
-
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+# Statistical analysis export functions
 
 if (!exists("%||%")) {
   `%||%` <- function(a, b) if (!is.null(a)) a else b
@@ -631,7 +627,7 @@ export_generic_analysis_csv <- function(analysis_result, base_filename) {
   return(exported_files)
 }
 
-# Helper function to create test results data frame
+# Test results data frame creation
 create_test_results_df <- function(test_results) {
   
   if (is.null(test_results) || length(test_results) == 0) {
@@ -672,7 +668,7 @@ create_test_results_df <- function(test_results) {
   return(NULL)
 }
 
-# Helper function to create effect sizes data frame
+# Effect sizes data frame creation
 create_effect_sizes_df <- function(effect_sizes) {
   
   if (is.null(effect_sizes) || length(effect_sizes) == 0) {
@@ -740,7 +736,7 @@ create_effect_sizes_df <- function(effect_sizes) {
   return(NULL)
 }
 
-# Helper function to create normality tests data frame
+# Normality tests data frame creation
 create_normality_tests_df <- function(normality_analysis) {
   
   if (is.null(normality_analysis) || length(normality_analysis) == 0) {
@@ -793,7 +789,7 @@ create_normality_tests_df <- function(normality_analysis) {
   return(NULL)
 }
 
-# Helper function to create outlier analysis data frame
+# Outlier analysis data frame creation
 create_outlier_analysis_df <- function(outlier_analysis) {
   
   if (is.null(outlier_analysis) || length(outlier_analysis) == 0) {
@@ -846,7 +842,7 @@ create_outlier_analysis_df <- function(outlier_analysis) {
   return(NULL)
 }
 
-# Helper function to create distribution analysis data frame
+# Distribution analysis data frame creation
 create_distribution_analysis_df <- function(distribution_analysis) {
   
   if (is.null(distribution_analysis) || length(distribution_analysis) == 0) {
@@ -888,7 +884,7 @@ create_distribution_analysis_df <- function(distribution_analysis) {
   return(NULL)
 }
 
-# Helper function to create homogeneity tests data frame
+# Homogeneity tests data frame creation
 create_homogeneity_tests_df <- function(homogeneity_analysis) {
   
   if (is.null(homogeneity_analysis) || length(homogeneity_analysis) == 0) {
@@ -920,7 +916,7 @@ create_homogeneity_tests_df <- function(homogeneity_analysis) {
   return(NULL)
 }
 
-# Helper function to create regression analysis data frame
+# Regression analysis data frame creation
 create_regression_analysis_df <- function(regression_analysis) {
   
   if (is.null(regression_analysis) || length(regression_analysis) == 0) {
@@ -959,7 +955,7 @@ create_regression_analysis_df <- function(regression_analysis) {
   return(NULL)
 }
 
-# Helper function to create correlation tests data frame
+# Correlation tests data frame creation
 create_correlation_tests_df <- function(correlation_tests) {
   
   if (is.null(correlation_tests) || length(correlation_tests) == 0) {
@@ -1021,7 +1017,7 @@ create_correlation_tests_df <- function(correlation_tests) {
   return(NULL)
 }
 
-# Helper function to create group correlations data frame
+# Group correlations data frame creation
 create_group_correlations_df <- function(group_correlations) {
   
   if (is.null(group_correlations) || length(group_correlations) == 0) {

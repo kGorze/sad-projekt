@@ -94,7 +94,15 @@ W zaleznosci od modulu w raporcie znajduja sie różne wykresy
 # Generowanie raportu podsumowującego
 Program składa się z czterech modułów do analizy
 
-
+# Usage: Rscript main.R --comparative_analysis --report
+# Usage: Rscript main.R --correlation_analysis --report
+# Usage: Rscript main.R --descriptive_stats --report
+# Usage: Rscript main.R --enhanced_inferential --report
+# Usage: Rscript main.R --comparative_analysis --export
+# Usage: Rscript main.R --correlation_analysis --report --export
+# Usage: Rscript main.R --enhanced_inferential --input dane2.csv --report --export
+# Usage: Rscript main.R --input dane2.csv --descriptive_stats --export
+# Usage: Rscript main.R --correlation_analysis --input mydata.csv --report --export
 
 ## To do 
 

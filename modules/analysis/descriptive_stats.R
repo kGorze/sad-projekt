@@ -1,20 +1,8 @@
-# Descriptive Statistics Module
-# Functions for generating descriptive statistics and group characteristics
+# Descriptive statistics and group characteristics
 # Supports independent groups analysis for medical data
-#
-# Variable Nomenclature Standards:
-# - hsCRP: High-sensitivity C-reactive protein (mg/L)
-# - BMI: Body Mass Index (kg/m²)  
-# - wiek: Age (years)
-# - plec: Gender (M/F)
-# - grupa: Study group assignment
-# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
-# - CV: Coefficient of Variation (%), IQR: Interquartile Range
 
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
 
-# Source reporting utilities
+# Reporting utilities
 source("modules/reporting/export_results.R")
 
 # Centralized modules are loaded in main.R
@@ -686,7 +674,7 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
   ))
 }
 
-# Helper function to calculate skewness
+# Skewness calculation
 calculate_skewness <- function(x) {
   x <- x[!is.na(x)]
   n <- length(x)
@@ -698,7 +686,7 @@ calculate_skewness <- function(x) {
   return(skew)
 }
 
-# Helper function to calculate kurtosis
+# Kurtosis calculation
 calculate_kurtosis <- function(x) {
   x <- x[!is.na(x)]
   n <- length(x)

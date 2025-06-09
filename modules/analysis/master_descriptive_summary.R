@@ -1,9 +1,8 @@
-# Master Descriptive Summary Module
+# Master descriptive summary
 # Unified generation of comprehensive group-wise descriptive statistics
 # Eliminates duplication across descriptive stats, comparative analysis, and correlation modules
 
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+# Package dependencies
 
 # Source statistical helper functions
 source("modules/utils/statistical_helpers.R")

@@ -1,5 +1,4 @@
-# Data Inspection Module
-# Functions for examining and reporting on data structure and quality
+# Data structure and quality examination
 # Provides detailed information about datasets without modification
 
 # Main data inspection function

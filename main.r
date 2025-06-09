@@ -1,31 +1,21 @@
-# Medical Data Statistical Analysis Tool
-# Main entry point for command-line execution
-# Author: SAD Project Team
-#
-# Usage: Rscript main.R --comparative_analysis --report
-# Usage: Rscript main.R --correlation_analysis --report
-# Usage: Rscript main.R --descriptive_stats --report
-# Usage: Rscript main.R --enhanced_inferential --report
-# Usage: Rscript main.R --comparative_analysis --export
-# Usage: Rscript main.R --correlation_analysis --report --export
-# Usage: Rscript main.R --enhanced_inferential --input dane2.csv --report --export
-# Usage: Rscript main.R --input dane2.csv --descriptive_stats --export
-# Usage: Rscript main.R --correlation_analysis --input mydata.csv --report --export
+# Statistical Analysis Framework
+# Author: Konrad Gorzelańczyk
 
-# Load required libraries for command line parsing with error handling
+
+# Command line parsing setup
 if (!require(optparse, quietly = TRUE)) {
   install.packages("optparse", repos = "https://cran.r-project.org")
   library(optparse)
 }
 
-# Source configuration first to get centralized package loading
+# Configuration and package loading
 source("modules/utils/config.R")
 
-# Load all required packages centrally and quietly to avoid warnings
+# Package loading
 cat("Loading required packages...\n")
 load_required_packages(quiet = TRUE)
 
-# Source all required modules
+# Module loading
 source("modules/utils/logging.R")
 source("modules/utils/statistical_helpers.R")
 
@@ -34,7 +24,7 @@ source("modules/data/inspect_data.R")
 source("modules/data/validate_data.R")
 source("modules/data/repair_dataset.R")
 
-# Source centralized analysis modules first (to eliminate duplication)
+# Analysis modules
 source("modules/analysis/assumptions_dashboard.R")
 source("modules/analysis/master_descriptive_summary.R")
 
@@ -45,8 +35,7 @@ source("modules/analysis/correlation_analysis.R")
 source("modules/reporting/generate_report.R")
 source("modules/reporting/export_results.R")
 
-# Main function to orchestrate the analysis
-# Helper to suppress output from verbose functions
+# Output suppression utility
 quiet <- function(expr) {
   capture.output(result <- eval(substitute(expr), envir = parent.frame()))
   result
@@ -809,7 +798,7 @@ run_analysis_with_args <- function(args) {
   return(NULL)
 }
 
-# Function to setup graphics environment to prevent unwanted Rplots.pdf
+# Graphics environment setup
 setup_graphics_environment <- function() {
   # Close any existing graphics devices
   if (length(dev.list()) > 0) {

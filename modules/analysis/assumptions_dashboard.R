@@ -1,30 +1,9 @@
-# Assumptions Dashboard Module
+# Statistical assumptions dashboard
 # Unified testing of statistical assumptions (normality, homogeneity of variance)
 # Eliminates duplication across descriptive stats and comparative analysis modules
-#
-# Variable Nomenclature Standards:
-# - hsCRP: High-sensitivity C-reactive protein (mg/L)
-# - BMI: Body Mass Index (kg/m²)
-# - wiek: Age (years)
-# - plec: Gender (M/F)
-# - grupa: Study group assignment
-# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
-# - Borderline p-values: 0.04 ≤ p ≤ 0.06 flagged for dual test approach
-#
-# Statistical Testing Framework:
-# 1. NORMALITY TESTS:
-#    - Shapiro-Wilk: n ≤ 50 (most powerful for small samples)
-#    - Anderson-Darling: n > 50 (more powerful than Kolmogorov-Smirnov)
-#    - Subsample approach: n > 5000 (computational efficiency)
-# 2. HOMOGENEITY TESTS:
-#    - Levene's test: Robust to non-normality (preferred)
-#    - Bartlett's test: Assumes normality (classical approach)
-#    - Fligner-Killeen: Non-parametric alternative
-# 3. BORDERLINE HANDLING: 0.04 ≤ p ≤ 0.06 triggers dual parametric/non-parametric analysis
-# 4. DECISION AUTOMATION: Flags guide automatic test selection in comparative analysis
 
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+
+# Package dependencies
 
 # Source statistical helper functions
 source("modules/utils/statistical_helpers.R")

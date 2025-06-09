@@ -1,28 +1,7 @@
-# Correlation Analysis Module
-# Comprehensive correlation analysis with multiple methods and advanced visualization
-#
-# Variable Nomenclature Standards:
-# - hsCRP: High-sensitivity C-reactive protein (mg/L)
-# - BMI: Body Mass Index (kg/m²)
-# - wiek: Age (years)
-# - plec: Gender (M/F)
-# - grupa: Study group assignment
-# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
-# - Correlation strength: negligible (<0.1), weak (0.1-0.3), moderate (0.3-0.5), strong (0.5-0.7), very strong (>0.7)
-#
-# Statistical Methods Documentation:
-# 1. CORRELATION METHOD SELECTION:
-#    - Pearson: Used when both variables are normally distributed (Shapiro-Wilk/KS test p > 0.05)
-#    - Spearman: Used when either variable is non-normal or relationship is non-linear
-# 2. MULTIPLE TESTING CORRECTION:
-#    - Benjamini-Hochberg (FDR) procedure applied to all correlation p-values
-#    - Controls False Discovery Rate at α = 0.05 level
-#    - More powerful than Bonferroni correction for exploratory analysis
-# 3. EFFECT SIZE INTERPRETATION:
-#    - Cohen's guidelines: r < 0.1 (negligible), 0.1-0.3 (small), 0.3-0.5 (medium), 0.5-0.7 (large), >0.7 (very large)
+# Correlation analysis
+# Correlation analysis with multiple methods and visualization
 
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+# Package dependencies
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")
@@ -33,7 +12,7 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
   # Create analysis result object
   result <- create_analysis_result("correlation_analysis")
   
-  cat("Starting comprehensive correlation analysis...\n")
+      cat("Starting correlation analysis...\n")
   
   # Identify numeric variables for correlation analysis
   if (is.null(variables)) {
@@ -1043,7 +1022,7 @@ quick_correlation_analysis <- function(data, group_column = NULL, variables = NU
   return(result)
 }
 
-# Helper function to demonstrate correlation calculation step by step
+# Step-by-step correlation demonstration
 demonstrate_correlation_calculation <- function(x, y, var1_name, var2_name) {
   
   # Remove missing values

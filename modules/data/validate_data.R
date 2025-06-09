@@ -1,5 +1,4 @@
-# Data Validation Module
-# Functions for validating data readiness for statistical analysis
+# Data validation for statistical analysis readiness
 # Ensures data meets requirements for comparative statistical tests
 
 # Main data validation function for statistical analysis

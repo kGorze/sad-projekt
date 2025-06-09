@@ -1,11 +1,6 @@
- # Residual Transformation and Robust Regression Module
-# Task F: Fix Model Residual Issues
-# 
-# For each model flagged "Residuals Non-normal":
-# 1. Try log/sqrt transforms and re-check assumptions
-# 2. If transformation fails, refit with robust regression (Huber/M-estimator)
+ # Residual transformation and robust regression
 
-# Load required libraries
+# Library dependencies
 if (!require(MASS, quietly = TRUE)) {
   install.packages("MASS", repos = "https://cran.r-project.org")
   library(MASS)

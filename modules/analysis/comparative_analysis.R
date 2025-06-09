@@ -1,27 +1,8 @@
-# Comparative Analysis Module
-# Functions for performing statistical comparisons between independent groups
+# Statistical comparisons between independent groups
 # Supports multiple groups (>2) with appropriate statistical tests
-#
-# Variable Nomenclature Standards:
-# - hsCRP: High-sensitivity C-reactive protein (mg/L)
-# - BMI: Body Mass Index (kg/m²)
-# - wiek: Age (years)
-# - plec: Gender (M/F)
-# - grupa: Study group assignment
-# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
-#
-# Statistical Test Selection Decision Matrix:
-# 1. NORMALITY: Shapiro-Wilk (n≤50) or Anderson-Darling (n>50) → Normal vs Non-normal
-# 2. HOMOGENEITY: Levene's test → Homogeneous vs Heterogeneous variances
-# 3. TEST SELECTION:
-#    - Normal + Homogeneous → One-way ANOVA (F-test) + Tukey HSD post-hoc
-#    - Normal + Heterogeneous → Welch's ANOVA (unequal variances)
-#    - Non-normal → Kruskal-Wallis test + Dunn's post-hoc with Bonferroni correction
-# 4. EFFECT SIZES: η² (eta-squared) for ANOVA, ε² (epsilon-squared) for Kruskal-Wallis, Cohen's d for pairwise
-# 5. MULTIPLE TESTING: Benjamini-Hochberg (FDR) correction applied to all correlation p-values
 
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+
+# Package dependencies
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")
@@ -37,7 +18,7 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
   # Create analysis result object
   result <- create_analysis_result("comparative_analysis")
   
-  cat("Starting comprehensive comparative analysis...\n")
+      cat("Starting comparative analysis...\n")
   
   # Identify variable types
   numeric_vars <- names(data)[sapply(data, is.numeric)]
@@ -979,7 +960,7 @@ perform_kruskal_wallis <- function(data, variable, group_column) {
   ))
 }
 
-# Helper function to calculate Cramer's V with 95% confidence interval - TASK 7
+# Cramer's V calculation with 95% CI
 calculate_cramers_v_with_ci <- function(contingency_table, chi_square_statistic, n) {
   
   tryCatch({
@@ -1137,7 +1118,7 @@ perform_tukey_hsd <- function(anova_result) {
   ))
 }
 
-# Helper function to calculate rank-biserial correlation with 95% CI
+# Rank-biserial correlation with 95% CI
 calculate_rank_biserial_with_ci <- function(x, y) {
   
   tryCatch({
@@ -1931,7 +1912,7 @@ detect_study_design <- function(data, group_column, id_column = NULL) {
   return(design_info)
 }
 
-# Helper function to determine recommended statistical test (enhanced version)
+# Statistical test recommendation
 determine_recommended_test <- function(normal, homogeneous, n_groups, outlier_percent) {
   
   if(is.na(normal) || is.na(homogeneous)) {

@@ -1,18 +1,6 @@
-# Enhanced Post Hoc Analysis Module
+# Enhanced post hoc analysis
 # Advanced post hoc testing with multiple correction methods and comprehensive reporting
-#
-# Post-Hoc Testing Decision Matrix:
-# 1. PARAMETRIC POST-HOC (after significant ANOVA):
-#    - Tukey HSD: Controls family-wise error rate, assumes equal variances
-#    - Bonferroni: More conservative, appropriate for planned comparisons
-#    - Holm: Sequential step-down method, less conservative than Bonferroni
-# 2. NON-PARAMETRIC POST-HOC (after significant Kruskal-Wallis):
-#    - Dunn's test: Recommended non-parametric follow-up, uses ranks
-#    - Pairwise Wilcoxon: Alternative non-parametric approach
-# 3. MULTIPLE TESTING CONTROL:
-#    - FWER methods: Bonferroni, Holm (control family-wise error rate)
-#    - FDR methods: Benjamini-Hochberg (control false discovery rate)
-# 4. EFFECT SIZES: Cohen's d for parametric, rank-biserial correlation for non-parametric
+
 
 # Source configuration
 source("modules/utils/config.R")

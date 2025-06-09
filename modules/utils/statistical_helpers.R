@@ -1,4 +1,4 @@
-# Statistical Helper Functions Module
+# Statistical calculation utilities
 # Centralized location for commonly used statistical calculation functions
 # Eliminates duplication across multiple analysis modules
 
@@ -130,7 +130,7 @@ detect_z_outliers <- function(x, threshold = 3) {
   return(outliers)
 }
 
-# Comprehensive outlier detection summary
+# Outlier detection summary
 detect_outliers_summary <- function(x) {
   if (length(x) < 4) {
     return(list(

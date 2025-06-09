@@ -1,31 +1,8 @@
-# Enhanced Inferential Framework Module
+# Enhanced inferential framework
 # Multiple linear regression and ANCOVA models with covariate adjustments
 # Implements advanced statistical modeling with interaction terms
-#
-# Variable Nomenclature Standards:
-# - hsCRP: High-sensitivity C-reactive protein (mg/L) - standardized biomarker name
-# - BMI: Body Mass Index (kg/m²)
-# - wiek: Age (years)
-# - plec: Gender (M/F)
-# - grupa: Study group assignment
-# - p-values: Formatted using format.pval() with 3 significant digits for scientific notation when p < 0.001
-# - Effect sizes: η² (eta-squared) for ANOVA models, adjusted R² for regression models
-#
-# Advanced Statistical Modeling Documentation:
-# 1. MODEL SELECTION HIERARCHY:
-#    - Group-only model: outcome ~ group (baseline comparison)
-#    - Covariate-adjusted: outcome ~ group + covariates (ANCOVA approach)
-#    - Interaction model: outcome ~ group * covariates (if interactions significant)
-# 2. COVARIATE CENTERING:
-#    - Continuous covariates centered around sample mean for interpretability
-#    - Reduces multicollinearity in interaction terms
-#    - Intercept represents group means at average covariate values
-# 3. INTERACTION TESTING:
-#    - Systematic testing of group × covariate interactions
-#    - Retained only if p < 0.05 and improve model fit (AIC criterion)
-# 4. EFFECT SIZES: η² for ANCOVA, adjusted R² for regression, Cohen's f² for model comparisons
 
-# Load required libraries with error handling
+# Package dependencies
 suppressPackageStartupMessages({
   if (requireNamespace("dplyr", quietly = TRUE)) library(dplyr)
   if (requireNamespace("broom", quietly = TRUE)) library(broom)
@@ -606,7 +583,7 @@ perform_model_comparison <- function(data, dependent_vars, group_column, covaria
   return(comparison_results)
 }
 
-# Helper function: Check model assumptions
+# Model assumption checking
 check_model_assumptions <- function(model) {
   
   tryCatch({
@@ -665,7 +642,7 @@ check_model_assumptions <- function(model) {
   })
 }
 
-# Helper function: Calculate ANCOVA effect sizes
+# ANCOVA effect size calculations
 calculate_ancova_effect_sizes <- function(model, anova_table) {
   
   tryCatch({
@@ -697,7 +674,7 @@ calculate_ancova_effect_sizes <- function(model, anova_table) {
   })
 }
 
-# Helper function: Compare models
+# Model comparison
 compare_models <- function(models) {
   
   comparison_table <- data.frame(
@@ -733,7 +710,7 @@ compare_models <- function(models) {
   return(comparison_table)
 }
 
-# Helper function: Select best model
+# Best model selection
 select_best_model <- function(comparison_table) {
   
   # Simple scoring system: lower AIC/BIC and higher adjusted R-squared are better
@@ -751,7 +728,7 @@ select_best_model <- function(comparison_table) {
   ))
 }
 
-# Helper function: Calculate enhanced effect sizes
+# Enhanced effect size calculations
 calculate_enhanced_effect_sizes <- function(mlr_results, ancova_results) {
   
   effect_sizes <- list()
@@ -785,7 +762,7 @@ calculate_enhanced_effect_sizes <- function(mlr_results, ancova_results) {
   return(effect_sizes)
 }
 
-# Helper function: Interpret eta squared
+# Eta squared interpretation
 interpret_eta_squared <- function(eta_sq) {
   if (is.na(eta_sq)) return("Cannot interpret")
   if (eta_sq < 0.01) return("Negligible")
@@ -794,7 +771,7 @@ interpret_eta_squared <- function(eta_sq) {
   return("Large")
 }
 
-# Helper function: Interpret Cohen's f²
+# Cohen's f² interpretation
 interpret_cohens_f2 <- function(f2) {
   if (is.na(f2)) return("Cannot interpret")
   if (f2 < 0.02) return("Negligible")

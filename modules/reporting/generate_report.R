@@ -1,8 +1,4 @@
-# Report Generation Module
-# Functions for generating comprehensive statistical reports in multiple formats
-
-# Load required libraries with error handling
-# NOTE: Packages are now loaded centrally in config.R - no individual loading needed
+# Statistical report generation and formatting
 
 if (!exists("%||%")) {
   `%||%` <- function(a, b) if (!is.null(a)) a else b
@@ -135,7 +131,7 @@ create_analysis_specific_content <- function(analysis_results, analysis_type, in
     "statistical_tests" = create_statistical_tests_content(analysis_results, include_plots, plot_base_path),
     "enhanced_inferential" = create_enhanced_inferential_content(analysis_results, include_plots, plot_base_path),
     # Default content for any analysis
-    create_generic_analysis_content(analysis_results, include_plots, plot_base_path)
+    create_analysis_content(analysis_results, include_plots, plot_base_path)
   )
   
   return(content)
@@ -1715,8 +1711,7 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
   return(content)
 }
 
-# Create generic content for any analysis
-create_generic_analysis_content <- function(results, include_plots, plot_base_path = "..") {
+create_analysis_content <- function(results, include_plots, plot_base_path = "..") {
   content <- '<div class="row"><div class="col-12">'
   
   content <- paste0(content, '
@@ -1734,7 +1729,7 @@ create_generic_analysis_content <- function(results, include_plots, plot_base_pa
   return(content)
 }
 
-# Helper function to create correlation table HTML
+# Correlation table HTML generation
 create_correlation_table_html <- function(corr_matrix) {
   if (is.null(corr_matrix)) return("")
   
@@ -1761,7 +1756,7 @@ create_correlation_table_html <- function(corr_matrix) {
   return(html)
 }
 
-# Helper function to create descriptive statistics table HTML
+# Descriptive statistics table HTML
 create_descriptive_table_html <- function(stats_data) {
   if (is.null(stats_data)) return("")
   
@@ -1850,7 +1845,7 @@ create_descriptive_table_html <- function(stats_data) {
   return(html)
 }
 
-# Helper function to create overview table HTML
+# Overview table HTML generation
 create_overview_table_html <- function(overview_data) {
   if (is.null(overview_data)) return("")
   
@@ -1874,7 +1869,7 @@ create_overview_table_html <- function(overview_data) {
   return(html)
 }
 
-# Helper function to create variable types table HTML
+# Variable types table HTML
 create_variable_types_table_html <- function(var_types_data) {
   if (is.null(var_types_data)) return("")
   
@@ -1898,7 +1893,7 @@ create_variable_types_table_html <- function(var_types_data) {
   return(html)
 }
 
-# Helper function to create group summary table HTML
+# Group summary table HTML
 create_group_summary_table_html <- function(group_data) {
   if (is.null(group_data)) return("")
   
@@ -1924,7 +1919,7 @@ create_group_summary_table_html <- function(group_data) {
   return(html)
 }
 
-# Helper function to create categorical table HTML
+# Categorical table HTML
 create_categorical_table_html <- function(cat_data) {
   if (is.null(cat_data)) return("")
   
@@ -1974,7 +1969,7 @@ create_categorical_table_html <- function(cat_data) {
   return(html)
 }
 
-# Helper function to create missing data table HTML
+# Missing data table HTML
 create_missing_data_table_html <- function(missing_data) {
   if (is.null(missing_data) || nrow(missing_data) == 0) {
     return('<div class="alert alert-success"><strong>No missing data detected!</strong> All variables are complete.</div>')
@@ -2013,7 +2008,7 @@ create_missing_data_table_html <- function(missing_data) {
   return(html)
 }
 
-# Helper function to create variable properties table HTML
+# Variable properties table HTML
 create_variable_properties_table_html <- function(properties_data) {
   if (is.null(properties_data) || nrow(properties_data) == 0) return("")
   
@@ -2135,7 +2130,7 @@ create_variable_properties_table_html <- function(properties_data) {
   return(html)
 }
 
-# Helper function to create simplified variable properties table HTML (for new assumptions dashboard)
+# Simplified variable properties table HTML
 create_simplified_properties_table_html <- function(properties_data) {
   if (is.null(properties_data) || nrow(properties_data) == 0) return("")
   
@@ -3588,7 +3583,7 @@ generate_power_sensitivity_analysis <- function(results) {
    return(content)
  }
     
-# Helper functions for power analysis
+# Power analysis functions
 calculate_post_hoc_power <- function(finding, total_n, group_sizes) {
   
   # Use actual data from metadata - no hardcoded defaults

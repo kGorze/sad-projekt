@@ -1,5 +1,4 @@
-# Data Fetching Module
-# Functions for loading CSV datasets with Polish format support
+# CSV dataset loading with Polish format support
 # Handles file reading, encoding detection, and basic data type conversion
 
 # Main function to load dataset from CSV file

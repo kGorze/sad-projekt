@@ -1,7 +1,5 @@
-# Plotting Utilities for Preventing Unwanted Rplots.pdf Files
-# This module provides utilities to manage graphics devices properly
+# Graphics environment management
 
-# Function to ensure graphics environment is clean before plotting
 ensure_clean_graphics_environment <- function() {
   # Close any open graphics devices
   if (length(dev.list()) > 0) {
@@ -18,7 +16,7 @@ ensure_clean_graphics_environment <- function() {
   }
 }
 
-# Function to safely save a ggplot without creating unwanted files
+# Safe plot saving
 safe_ggsave <- function(filename, plot, width = 10, height = 8, dpi = 300, ...) {
   # Ensure clean environment before saving
   ensure_clean_graphics_environment()
@@ -46,7 +44,7 @@ safe_ggsave <- function(filename, plot, width = 10, height = 8, dpi = 300, ...) 
   })
 }
 
-# Function to safely create and save plots without unwanted PDF creation
+# Plot creation and saving
 safe_plot_creation <- function(plot_creation_function, filename, width = 10, height = 8, dpi = 300) {
   # Ensure clean environment
   ensure_clean_graphics_environment()
@@ -72,7 +70,7 @@ safe_plot_creation <- function(plot_creation_function, filename, width = 10, hei
   return(NULL)
 }
 
-# Function to clean up graphics environment after analysis
+# Graphics cleanup
 cleanup_graphics_after_analysis <- function() {
   # Close any remaining graphics devices
   if (length(dev.list()) > 0) {
@@ -93,7 +91,7 @@ cleanup_graphics_after_analysis <- function() {
   gc()
 }
 
-# Function to initialize graphics environment for an analysis session
+# Graphics session initialization
 init_graphics_session <- function() {
   # Ensure clean start
   ensure_clean_graphics_environment()
@@ -106,7 +104,7 @@ init_graphics_session <- function() {
   cat("Graphics session initialized with clean environment\n")
 }
 
-# Function to end graphics session cleanly
+# Session cleanup
 end_graphics_session <- function() {
   cleanup_graphics_after_analysis()
   cat("Graphics session ended cleanly\n")

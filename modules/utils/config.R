@@ -1,6 +1,4 @@
-# Configuration Module
-# Global settings and parameters for the statistical analysis tool
-# Centralized configuration management
+# Configuration settings and package management
 
 # Statistical analysis settings
 STATISTICAL_SETTINGS <- list(
@@ -43,7 +41,7 @@ OUTPUT_SETTINGS <- list(
 # Global variable to track loaded packages
 .loaded_packages <- character(0)
 
-# Load required packages centrally to avoid conflicts and warnings
+# Package loading and management
 load_required_packages <- function(packages = NULL, quiet = TRUE) {
   # Set CRAN mirror if not set
   if (length(getOption("repos")) == 0 || getOption("repos")["CRAN"] == "@CRAN@") {
@@ -169,7 +167,7 @@ load_required_packages <- function(packages = NULL, quiet = TRUE) {
   return(success)
 }
 
-# Helper function to load packages safely for individual modules
+# Module-specific package loading
 load_packages_safely <- function(packages, quiet = TRUE) {
   return(load_required_packages(packages, quiet))
 }

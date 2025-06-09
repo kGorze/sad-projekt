@@ -1,6 +1,5 @@
-# Logging Module
-# Functions for logging analysis progress, warnings, and errors
-# Provides comprehensive tracking of analysis steps and console output
+# Analysis progress and error logging
+# Analysis tracking and console output logging
 
 # Global logging variables
 .log_data <- new.env()
@@ -13,7 +12,7 @@
 .log_data$console_output <- list()
 .log_data$r_warnings <- list()
 
-# Initialize logging system with enhanced debugging capabilities
+# Initialize logging system
 init_logging <- function(log_file = NULL, log_level = "INFO") {
   
   # Create logs directory if it doesn't exist
@@ -83,7 +82,7 @@ write_log_header <- function() {
   
   header_lines <- c(
     "================================================================================",
-    paste("R STATISTICAL ANALYSIS SESSION LOG - ENHANCED DEBUGGING MODE"),
+    paste("R STATISTICAL ANALYSIS SESSION LOG"),
     paste("Session started:", .log_data$session_start),
     paste("R Version:", R.version.string),
     paste("Working directory:", getwd()),
@@ -96,7 +95,7 @@ write_log_header <- function() {
   writeLines(header_lines, .log_data$log_file)
 }
 
-# Enhanced console output capture
+# Console output capture
 capture_console_output <- function(output_text, level = "CONSOLE") {
   timestamp <- Sys.time()
   
@@ -310,7 +309,7 @@ log_error <- function(message, context = NULL) {
   }
 }
 
-# Enhanced function to capture all console output with real-time logging
+# Console output capture with real-time logging
 capture_and_log_expression <- function(expr, description = "Operation") {
   
   # Create temporary files for capturing output and messages
@@ -391,7 +390,7 @@ capture_and_log_expression <- function(expr, description = "Operation") {
   return(result)
 }
 
-# Function to enable automatic warning capture
+# Warning capture management
 enable_warning_capture <- function() {
   # Store the original warning option
   .log_data$old_warn <- getOption("warn")
@@ -402,7 +401,7 @@ enable_warning_capture <- function() {
   cat("Real-time warning display enabled for logging.\n")
 }
 
-# Function to disable automatic warning capture
+# Disable warning capture
 disable_warning_capture <- function() {
   # Restore original warn option
   if (!is.null(.log_data$old_warn)) {
@@ -442,7 +441,7 @@ execute_with_warning_capture <- function(expr) {
   return(result)
 }
 
-# Generate analysis summary log with enhanced debugging information
+# Generate analysis summary log
 generate_summary_log <- function() {
   
   if (is.null(.log_data$log_file)) {
@@ -460,7 +459,7 @@ generate_summary_log <- function() {
   summary_lines <- c(
     "",
     "================================================================================",
-    "ENHANCED SESSION SUMMARY WITH DEBUGGING INFORMATION",
+    "SESSION SUMMARY WITH DEBUGGING INFORMATION",
     "================================================================================",
     paste("Session duration:", round(session_duration, 2), "minutes"),
     paste("Total analysis steps:", length(.log_data$steps)),
@@ -541,7 +540,7 @@ generate_summary_log <- function() {
   write(summary_lines, file = .log_data$log_file, append = TRUE)
   
   # Also print key summary to console
-  cat("\n=== ENHANCED SESSION SUMMARY ===\n")
+  cat("\n=== SESSION SUMMARY ===\n")
   cat(paste("Analysis completed in", round(session_duration, 2), "minutes\n"))
   cat(paste("Steps completed:", length(.log_data$steps), "\n"))
   cat(paste("R warnings captured:", length(.log_data$r_warnings), "\n"))
@@ -574,12 +573,12 @@ export_log <- function(output_path = NULL) {
   }
 }
 
-# Function to get current log file path
+# Log file access
 get_log_file <- function() {
   return(.log_data$log_file)
 }
 
-# Function to capture accumulated R warnings
+# R warning capture
 capture_accumulated_warnings <- function() {
   # Try to capture any accumulated warnings
   tryCatch({
@@ -597,7 +596,7 @@ capture_accumulated_warnings <- function() {
   })
 }
 
-# Function to close logging session
+# Session termination
 close_logging <- function() {
   
   # Disable warning capture
@@ -619,5 +618,5 @@ close_logging <- function() {
   .log_data$r_warnings <- list()
   .log_data$original_warning_handler <- NULL
   
-  cat("Enhanced logging session closed.\n")
+      cat("Logging session closed.\n")
 } 
