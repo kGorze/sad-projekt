@@ -358,28 +358,28 @@ run_analysis_with_args <- function(args) {
     
     # Generate button HTML for each analysis
     desc_button <- if(!is.null(report_files$descriptive_stats)) {
-      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
+      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$descriptive_stats)
     } else {
       '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     corr_button <- if(!is.null(report_files$correlation_analysis)) {
-      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
+      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$correlation_analysis)
     } else {
       '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     comp_button <- if(!is.null(report_files$comparative_analysis)) {
-      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
+      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$comparative_analysis)
     } else {
       '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
     }
     
     infer_button <- if(!is.null(report_files$enhanced_inferential)) {
-      sprintf('<a href="%s" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
+      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
               report_files$enhanced_inferential)
     } else {
       '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
@@ -443,7 +443,7 @@ run_analysis_with_args <- function(args) {
         
         .analysis-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(4, 1fr);
             gap: 32px;
             margin-bottom: 60px;
         }
@@ -549,6 +549,31 @@ run_analysis_with_args <- function(args) {
             color: #007aff;
         }
         
+        .creator-credit {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid #e5e5e7;
+            backdrop-filter: blur(10px);
+        }
+        
+        .creator-credit p {
+            font-size: 0.85rem;
+            color: #6e6e73;
+            margin: 0;
+            font-weight: 400;
+        }
+        
+        @media (max-width: 1200px) {
+            .analysis-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 24px;
+            }
+        }
+        
         @media (max-width: 768px) {
             .container {
                 padding: 40px 16px;
@@ -566,6 +591,17 @@ run_analysis_with_args <- function(args) {
                 grid-template-columns: 1fr;
                 gap: 24px;
             }
+            
+            .creator-credit {
+                position: relative;
+                bottom: auto;
+                right: auto;
+                margin-top: 40px;
+                text-align: center;
+                background: transparent;
+                border: none;
+                padding: 0;
+            }
         }
     </style>
 </head>
@@ -573,14 +609,13 @@ run_analysis_with_args <- function(args) {
     <div class="container">
         <div class="header">
             <h1>Statistical Analysis Dashboard</h1>
-            <p class="subtitle">Complete Medical Data Analysis Suite</p>
+            <p class="subtitle">Complete Statistical Data Analysis Suite</p>
             <p class="meta">Generated: %s | Dataset: %d observations, %d variables</p>
         </div>
         
         <div class="analysis-grid">
             <div class="analysis-card">
                 <div class="card-icon primary">
-                    <i class="fas fa-table"></i>
                     <h3>Descriptive Statistics</h3>
                 </div>
                 <div class="card-content">
@@ -591,7 +626,6 @@ run_analysis_with_args <- function(args) {
             
             <div class="analysis-card">
                 <div class="card-icon success">
-                    <i class="fas fa-project-diagram"></i>
                     <h3>Correlation Analysis</h3>
                 </div>
                 <div class="card-content">
@@ -602,7 +636,6 @@ run_analysis_with_args <- function(args) {
             
             <div class="analysis-card">
                 <div class="card-icon warning">
-                    <i class="fas fa-balance-scale"></i>
                     <h3>Comparative Analysis</h3>
                 </div>
                 <div class="card-content">
@@ -613,7 +646,6 @@ run_analysis_with_args <- function(args) {
             
             <div class="analysis-card">
                 <div class="card-icon info">
-                    <i class="fas fa-brain"></i>
                     <h3>Enhanced Inferential</h3>
                 </div>
                 <div class="card-content">
@@ -623,11 +655,10 @@ run_analysis_with_args <- function(args) {
             </div>
         </div>
         
-        <div class="footer-note">
-            <p>
-                <i class="fas fa-info-circle"></i>
-                Click on any analysis button to view the detailed report
-            </p>
+
+        
+        <div class="creator-credit">
+            <p>Created by Konrad Gorzelańczyk</p>
         </div>
     </div>
 </body>
