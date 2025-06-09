@@ -1,0 +1,2908 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Analysis Report - Correlation Analysis</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: "Arial", sans-serif; margin: 20px; }
+        .result-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-result { background-color: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .significant { border-left: 5px solid #28a745; }
+        .not-significant { border-left: 5px solid #dc3545; }
+        .warning { border-left: 5px solid #ffc107; }
+        .plot-container { text-align: center; margin: 20px 0; }
+        .stats-table { font-size: 0.9em; }
+        .interpretation { background-color: #e9ecef; padding: 15px; border-radius: 5px; font-style: italic; }
+        .timestamp { color: #6c757d; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Statistical Analysis Report - Correlation Analysis</h1>
+                <p class="text-center timestamp">Generated on: 2025-06-09 13:16:36</p>
+            </div>
+        </div><div class="row"><div class="col-12">
+    <div class="result-section">
+        <h2>Correlation Analysis Summary</h2>
+        <p>This analysis examines the strength and direction of linear relationships between continuous variables, 
+           using Pearson or Spearman correlation coefficients based on data characteristics.</p>
+           
+    </div>
+        <h3>Analysis Overview</h3>
+        <div class="interpretation">
+            <strong>Total Variables:</strong> 8<br>
+            <strong>Total Observations:</strong> 80<br><strong>Group Column:</strong> grupa<br>
+                        <strong>Groups:</strong> T1DM, T2DM, KONTROLA<br></div>
+        <h3>Overall Variable-by-Variable Correlation Analysis</h3>
+        <p>Correlation patterns for each variable with all others (across all groups combined):</p>
+        <h4>wiek - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.906</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.858</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.806</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.675</td>
+                                               <td>1.5e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>insulina</strong></td>
+                    <td>0.633</td>
+                                               <td>5.1e-10</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.048</td>
+                                               <td>0.6996</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>glukoza</strong></td>
+                    <td>-0.022</td>
+                                               <td>0.8485</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>negative</td>
+                    <td>not significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>wiek</strong> shows significant correlations with: BMI, RR_sys, RR_dias, cholesterol, insulina
+        </div>
+        <h4>glukoza - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.993</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.649</td>
+                                               <td>1.3e-10</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.463</td>
+                                               <td>2.0e-05</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.412</td>
+                                               <td>1.9e-04</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.297</td>
+                                               <td>0.0086</td>
+                    <td><span style="color: black;">weak</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>insulina</strong></td>
+                    <td>0.087</td>
+                                               <td>0.4768</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>wiek</strong></td>
+                    <td>-0.022</td>
+                                               <td>0.8485</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>negative</td>
+                    <td>not significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>glukoza</strong> shows significant correlations with: HbA1c, cholesterol, RR_dias, RR_sys, BMI
+        </div>
+        <h4>HbA1c - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.993</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.694</td>
+                                               <td>2.5e-12</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.522</td>
+                                               <td>1.0e-06</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.469</td>
+                                               <td>1.6e-05</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.359</td>
+                                               <td>0.0013</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>insulina</strong></td>
+                    <td>0.099</td>
+                                               <td>0.4306</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>wiek</strong></td>
+                    <td>0.048</td>
+                                               <td>0.6996</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>HbA1c</strong> shows significant correlations with: glukoza, cholesterol, RR_dias, RR_sys, BMI
+        </div>
+        <h4>insulina - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.669</td>
+                                               <td>2.6e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.659</td>
+                                               <td>6.1e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>0.633</td>
+                                               <td>5.1e-10</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.572</td>
+                                               <td>4.8e-08</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.545</td>
+                                               <td>2.8e-07</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.099</td>
+                                               <td>0.4306</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr>
+                <tr class="table-light">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.087</td>
+                                               <td>0.4768</td>
+                    <td><span style="color: black;">negligible</span></td>
+                    <td>positive</td>
+                    <td>not significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>insulina</strong> shows significant correlations with: BMI, RR_sys, wiek, RR_dias, cholesterol
+        </div>
+        <h4>cholesterol - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.962</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.945</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.902</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.694</td>
+                                               <td>2.5e-12</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>0.675</td>
+                                               <td>1.5e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.649</td>
+                                               <td>1.3e-10</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>insulina</strong></td>
+                    <td>0.545</td>
+                                               <td>2.8e-07</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>cholesterol</strong> shows significant correlations with: RR_dias, RR_sys, BMI, HbA1c, wiek, glukoza, insulina
+        </div>
+        <h4>BMI - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.983</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.963</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>0.906</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.902</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>insulina</strong></td>
+                    <td>0.669</td>
+                                               <td>2.6e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.359</td>
+                                               <td>0.0013</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.297</td>
+                                               <td>0.0086</td>
+                    <td><span style="color: black;">weak</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>BMI</strong> shows significant correlations with: RR_sys, RR_dias, wiek, cholesterol, insulina, HbA1c, glukoza
+        </div>
+        <h4>RR_sys - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.983</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>RR_dias</strong></td>
+                    <td>0.983</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.945</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>0.858</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>insulina</strong></td>
+                    <td>0.659</td>
+                                               <td>6.1e-11</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.469</td>
+                                               <td>1.6e-05</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.412</td>
+                                               <td>1.9e-04</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>RR_sys</strong> shows significant correlations with: BMI, RR_dias, cholesterol, wiek, insulina, HbA1c, glukoza
+        </div>
+        <h4>RR_dias - Correlations with Other Variables</h4>
+        <div class="table-responsive">
+        <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                        <th>Correlated Variable</th>
+                    <th>Pearson r</th>
+                        <th>p-value (FDR)</th>
+                    <th>Strength</th>
+                        <th>Direction</th>
+                    <th>Significance</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>RR_sys</strong></td>
+                    <td>0.983</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>BMI</strong></td>
+                    <td>0.963</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>cholesterol</strong></td>
+                    <td>0.962</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>0.806</td>
+                                               <td>< 1e-16</td>
+                    <td><span style="color: green;">very strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>insulina</strong></td>
+                    <td>0.572</td>
+                                               <td>4.8e-08</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HbA1c</strong></td>
+                    <td>0.522</td>
+                                               <td>1.0e-06</td>
+                    <td><span style="color: green;">strong</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>glukoza</strong></td>
+                    <td>0.463</td>
+                                               <td>2.0e-05</td>
+                    <td><span style="color: orange;">moderate</span></td>
+                    <td>positive</td>
+                    <td>significant</td>
+                </tr></tbody></table></div><div class="interpretation">
+            <strong>RR_dias</strong> shows significant correlations with: RR_sys, BMI, cholesterol, wiek, insulina, HbA1c, glukoza
+        </div>
+         <h3>Group-Specific Variable Correlation Analysis</h3>
+         <p>Correlation patterns within each group separately:</p>
+           <h4>Group: T1DM (n = 25)</h4>
+             <h5>wiek - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-light">
+                         <td><strong>BMI</strong></td>
+                         <td>0.181</td>
+                         <td>0.4935</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>insulina</strong></td>
+                         <td>0.154</td>
+                         <td>0.5638</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>HbA1c</strong></td>
+                         <td>-0.135</td>
+                         <td>0.6076</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>glukoza</strong></td>
+                         <td>-0.118</td>
+                         <td>0.645</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>cholesterol</strong></td>
+                         <td>-0.109</td>
+                         <td>0.6514</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.025</td>
+                         <td>0.9387</td>
+                         <td><span style="color: black;">negligible</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>RR_sys</strong></td>
+                         <td>-0.007</td>
+                         <td>0.9746</td>
+                         <td><span style="color: black;">negligible</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>wiek</strong> in <strong>T1DM</strong> group shows no significant correlations.
+             </div>
+             <h5>glukoza - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.968</td>
+                         <td>3.6e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.962</td>
+                         <td>1.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.919</td>
+                         <td>2.5e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.884</td>
+                         <td>9.1e-09</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.866</td>
+                         <td>3.8e-08</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.825</td>
+                         <td>5.5e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.118</td>
+                         <td>0.645</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>glukoza</strong> in <strong>T1DM</strong> group shows significant correlations with: insulina, HbA1c, cholesterol, RR_dias, RR_sys, BMI
+             </div>
+             <h5>HbA1c - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.962</td>
+                         <td>1.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.942</td>
+                         <td>9.2e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.939</td>
+                         <td>1.5e-11</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.917</td>
+                         <td>3.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.899</td>
+                         <td>2.0e-09</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.837</td>
+                         <td>2.7e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.135</td>
+                         <td>0.6076</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>HbA1c</strong> in <strong>T1DM</strong> group shows significant correlations with: glukoza, insulina, cholesterol, RR_dias, RR_sys, BMI
+             </div>
+             <h5>insulina - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>-0.968</td>
+                         <td>3.6e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>-0.942</td>
+                         <td>9.2e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>-0.924</td>
+                         <td>1.4e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>-0.871</td>
+                         <td>2.7e-08</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>-0.844</td>
+                         <td>1.8e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>-0.795</td>
+                         <td>2.7e-06</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>0.154</td>
+                         <td>0.5638</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>insulina</strong> in <strong>T1DM</strong> group shows significant correlations with: glukoza, HbA1c, cholesterol, RR_dias, RR_sys, BMI
+             </div>
+             <h5>cholesterol - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.962</td>
+                         <td>1.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.959</td>
+                         <td>2.8e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.939</td>
+                         <td>1.5e-11</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.924</td>
+                         <td>1.4e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.919</td>
+                         <td>2.5e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.912</td>
+                         <td>5.1e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.109</td>
+                         <td>0.6514</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>cholesterol</strong> in <strong>T1DM</strong> group shows significant correlations with: RR_dias, RR_sys, HbA1c, insulina, glukoza, BMI
+             </div>
+             <h5>BMI - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.926</td>
+                         <td>1.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.915</td>
+                         <td>3.6e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.912</td>
+                         <td>5.1e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.837</td>
+                         <td>2.7e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.825</td>
+                         <td>5.5e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.795</td>
+                         <td>2.7e-06</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>0.181</td>
+                         <td>0.4935</td>
+                         <td><span style="color: black;">weak</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>BMI</strong> in <strong>T1DM</strong> group shows significant correlations with: RR_dias, RR_sys, cholesterol, HbA1c, glukoza, insulina
+             </div>
+             <h5>RR_sys - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.991</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.959</td>
+                         <td>2.8e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.915</td>
+                         <td>3.6e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.899</td>
+                         <td>2.0e-09</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.866</td>
+                         <td>3.8e-08</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.844</td>
+                         <td>1.8e-07</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.007</td>
+                         <td>0.9746</td>
+                         <td><span style="color: black;">negligible</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_sys</strong> in <strong>T1DM</strong> group shows significant correlations with: RR_dias, cholesterol, BMI, HbA1c, glukoza, insulina
+             </div>
+             <h5>RR_dias - Correlations in T1DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.991</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.962</td>
+                         <td>1.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.926</td>
+                         <td>1.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.917</td>
+                         <td>3.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.884</td>
+                         <td>9.1e-09</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.871</td>
+                         <td>2.7e-08</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>wiek</strong></td>
+                         <td>0.025</td>
+                         <td>0.9387</td>
+                         <td><span style="color: black;">negligible</span></td>
+                         <td>positive</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_dias</strong> in <strong>T1DM</strong> group shows significant correlations with: RR_sys, cholesterol, BMI, HbA1c, glukoza, insulina
+             </div>
+           <h4>Group: T2DM (n = 30)</h4>
+             <h5>wiek - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.925</td>
+                         <td>1.0e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.923</td>
+                         <td>1.1e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.92</td>
+                         <td>1.5e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.92</td>
+                         <td>1.5e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.912</td>
+                         <td>4.8e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.905</td>
+                         <td>1.2e-11</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.403</td>
+                         <td>0.0307</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>wiek</strong> in <strong>T2DM</strong> group shows significant correlations with: RR_sys, HbA1c, glukoza, cholesterol, BMI, RR_dias, insulina
+             </div>
+             <h5>glukoza - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.992</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.924</td>
+                         <td>1.0e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.92</td>
+                         <td>1.5e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.886</td>
+                         <td>1.3e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.885</td>
+                         <td>1.4e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.869</td>
+                         <td>6.5e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.55</td>
+                         <td>0.0021</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>glukoza</strong> in <strong>T2DM</strong> group shows significant correlations with: HbA1c, cholesterol, wiek, RR_dias, RR_sys, BMI, insulina
+             </div>
+             <h5>HbA1c - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.992</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.923</td>
+                         <td>1.1e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.91</td>
+                         <td>6.1e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.875</td>
+                         <td>4.0e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.874</td>
+                         <td>4.1e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.871</td>
+                         <td>5.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.546</td>
+                         <td>0.0022</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>HbA1c</strong> in <strong>T2DM</strong> group shows significant correlations with: glukoza, wiek, cholesterol, RR_dias, RR_sys, BMI, insulina
+             </div>
+             <h5>insulina - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>-0.55</td>
+                         <td>0.0021</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>-0.546</td>
+                         <td>0.0022</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>-0.406</td>
+                         <td>0.0301</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.403</td>
+                         <td>0.0307</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>RR_sys</strong></td>
+                         <td>-0.357</td>
+                         <td>0.0569</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>RR_dias</strong></td>
+                         <td>-0.351</td>
+                         <td>0.0591</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>BMI</strong></td>
+                         <td>-0.308</td>
+                         <td>0.0972</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>insulina</strong> in <strong>T2DM</strong> group shows significant correlations with: glukoza, HbA1c, cholesterol, wiek
+             </div>
+             <h5>cholesterol - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.985</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.972</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.938</td>
+                         <td>1.1e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.924</td>
+                         <td>1.0e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.92</td>
+                         <td>1.5e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.91</td>
+                         <td>6.1e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.406</td>
+                         <td>0.0301</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>cholesterol</strong> in <strong>T2DM</strong> group shows significant correlations with: RR_sys, RR_dias, BMI, glukoza, wiek, HbA1c, insulina
+             </div>
+             <h5>BMI - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.947</td>
+                         <td>1.3e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.938</td>
+                         <td>1.1e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.929</td>
+                         <td>5.6e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.912</td>
+                         <td>4.8e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.871</td>
+                         <td>5.2e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.869</td>
+                         <td>6.5e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.308</td>
+                         <td>0.0972</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>BMI</strong> in <strong>T2DM</strong> group shows significant correlations with: RR_sys, cholesterol, RR_dias, wiek, HbA1c, glukoza
+             </div>
+             <h5>RR_sys - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.989</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.985</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.947</td>
+                         <td>1.3e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.925</td>
+                         <td>1.0e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.885</td>
+                         <td>1.4e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.874</td>
+                         <td>4.1e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.357</td>
+                         <td>0.0569</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_sys</strong> in <strong>T2DM</strong> group shows significant correlations with: RR_dias, cholesterol, BMI, wiek, glukoza, HbA1c
+             </div>
+             <h5>RR_dias - Correlations in T2DM Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.989</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.972</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.929</td>
+                         <td>5.6e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.905</td>
+                         <td>1.2e-11</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.886</td>
+                         <td>1.3e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.875</td>
+                         <td>4.0e-10</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-light">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.351</td>
+                         <td>0.0591</td>
+                         <td><span style="color: orange;">moderate</span></td>
+                         <td>negative</td>
+                         <td>not significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_dias</strong> in <strong>T2DM</strong> group shows significant correlations with: RR_sys, cholesterol, BMI, wiek, glukoza, HbA1c
+             </div>
+           <h4>Group: KONTROLA (n = 25)</h4>
+             <h5>wiek - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.694</td>
+                         <td>1.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.672</td>
+                         <td>2.8e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.668</td>
+                         <td>3.1e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.642</td>
+                         <td>6.1e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.623</td>
+                         <td>9.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.621</td>
+                         <td>9.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.608</td>
+                         <td>0.0013</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>wiek</strong> in <strong>KONTROLA</strong> group shows significant correlations with: RR_sys, RR_dias, BMI, cholesterol, HbA1c, glukoza, insulina
+             </div>
+             <h5>glukoza - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.988</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.975</td>
+                         <td>4.0e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.968</td>
+                         <td>7.1e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.956</td>
+                         <td>1.8e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.946</td>
+                         <td>1.4e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.621</td>
+                         <td>9.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>glukoza</strong> in <strong>KONTROLA</strong> group shows significant correlations with: HbA1c, cholesterol, BMI, insulina, RR_dias, RR_sys, wiek
+             </div>
+             <h5>HbA1c - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.988</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.972</td>
+                         <td>1.2e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.964</td>
+                         <td>2.3e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.952</td>
+                         <td>4.7e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.949</td>
+                         <td>8.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.94</td>
+                         <td>4.3e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.623</td>
+                         <td>9.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>HbA1c</strong> in <strong>KONTROLA</strong> group shows significant correlations with: glukoza, cholesterol, BMI, insulina, RR_dias, RR_sys, wiek
+             </div>
+             <h5>insulina - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>-0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>-0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>-0.98</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>-0.968</td>
+                         <td>7.1e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>-0.961</td>
+                         <td>5.5e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>-0.952</td>
+                         <td>4.7e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>-0.608</td>
+                         <td>0.0013</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>insulina</strong> in <strong>KONTROLA</strong> group shows significant correlations with: BMI, RR_sys, RR_dias, glukoza, cholesterol, HbA1c, wiek
+             </div>
+             <h5>cholesterol - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.972</td>
+                         <td>1.2e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.972</td>
+                         <td>1.2e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.961</td>
+                         <td>5.5e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.95</td>
+                         <td>6.7e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.941</td>
+                         <td>3.6e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.642</td>
+                         <td>6.1e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>cholesterol</strong> in <strong>KONTROLA</strong> group shows significant correlations with: glukoza, HbA1c, BMI, insulina, RR_dias, RR_sys, wiek
+             </div>
+             <h5>BMI - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.992</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.986</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.975</td>
+                         <td>4.0e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.972</td>
+                         <td>1.2e-15</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.964</td>
+                         <td>2.3e-14</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.668</td>
+                         <td>3.1e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>BMI</strong> in <strong>KONTROLA</strong> group shows significant correlations with: RR_dias, RR_sys, insulina, glukoza, cholesterol, HbA1c, wiek
+             </div>
+             <h5>RR_sys - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_dias</strong></td>
+                         <td>0.996</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.986</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.982</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.946</td>
+                         <td>1.4e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.941</td>
+                         <td>3.6e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.94</td>
+                         <td>4.3e-12</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.694</td>
+                         <td>1.5e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_sys</strong> in <strong>KONTROLA</strong> group shows significant correlations with: RR_dias, BMI, insulina, glukoza, cholesterol, HbA1c, wiek
+             </div>
+             <h5>RR_dias - Correlations in KONTROLA Group</h5>
+             <div class="table-responsive">
+                 <table class="table table-striped stats-table table-sm">
+                     <thead>
+                         <tr>
+                             <th>Correlated Variable</th>
+                             <th>Pearson r</th>
+                             <th>p-value (FDR)</th>
+                             <th>Strength</th>
+                             <th>Direction</th>
+                             <th>Significance</th>
+                         </tr>
+                     </thead>
+                     <tbody>
+                     <tr class="table-success">
+                         <td><strong>RR_sys</strong></td>
+                         <td>0.996</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>BMI</strong></td>
+                         <td>0.992</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>insulina</strong></td>
+                         <td>-0.98</td>
+                         <td>< 1e-16</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>negative</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>glukoza</strong></td>
+                         <td>0.956</td>
+                         <td>1.8e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>cholesterol</strong></td>
+                         <td>0.95</td>
+                         <td>6.7e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>HbA1c</strong></td>
+                         <td>0.949</td>
+                         <td>8.3e-13</td>
+                         <td><span style="color: green;">very strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr>
+                     <tr class="table-success">
+                         <td><strong>wiek</strong></td>
+                         <td>0.672</td>
+                         <td>2.8e-04</td>
+                         <td><span style="color: green;">strong</span></td>
+                         <td>positive</td>
+                         <td>significant</td>
+                     </tr></tbody></table></div><div class="interpretation">
+                 <strong>RR_dias</strong> in <strong>KONTROLA</strong> group shows significant correlations with: RR_sys, BMI, insulina, glukoza, cholesterol, HbA1c, wiek
+             </div>
+      <h3>Significant Correlations Summary</h3>
+        <h4>Overall Significant Correlations (All Groups Combined)</h4>
+          <p>Variables with statistically significant correlations across the entire dataset (p < 0.05):</p>
+          <div class="test-result significant">
+              <strong>glukoza ↔ HbA1c</strong><br>
+              <strong>Correlation:</strong> r = 0.993 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>BMI ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.983 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>RR_sys ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.983 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>BMI ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.963 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>cholesterol ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.962 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>cholesterol ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.945 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>wiek ↔ BMI</strong><br>
+              <strong>Correlation:</strong> r = 0.906 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>cholesterol ↔ BMI</strong><br>
+              <strong>Correlation:</strong> r = 0.902 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>wiek ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.858 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>wiek ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.806 (very strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> < 1e-16
+          </div>
+          <div class="test-result significant">
+              <strong>HbA1c ↔ cholesterol</strong><br>
+              <strong>Correlation:</strong> r = 0.694 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 2.5e-12
+          </div>
+          <div class="test-result significant">
+              <strong>wiek ↔ cholesterol</strong><br>
+              <strong>Correlation:</strong> r = 0.675 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 1.5e-11
+          </div>
+          <div class="test-result significant">
+              <strong>insulina ↔ BMI</strong><br>
+              <strong>Correlation:</strong> r = 0.669 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 2.6e-11
+          </div>
+          <div class="test-result significant">
+              <strong>insulina ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.659 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 6.1e-11
+          </div>
+          <div class="test-result significant">
+              <strong>glukoza ↔ cholesterol</strong><br>
+              <strong>Correlation:</strong> r = 0.649 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 1.3e-10
+          </div>
+          <div class="test-result significant">
+              <strong>wiek ↔ insulina</strong><br>
+              <strong>Correlation:</strong> r = 0.633 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 5.1e-10
+          </div>
+          <div class="test-result significant">
+              <strong>insulina ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.572 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 4.8e-08
+          </div>
+          <div class="test-result significant">
+              <strong>insulina ↔ cholesterol</strong><br>
+              <strong>Correlation:</strong> r = 0.545 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 2.8e-07
+          </div>
+          <div class="test-result significant">
+              <strong>HbA1c ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.522 (strong positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 1.0e-06
+          </div>
+          <div class="test-result significant">
+              <strong>HbA1c ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.469 (moderate positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 1.6e-05
+          </div>
+          <div class="test-result significant">
+              <strong>glukoza ↔ RR_dias</strong><br>
+              <strong>Correlation:</strong> r = 0.463 (moderate positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 2.0e-05
+          </div>
+          <div class="test-result significant">
+              <strong>glukoza ↔ RR_sys</strong><br>
+              <strong>Correlation:</strong> r = 0.412 (moderate positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 1.9e-04
+          </div>
+          <div class="test-result significant">
+              <strong>HbA1c ↔ BMI</strong><br>
+              <strong>Correlation:</strong> r = 0.359 (moderate positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 0.0013
+          </div>
+          <div class="test-result significant">
+              <strong>glukoza ↔ BMI</strong><br>
+              <strong>Correlation:</strong> r = 0.297 (weak positive)<br>
+                                <strong>p-value (FDR-corrected):</strong> 0.0086
+          </div>
+        <h4>Group-Specific Significant Correlations</h4>
+        <p>Significant correlations within each group separately:</p>
+          <h5>Group: T1DM (n = 25)</h5>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ HbA1c</strong><br>
+                  <strong>Correlation:</strong> r = 0.962 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.3e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.968 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.6e-14
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.919 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.5e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.825 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 5.5e-07
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.866 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.8e-08
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.884 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 9.1e-09
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.942 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 9.2e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.939 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.5e-11
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.837 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.7e-07
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.899 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.0e-09
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.917 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.2e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = -0.924 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.4e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = -0.795 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.7e-06
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = -0.844 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.8e-07
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = -0.871 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.7e-08
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.912 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 5.1e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.959 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.8e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.962 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.3e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.915 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.6e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.926 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.2e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>RR_sys ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.991 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+          <h5>Group: T2DM (n = 30)</h5>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ glukoza</strong><br>
+                  <strong>Correlation:</strong> r = 0.92 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.5e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ HbA1c</strong><br>
+                  <strong>Correlation:</strong> r = 0.923 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.1e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.403 (moderate negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 0.0307
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.92 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.5e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.912 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.8e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.925 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.0e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.905 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.2e-11
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ HbA1c</strong><br>
+                  <strong>Correlation:</strong> r = 0.992 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.55 (strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 0.0021
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.924 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.0e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.869 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 6.5e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.885 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.4e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.886 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.3e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.546 (strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 0.0022
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.91 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 6.1e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.871 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 5.2e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.874 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.1e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.875 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.0e-10
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = -0.406 (moderate negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 0.0301
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.938 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.1e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.985 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.972 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.947 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.3e-14
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.929 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 5.6e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>RR_sys ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.989 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+          <h5>Group: KONTROLA (n = 25)</h5>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ glukoza</strong><br>
+                  <strong>Correlation:</strong> r = 0.621 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 9.5e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ HbA1c</strong><br>
+                  <strong>Correlation:</strong> r = 0.623 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 9.5e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.608 (strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 0.0013
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.642 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 6.1e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.668 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.1e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.694 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.5e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>wiek ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.672 (strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.8e-04
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ HbA1c</strong><br>
+                  <strong>Correlation:</strong> r = 0.988 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.968 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 7.1e-15
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.982 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.975 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.0e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.946 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.4e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>glukoza ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.956 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.8e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ insulina</strong><br>
+                  <strong>Correlation:</strong> r = -0.952 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.7e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = 0.972 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.2e-15
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.964 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 2.3e-14
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.94 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 4.3e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>HbA1c ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.949 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 8.3e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ cholesterol</strong><br>
+                  <strong>Correlation:</strong> r = -0.961 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 5.5e-14
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = -0.982 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = -0.982 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>insulina ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = -0.98 (very strong negative)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ BMI</strong><br>
+                  <strong>Correlation:</strong> r = 0.972 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 1.2e-15
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.941 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 3.6e-12
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>cholesterol ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.95 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> 6.7e-13
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_sys</strong><br>
+                  <strong>Correlation:</strong> r = 0.986 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>BMI ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.992 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+              <div class="test-result significant" style="margin-left: 20px;">
+                  <strong>RR_sys ↔ RR_dias</strong><br>
+                  <strong>Correlation:</strong> r = 0.996 (very strong positive)<br>
+                                     <strong>p-value (FDR-corrected):</strong> < 1e-16
+              </div>
+        <h3>Correlation Visualizations</h3>
+        <p>Visual representations of correlation patterns:</p>
+        <div class="plot-container">
+            <h4>Correlation Matrix Overall</h4>
+            <img src="../plots/correlation_analysis/correlation_matrix_overall_20250609_131631.png" alt="correlation_matrix_overall" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Matrix Significance</h4>
+            <img src="../plots/correlation_analysis/correlation_matrix_significance_20250609_131632.png" alt="correlation_matrix_significance" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Matrix T1dm</h4>
+            <img src="../plots/correlation_analysis/correlation_matrix_T1DM_20250609_131632.png" alt="correlation_matrix_T1DM" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Matrix T2dm</h4>
+            <img src="../plots/correlation_analysis/correlation_matrix_T2DM_20250609_131633.png" alt="correlation_matrix_T2DM" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Matrix Kontrola</h4>
+            <img src="../plots/correlation_analysis/correlation_matrix_KONTROLA_20250609_131633.png" alt="correlation_matrix_KONTROLA" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Comparison Groups</h4>
+            <img src="../plots/correlation_analysis/correlation_comparison_groups_20250609_131634.png" alt="correlation_comparison_groups" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Distribution</h4>
+            <img src="../plots/correlation_analysis/correlation_distribution_20250609_131634.png" alt="correlation_distribution" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Explanation</h4>
+            <img src="../plots/correlation_analysis/correlation_explanation_20250609_131635.png" alt="correlation_explanation" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Correlation Summary Table</h4>
+            <img src="../plots/correlation_analysis/correlation_summary_table_20250609_131636.png" alt="correlation_summary_table" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+      <h3>Interpretation Guidelines</h3>
+      <div class="interpretation">
+          <h4>Correlation Strength Classification:</h4>
+          <strong>Negligible:</strong> |r| < 0.1 - Very weak or no linear relationship<br>
+          <strong>Weak:</strong> 0.1 ≤ |r| < 0.3 - Weak linear relationship<br>
+          <strong>Moderate:</strong> 0.3 ≤ |r| < 0.5 - Moderate linear relationship<br>
+          <strong>Strong:</strong> 0.5 ≤ |r| < 0.7 - Strong linear relationship<br>
+          <strong>Very Strong:</strong> |r| ≥ 0.7 - Very strong linear relationship<br><br>
+          
+          <h4>Important Notes:</h4>
+          • Correlation does not imply causation<br>
+          • Pearson correlation measures linear relationships only<br>
+          • Statistical significance (p < 0.05) indicates the correlation is unlikely due to chance<br>
+          • Effect size (correlation strength) is often more important than statistical significance<br>
+          • P-values are corrected for multiple testing using the Benjamini-Hochberg (FDR) method<br>
+          • FDR correction controls the expected proportion of false discoveries among significant results
+      </div></div></div></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

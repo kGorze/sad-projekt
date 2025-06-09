@@ -1,0 +1,52 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG
+Session started: 2025-06-09 13:34:54.53161
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --descriptive_stats --export
+Log level: INFO
+================================================================================
+
+[2025-06-09 13:34:54] [INFO] STEP: DATA LOADING - Loading data from: dane.csv
+[2025-06-09 13:34:55] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 75 rows and 11 columns
+[2025-06-09 13:34:56] [INFO] STEP: DESCRIPTIVE STATISTICS - Starting descriptive statistics generation
+[2025-06-09 13:34:57] [R_WARNING] Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+[2025-06-09 13:34:57] [R_WARNING] Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+[2025-06-09 13:34:57] [R_WARNING] The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+ℹ Please use `after_stat(density)` instead.
+[2025-06-09 13:34:57] [R_WARNING] The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+ℹ Please use `after_stat(density)` instead.
+[2025-06-09 13:35:02] [INFO] STEP: DESCRIPTIVE STATISTICS COMPLETED - Descriptive statistics successfully generated
+[2025-06-09 13:35:02] [INFO] STEP: CSV EXPORT - Starting CSV export of analysis results
+[2025-06-09 13:35:02] [INFO] STEP: CSV EXPORT COMPLETED - Exported 3 CSV files to output/tables/
+
+================================================================================
+SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.14 minutes
+Total analysis steps: 6
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 4
+Total console output entries: 0
+Session ended: 2025-06-09 13:35:02.951019
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (13:34:54)
+  2. DATA PREPARATION COMPLETED (13:34:55)
+  3. DESCRIPTIVE STATISTICS (13:34:56)
+  4. DESCRIPTIVE STATISTICS COMPLETED (13:35:02)
+  5. CSV EXPORT (13:35:02)
+  6. CSV EXPORT COMPLETED (13:35:02)
+
+R WARNINGS ENCOUNTERED (DEBUGGING INFO):
+  2x: The dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+ℹ Please use `after_stat(density)` instead.
+  2x: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+
+DEBUGGING RECOMMENDATIONS:
+
+================================================================================

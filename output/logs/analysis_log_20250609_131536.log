@@ -1,0 +1,52 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG
+Session started: 2025-06-09 13:15:36.960029
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --descriptive_stats --report
+Log level: INFO
+================================================================================
+
+[2025-06-09 13:15:37] [INFO] STEP: DATA LOADING - Loading data from: dane.csv
+[2025-06-09 13:15:38] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 75 rows and 11 columns
+[2025-06-09 13:15:38] [INFO] STEP: DESCRIPTIVE STATISTICS - Starting descriptive statistics generation
+[2025-06-09 13:15:40] [R_WARNING] [1m[22mUsing `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `linewidth` instead.
+[2025-06-09 13:15:40] [R_WARNING] [1m[22mUsing `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `linewidth` instead.
+[2025-06-09 13:15:40] [R_WARNING] [1m[22mThe dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `after_stat(density)` instead.
+[2025-06-09 13:15:40] [R_WARNING] [1m[22mThe dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `after_stat(density)` instead.
+[2025-06-09 13:15:46] [INFO] STEP: DESCRIPTIVE STATISTICS COMPLETED - Descriptive statistics successfully generated
+[2025-06-09 13:15:46] [INFO] STEP: HTML REPORT GENERATION - Starting HTML report generation
+[2025-06-09 13:15:47] [INFO] STEP: HTML REPORT COMPLETED - Report saved to: descriptive_stats_report_20250609_131547.html
+
+================================================================================
+SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.18 minutes
+Total analysis steps: 6
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 4
+Total console output entries: 0
+Session ended: 2025-06-09 13:15:47.588367
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (13:15:37)
+  2. DATA PREPARATION COMPLETED (13:15:38)
+  3. DESCRIPTIVE STATISTICS (13:15:38)
+  4. DESCRIPTIVE STATISTICS COMPLETED (13:15:46)
+  5. HTML REPORT GENERATION (13:15:46)
+  6. HTML REPORT COMPLETED (13:15:47)
+
+R WARNINGS ENCOUNTERED (DEBUGGING INFO):
+  2x: [1m[22mThe dot-dot notation (`..density..`) was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `after_stat(density)` instead.
+  2x: [1m[22mUsing `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+[36mℹ[39m Please use `linewidth` instead.
+
+DEBUGGING RECOMMENDATIONS:
+
+================================================================================

@@ -1,0 +1,1169 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Statistical Analysis Report - Descriptive Stats</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { font-family: "Arial", sans-serif; margin: 20px; }
+        .result-section { margin-bottom: 30px; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .test-result { background-color: #f8f9fa; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .significant { border-left: 5px solid #28a745; }
+        .not-significant { border-left: 5px solid #dc3545; }
+        .warning { border-left: 5px solid #ffc107; }
+        .plot-container { text-align: center; margin: 20px 0; }
+        .stats-table { font-size: 0.9em; }
+        .interpretation { background-color: #e9ecef; padding: 15px; border-radius: 5px; font-style: italic; }
+        .timestamp { color: #6c757d; font-size: 0.8em; }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-4">Statistical Analysis Report - Descriptive Stats</h1>
+                <p class="text-center timestamp">Generated on: 2025-06-09 13:15:46</p>
+            </div>
+        </div><div class="row"><div class="col-12">
+    <div class="result-section">
+        <h2>Descriptive Statistics Summary</h2>
+        <p>This section provides comprehensive summary statistics for all variables in the dataset.</p>
+        <h3>Dataset Overview</h3>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Metric</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody><tr>
+                        <td><strong>Total observations</strong></td>
+                        <td>75</td>
+                      </tr><tr>
+                        <td><strong>Total variables</strong></td>
+                        <td>11</td>
+                      </tr><tr>
+                        <td><strong>Numeric variables</strong></td>
+                        <td>9</td>
+                      </tr><tr>
+                        <td><strong>Categorical variables</strong></td>
+                        <td>1</td>
+                      </tr><tr>
+                        <td><strong>Group column</strong></td>
+                        <td>grupa</td>
+                      </tr></tbody></table>
+        </div>
+        <h3>Variable Types</h3>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable Type</th>
+                    <th>Count</th>
+                </tr>
+            </thead>
+            <tbody><tr>
+                        <td><strong>Numeric</strong></td>
+                        <td>9</td>
+                      </tr><tr>
+                        <td><strong>Categorical</strong></td>
+                        <td>1</td>
+                      </tr></tbody></table>
+        </div>
+        <h3>Group Distribution</h3>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Group</th>
+                    <th>N</th>
+                    <th>Percentage</th>
+                </tr>
+            </thead>
+            <tbody><tr>
+                        <td><strong>CHOR1</strong></td>
+                        <td>25</td>
+                        <td>33.33%</td>
+                      </tr><tr>
+                        <td><strong>CHOR2</strong></td>
+                        <td>25</td>
+                        <td>33.33%</td>
+                      </tr><tr>
+                        <td><strong>KONTROLA</strong></td>
+                        <td>25</td>
+                        <td>33.33%</td>
+                      </tr></tbody></table>
+        </div>
+        <h3>Continuous Variables Statistics</h3>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Variable</th>
+                      <th>N</th>
+                      <th>Missing</th>
+                      <th>Mean</th>
+                      <th>SD</th>
+                      <th>Median</th>
+                      <th>Q25</th>
+                      <th>Q75</th>
+                      <th>Min</th>
+                      <th>Max</th>
+                      <th>Range</th>
+                      <th>IQR</th>
+                      <th>CV%</th>
+                      <th>Skewness</th>
+                      <th>Kurtosis</th>
+                  </tr>
+              </thead>
+              <tbody><tr>
+                          <td><strong>wiek</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>30.629</td>
+                          <td>5.318</td>
+                          <td>30</td>
+                          <td>26.5</td>
+                          <td>34.5</td>
+                          <td>23</td>
+                          <td>41.3</td>
+                          <td>18.3</td>
+                          <td>8</td>
+                          <td>17.4%</td>
+                          <td>0.333</td>
+                          <td>-0.801</td>
+                        </tr><tr>
+                          <td><strong>hsCRP</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>5.146</td>
+                          <td>4.06</td>
+                          <td>4.184</td>
+                          <td>2.287</td>
+                          <td>7.238</td>
+                          <td>0.862</td>
+                          <td>14.999</td>
+                          <td>14.137</td>
+                          <td>4.951</td>
+                          <td>78.9%</td>
+                          <td>1.096</td>
+                          <td>0.193</td>
+                        </tr><tr>
+                          <td><strong>ERY</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>4.154</td>
+                          <td>0.399</td>
+                          <td>4.18</td>
+                          <td>3.85</td>
+                          <td>4.44</td>
+                          <td>3.392</td>
+                          <td>4.844</td>
+                          <td>1.452</td>
+                          <td>0.59</td>
+                          <td>9.6%</td>
+                          <td>-0.18</td>
+                          <td>-0.863</td>
+                        </tr><tr>
+                          <td><strong>PLT</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>218.032</td>
+                          <td>51.456</td>
+                          <td>202</td>
+                          <td>178.5</td>
+                          <td>249.5</td>
+                          <td>146.4</td>
+                          <td>319.7</td>
+                          <td>173.3</td>
+                          <td>71</td>
+                          <td>23.6%</td>
+                          <td>0.633</td>
+                          <td>-0.661</td>
+                        </tr><tr>
+                          <td><strong>HGB</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>12.036</td>
+                          <td>1.317</td>
+                          <td>12.244</td>
+                          <td>11.196</td>
+                          <td>13.049</td>
+                          <td>9.827</td>
+                          <td>14.177</td>
+                          <td>4.35</td>
+                          <td>1.853</td>
+                          <td>10.9%</td>
+                          <td>-0.122</td>
+                          <td>-0.935</td>
+                        </tr><tr>
+                          <td><strong>HCT</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>0.352</td>
+                          <td>0.034</td>
+                          <td>0.354</td>
+                          <td>0.33</td>
+                          <td>0.384</td>
+                          <td>0.288</td>
+                          <td>0.404</td>
+                          <td>0.117</td>
+                          <td>0.053</td>
+                          <td>9.7%</td>
+                          <td>-0.243</td>
+                          <td>-0.9</td>
+                        </tr><tr>
+                          <td><strong>MCHC</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>35.001</td>
+                          <td>1.018</td>
+                          <td>35.047</td>
+                          <td>34.383</td>
+                          <td>35.712</td>
+                          <td>32.838</td>
+                          <td>36.708</td>
+                          <td>3.87</td>
+                          <td>1.329</td>
+                          <td>2.9%</td>
+                          <td>-0.365</td>
+                          <td>-0.317</td>
+                        </tr><tr>
+                          <td><strong>MON</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>0.787</td>
+                          <td>0.248</td>
+                          <td>0.74</td>
+                          <td>0.61</td>
+                          <td>0.9</td>
+                          <td>0.427</td>
+                          <td>1.367</td>
+                          <td>0.94</td>
+                          <td>0.29</td>
+                          <td>31.5%</td>
+                          <td>0.768</td>
+                          <td>-0.119</td>
+                        </tr><tr>
+                          <td><strong>LEU</strong></td>
+                          <td>75</td>
+                          <td>0</td>
+                          <td>11.831</td>
+                          <td>2.475</td>
+                          <td>11.4</td>
+                          <td>9.935</td>
+                          <td>13.775</td>
+                          <td>7.893</td>
+                          <td>16.233</td>
+                          <td>8.34</td>
+                          <td>3.84</td>
+                          <td>20.9%</td>
+                          <td>0.237</td>
+                          <td>-1.055</td>
+                        </tr></tbody></table>
+        </div>
+        <div class="interpretation">
+            <h4>Statistical Measures Explained:</h4>
+            <div style="font-size: 0.9em; line-height: 1.4em;">
+                • <strong>N:</strong> Number of valid (non-missing) observations for each variable<br>
+                • <strong>Missing:</strong> Count of missing values (NA) that were excluded from calculations<br>
+                • <strong>Mean:</strong> Arithmetic average calculated as sum of all values divided by N<br>
+                • <strong>SD:</strong> Standard deviation measuring variability around the mean (square root of variance)<br>
+                • <strong>Median:</strong> Middle value when data is arranged in ascending order (50th percentile)<br>
+                • <strong>Q25:</strong> First quartile, 25th percentile (25% of values fall below this point)<br>
+                • <strong>Q75:</strong> Third quartile, 75th percentile (75% of values fall below this point)<br>
+                • <strong>Min:</strong> Smallest observed value in the dataset for each variable<br>
+                • <strong>Max:</strong> Largest observed value in the dataset for each variable<br>
+                • <strong>Range:</strong> Difference between maximum and minimum values (Max - Min)<br>
+                • <strong>IQR:</strong> Interquartile range, difference between Q75 and Q25 (middle 50% spread)<br>
+                • <strong>CV%:</strong> Coefficient of variation as percentage (SD/Mean × 100), relative variability measure<br>
+                • <strong>Skewness:</strong> Measure of asymmetry; positive = right tail, negative = left tail, 0 = symmetric<br>
+                • <strong>Kurtosis:</strong> Measure of tail heaviness; positive = heavy tails, negative = light tails, 0 = normal
+            </div>
+        </div>
+        <h3>Categorical Variables Statistics</h3>
+        <h4>plec</h4>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+              <thead>
+                  <tr>
+                      <th>Category</th>
+                      <th>Frequency</th>
+                      <th>Percentage</th>
+                  </tr>
+              </thead>
+              <tbody><tr>
+                          <td>k</td>
+                          <td>40</td>
+                          <td>53.33%</td>
+                        </tr><tr>
+                          <td>m</td>
+                          <td>35</td>
+                          <td>46.67%</td>
+                        </tr></tbody></table>
+        </div>
+        <h3>Missing Data Summary</h3>
+        <div class="table-responsive">
+            <div class="alert alert-success"><strong>No missing data detected!</strong> All variables are complete.</div>
+        </div>
+        <h3>Analysis Metadata</h3>
+        <div class="interpretation">
+            <strong>Analysis Date:</strong> 2025-06-09 13:15:46<br>
+            <strong>Total Observations:</strong> 75<br>
+            <strong>Total Variables:</strong> 11<br>
+            <strong>Numeric Variables:</strong> 9<br>
+            <strong>Categorical Variables:</strong> 1<br>
+            <strong>Group Column:</strong> grupa<br>
+            <strong>Missing Data Present:</strong> No
+        </div>
+    <h2 id="assumptions-section">Statistical Assumptions Analysis</h2>
+    <p>Comprehensive testing of statistical assumptions underlying the chosen analytical methods. All subsequent analyses reference these centralized diagnostics.</p>
+    <h3>Normality Assessment</h3>
+    <p>Distribution normality testing using optimal test selection based on sample size and data characteristics:</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Variable</th>
+                    <th>Test Method</th>
+                    <th>Statistic</th>
+                    <th>p-value</th>
+                    <th>Normality Status</th>
+                    <th>Skewness</th>
+                    <th>Kurtosis</th>
+                    <th>Interpretation</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-warning">
+                    <td><strong>wiek</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.7673</td>
+                    <td>0.044</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td>0.333</td>
+                    <td>-0.801</td>
+                    <td>BORDERLINE normality - requires attention (Anderson-Darling p = 0.044)</td>
+                </tr>
+                <tr class="table-danger">
+                    <td><strong>hsCRP</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>3.4504</td>
+                    <td>0</td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td>1.096</td>
+                    <td>0.193</td>
+                    <td>Clearly non-normal distribution (Anderson-Darling p = 0)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>ERY</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.5039</td>
+                    <td>0.198</td>
+                    <td><span style="color: green; font-weight: bold;">Normal</span></td>
+                    <td>-0.18</td>
+                    <td>-0.863</td>
+                    <td>Clearly normal distribution (Anderson-Darling p = 0.198)</td>
+                </tr>
+                <tr class="table-danger">
+                    <td><strong>PLT</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>1.8545</td>
+                    <td>0</td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td>0.633</td>
+                    <td>-0.661</td>
+                    <td>Clearly non-normal distribution (Anderson-Darling p = 0)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HGB</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.6806</td>
+                    <td>0.073</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td>-0.122</td>
+                    <td>-0.935</td>
+                    <td>Normal distribution (Anderson-Darling p = 0.073)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HCT</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.6763</td>
+                    <td>0.074</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td>-0.243</td>
+                    <td>-0.9</td>
+                    <td>Normal distribution (Anderson-Darling p = 0.074)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>MCHC</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.5853</td>
+                    <td>0.123</td>
+                    <td><span style="color: green; font-weight: bold;">Normal</span></td>
+                    <td>-0.365</td>
+                    <td>-0.317</td>
+                    <td>Clearly normal distribution (Anderson-Darling p = 0.123)</td>
+                </tr>
+                <tr class="table-danger">
+                    <td><strong>MON</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>1.4436</td>
+                    <td>0.001</td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td>0.768</td>
+                    <td>-0.119</td>
+                    <td>Clearly non-normal distribution (Anderson-Darling p = 0.001)</td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>LEU</strong></td>
+                    <td>Anderson-Darling</td>
+                    <td>0.8609</td>
+                    <td>0.026</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td>0.237</td>
+                    <td>-1.055</td>
+                    <td>BORDERLINE normality - requires attention (Anderson-Darling p = 0.026)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="interpretation">
+        <h4>Normality Status Explained:</h4>
+        <div style="font-size: 0.9em; line-height: 1.4em;">
+            • <strong><span style="color: green;">Normal:</span></strong> Data follows normal distribution (p > 0.05) - parametric tests appropriate<br>
+            • <strong><span style="color: red;">Non-normal:</span></strong> Data significantly deviates from normality (p ≤ 0.05) - use non-parametric tests<br>
+            • <strong><span style="color: orange;">Borderline:</span></strong> Normality uncertain (0.01 < p ≤ 0.05) - requires careful consideration and visual inspection<br><br>
+            
+            <strong>Test Methods Available:</strong><br>
+            • <strong>Shapiro-Wilk:</strong> Gold standard for small samples (n ≤ 50), most powerful normality test<br>
+            • <strong>Anderson-Darling:</strong> Preferred for larger samples (n > 50), sensitive to tail deviations<br>
+            • <strong>Kolmogorov-Smirnov:</strong> Alternative test, less powerful but widely available<br>
+            • <strong>Lilliefors:</strong> Modification of K-S test when parameters estimated from data<br><br>
+            
+            <strong>Skewness & Kurtosis Guidelines:</strong><br>
+            • <strong>Skewness:</strong> |value| < 0.5 = normal, 0.5-1.0 = moderate, > 1.0 = severe asymmetry<br>
+            • <strong>Kurtosis:</strong> |value| < 0.5 = normal, 0.5-1.0 = moderate, > 1.0 = severe tail deviation
+        </div>
+    </div>
+    <h3>Homogeneity of Variance Assessment</h3>
+    <p>Comprehensive variance homogeneity testing using multiple methods (Levene, Bartlett, Fligner-Killeen):</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Variable</th>
+                    <th>Primary Test (Levene)</th>
+                    <th>Supporting Tests</th>
+                    <th>Homogeneity Status</th>
+                    <th>Detailed Results</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-success">
+                    <td><strong>wiek</strong></td>
+                    <td>F = 0.622, p = 0.54</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.776)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.551)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 0.622, p = 0.54 (homogeneous); Bartlett: χ² = 0.506, p = 0.776 (homogeneous); Fligner: χ² = 1.192, p = 0.551 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>hsCRP</strong></td>
+                    <td>F = 0.489, p = 0.615</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.973)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.4)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 0.489, p = 0.615 (homogeneous); Bartlett: χ² = 0.054, p = 0.973 (homogeneous); Fligner: χ² = 1.835, p = 0.4 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>ERY</strong></td>
+                    <td>F = 0.596, p = 0.554</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.581)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.617)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 0.596, p = 0.554 (homogeneous); Bartlett: χ² = 1.086, p = 0.581 (homogeneous); Fligner: χ² = 0.965, p = 0.617 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>PLT</strong></td>
+                    <td>F = 0.06, p = 0.942</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.965)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.938)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 0.06, p = 0.942 (homogeneous); Bartlett: χ² = 0.071, p = 0.965 (homogeneous); Fligner: χ² = 0.127, p = 0.938 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HGB</strong></td>
+                    <td>F = 1.015, p = 0.367</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.448)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.395)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 1.015, p = 0.367 (homogeneous); Bartlett: χ² = 1.605, p = 0.448 (homogeneous); Fligner: χ² = 1.86, p = 0.395 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>HCT</strong></td>
+                    <td>F = 2.186, p = 0.12</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.31)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.12)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 2.186, p = 0.12 (homogeneous); Bartlett: χ² = 2.339, p = 0.31 (homogeneous); Fligner: χ² = 4.232, p = 0.12 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>MCHC</strong></td>
+                    <td>F = 1.06, p = 0.352</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.584)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.31)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 1.06, p = 0.352 (homogeneous); Bartlett: χ² = 1.077, p = 0.584 (homogeneous); Fligner: χ² = 2.341, p = 0.31 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>MON</strong></td>
+                    <td>F = 2.205, p = 0.118</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.089)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.105)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 2.205, p = 0.118 (homogeneous); Bartlett: χ² = 4.827, p = 0.089 (homogeneous); Fligner: χ² = 4.503, p = 0.105 (homogeneous)</td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>LEU</strong></td>
+                    <td>F = 0.667, p = 0.516</td>
+                    <td>Bartlett: <span style="color: green;">Pass</span> (p = 0.706)<br>Fligner: <span style="color: green;">Pass</span> (p = 0.529)</td>
+                    <td><span style="color: green; font-weight: bold;">Homogeneous</span></td>
+                    <td>Levene: F = 0.667, p = 0.516 (homogeneous); Bartlett: χ² = 0.696, p = 0.706 (homogeneous); Fligner: χ² = 1.273, p = 0.529 (homogeneous)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="interpretation">
+        <h4>Homogeneity Tests Explained:</h4>
+        <div style="font-size: 0.9em; line-height: 1.4em;">
+            • <strong>Levene Test:</strong> Primary test, robust to non-normality, tests equal variances across groups using median<br>
+            • <strong>Bartlett Test:</strong> Most powerful when data is normal, highly sensitive to non-normality, uses maximum likelihood<br>
+            • <strong>Fligner-Killeen Test:</strong> Non-parametric alternative, robust to outliers and non-normality, uses ranks<br><br>
+            
+            <strong>Interpretation Guidelines:</strong><br>
+            • <strong><span style="color: green;">Homogeneous:</span></strong> Equal variances across groups (p > 0.05) - parametric tests valid<br>
+            • <strong><span style="color: red;">Heterogeneous:</span></strong> Unequal variances (p ≤ 0.05) - use Welch corrections or robust tests<br><br>
+            
+            <strong>Test Selection Hierarchy:</strong><br>
+            • Primary decision based on <strong>Levene Test</strong> (robust across distributions)<br>
+            • Bartlett confirms when normality assumptions met<br>
+            • Fligner-Killeen provides non-parametric confirmation
+        </div>
+    </div>
+    <h3>Statistical Test Recommendations</h3>
+    <p>Automated test selection based on the assumption diagnostics above:</p>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Variable</th>
+                    <th>Recommended Test</th>
+                    <th>Post-hoc Method</th>
+                    <th>Rationale</th>
+                    <th>Assumption Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-warning">
+                    <td><strong>wiek</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+                <tr class="table-danger">
+                    <td><strong>hsCRP</strong></td>
+                    <td>Kruskal-Wallis test</td>
+                    <td>Dunn's test with Bonferroni correction</td>
+                    <td>Non-normal distribution or other assumption violations</td>
+                    <td><span style="color: red; font-weight: bold;">Assumptions violated</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>ERY</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>PLT</strong></td>
+                    <td>Kruskal-Wallis test (borderline normality)</td>
+                    <td>Dunn's test with Bonferroni correction</td>
+                    <td>Borderline normality detected - non-parametric approach recommended</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline non-normal</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>HGB</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>HCT</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>MCHC</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>MON</strong></td>
+                    <td>Kruskal-Wallis test (borderline normality)</td>
+                    <td>Dunn's test with Bonferroni correction</td>
+                    <td>Borderline normality detected - non-parametric approach recommended</td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline non-normal</span></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>LEU</strong></td>
+                    <td>Welch's ANOVA</td>
+                    <td>Games-Howell</td>
+                    <td>Normal distribution but heterogeneous variances</td>
+                    <td><span style="color: orange; font-weight: bold;">Variance inequality</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="interpretation">
+        <h4>Statistical Tests Explained:</h4>
+        <div style="font-size: 0.9em; line-height: 1.4em;">
+            <strong>Primary Tests Available:</strong><br>
+            • <strong>Welch ANOVA:</strong> Robust one-way ANOVA, handles unequal variances, assumes normality but not homogeneity<br>
+            • <strong>Standard ANOVA:</strong> Classic one-way ANOVA, requires both normality and equal variances (homogeneity)<br>
+            • <strong>Kruskal-Wallis Test:</strong> Non-parametric alternative, uses ranks, robust to outliers and non-normality<br>
+            • <strong>t-tests (2 groups):</strong> Student t-test (equal variances) or Welch t-test (unequal variances)<br>
+            • <strong>Mann-Whitney U:</strong> Non-parametric t-test alternative for 2 groups<br><br>
+            
+            <strong>Post-hoc Methods Available:</strong><br>
+            • <strong>Games-Howell:</strong> Pairwise comparisons for unequal variances, does not assume homogeneity<br>
+            • <strong>Tukey HSD:</strong> Pairwise comparisons for equal variances, controls family-wise error rate<br>
+            • <strong>Dunn Test:</strong> Non-parametric post-hoc for Kruskal-Wallis, uses rank-based comparisons<br>
+            • <strong>Bonferroni Correction:</strong> Conservative multiple comparison adjustment (p × number of comparisons)<br>
+            • <strong>Holm Correction:</strong> Step-down Bonferroni, less conservative than standard Bonferroni<br><br>
+            
+            <strong>Test Selection Logic:</strong><br>
+            • <span style="color: green; font-weight: bold;">Normal + Homogeneous</span> → Standard ANOVA + Tukey HSD<br>
+            • <span style="color: orange; font-weight: bold;">Normal + Heterogeneous</span> → Welch ANOVA + Games-Howell<br>
+            • <span style="color: red; font-weight: bold;">Non-normal</span> → Kruskal-Wallis + Dunn test<br>
+            • <span style="color: orange; font-weight: bold;">Borderline</span> → Conservative approach (non-parametric) or sensitivity analysis
+        </div>
+    </div>
+    <h2 id="transformation-verification">Transformation Workflow Verification</h2>
+    <div class="alert alert-info">
+        <h4>What This Section Does:</h4>
+        <p>This section verifies that our statistical analysis pipeline correctly handles non-normal data by:</p>
+        <ul>
+            <li><strong>Detecting non-normal distributions</strong> through normality tests</li>
+            <li><strong>Attempting data transformations</strong> (log, square-root, Box-Cox) when appropriate</li>
+            <li><strong>Re-testing normality</strong> after transformation</li>
+            <li><strong>Selecting appropriate tests</strong> based on final data characteristics</li>
+            <li><strong>Ensuring robust alternatives</strong> (non-parametric tests) are used when transformations fail</li>
+        </ul>
+        <p><strong>Goal:</strong> Verify that non-normal variables correctly trigger robust statistical methods instead of inappropriate parametric tests.</p>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Variable</th>
+                    <th>Normality Status</th>
+                    <th>Transformation Applied</th>
+                    <th>Post-Transform Normality</th>
+                    <th>Selected Test</th>
+                    <th>Verification Status</th>
+                    <th>Rationale</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr class="table-warning">
+                    <td><strong>wiek</strong></td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: orange; font-weight: bold;">Questionable</span></td>
+                    <td><small>Borderline normality should trigger sensitivity analysis</small></td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>hsCRP</strong></td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Kruskal-Wallis test</small></td>
+                    <td><span style="color: green; font-weight: bold;">Appropriate</span></td>
+                    <td><small>Non-normal data correctly routed to non-parametric test</small></td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>ERY</strong></td>
+                    <td><span style="color: green; font-weight: bold;">Normal</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: green; font-weight: bold;">Appropriate</span></td>
+                    <td><small>Normal data correctly uses parametric test</small></td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>PLT</strong></td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Kruskal-Wallis test (borderline normality)</small></td>
+                    <td><span style="color: green; font-weight: bold;">Appropriate</span></td>
+                    <td><small>Non-normal data correctly routed to non-parametric test</small></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>HGB</strong></td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: orange; font-weight: bold;">Questionable</span></td>
+                    <td><small>Borderline normality should trigger sensitivity analysis</small></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>HCT</strong></td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: orange; font-weight: bold;">Questionable</span></td>
+                    <td><small>Borderline normality should trigger sensitivity analysis</small></td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>MCHC</strong></td>
+                    <td><span style="color: green; font-weight: bold;">Normal</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: green; font-weight: bold;">Appropriate</span></td>
+                    <td><small>Normal data correctly uses parametric test</small></td>
+                </tr>
+                <tr class="table-success">
+                    <td><strong>MON</strong></td>
+                    <td><span style="color: red; font-weight: bold;">Non-normal</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Kruskal-Wallis test (borderline normality)</small></td>
+                    <td><span style="color: green; font-weight: bold;">Appropriate</span></td>
+                    <td><small>Non-normal data correctly routed to non-parametric test</small></td>
+                </tr>
+                <tr class="table-warning">
+                    <td><strong>LEU</strong></td>
+                    <td><span style="color: orange; font-weight: bold;">Borderline</span></td>
+                    <td><small>None detected</small></td>
+                    <td><small>N/A - No transformation attempted</small></td>
+                    <td><small>Welch's ANOVA</small></td>
+                    <td><span style="color: orange; font-weight: bold;">Questionable</span></td>
+                    <td><small>Borderline normality should trigger sensitivity analysis</small></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="alert alert-danger mt-3">
+        <h4>Transformation Workflow Assessment</h4>
+        <p><strong>Overall Appropriateness:</strong> 55.6% (5/9 variables with appropriate test selection)</p>
+        
+        <h5>Verification Criteria:</h5>
+        <ul>
+            <li><strong>Non-normal variables</strong> should trigger non-parametric tests (Kruskal-Wallis, Mann-Whitney)</li>
+            <li><strong>Borderline normality</strong> should trigger dual parametric/non-parametric analysis</li>
+            <li><strong>Normal variables</strong> can appropriately use parametric tests (ANOVA, t-tests)</li>
+            <li><strong>Transformation attempts</strong> should be documented and post-transformation normality verified</li>
+        </ul>
+        
+        <h5>Quality Assurance Notes:</h5>
+        <p><span style="color: green; font-weight: bold;">Green</span> = Workflow correctly implemented | <span style="color: orange; font-weight: bold;">Orange</span> = Acceptable but suboptimal | <span style="color: red; font-weight: bold;">Red</span> = Inappropriate test selection</p>
+        <p><strong>Assessment:</strong> Transformation workflow requires review and improvement of test selection logic.</p>
+    </div>
+        <h3>Variable Properties Analysis</h3>
+        <p>Comprehensive analysis of variable characteristics for each group - essential for statistical test selection:</p>
+        <div class="table-responsive">
+            <table class="table table-striped stats-table">
+            <thead>
+                <tr>
+                    <th>Variable</th>
+                    <th>N Total</th>
+                    <th>N Missing</th>
+                    <th>Overall Normal</th>
+                    <th>Normality p-value</th>
+                    <th>Group Normality</th>
+                    <th>Homogeneity</th>
+                    <th>Homogeneity p-value</th>
+                    <th>Skewness</th>
+                    <th>Kurtosis</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>wiek</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-danger"><span style="color: red;">Non-normal</span></td>
+                    <td>0.044</td>
+                    <td>3/3 normal, 2 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.54</td>
+                    <td>0.333</td>
+                    <td>-0.801</td>
+                </tr>
+                <tr>
+                    <td><strong>hsCRP</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-danger"><span style="color: red;">Non-normal</span></td>
+                    <td>0</td>
+                    <td>0/3 groups normal</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.615</td>
+                    <td>1.096</td>
+                    <td>0.193</td>
+                </tr>
+                <tr>
+                    <td><strong>ERY</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-success"><span style="color: green;">Normal</span></td>
+                    <td>0.198</td>
+                    <td>3/3 groups normal</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.554</td>
+                    <td>-0.18</td>
+                    <td>-0.863</td>
+                </tr>
+                <tr>
+                    <td><strong>PLT</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-danger"><span style="color: red;">Non-normal</span></td>
+                    <td>0</td>
+                    <td>2/3 normal, 1 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.942</td>
+                    <td>0.633</td>
+                    <td>-0.661</td>
+                </tr>
+                <tr>
+                    <td><strong>HGB</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-success"><span style="color: green;">Normal</span></td>
+                    <td>0.073</td>
+                    <td>3/3 normal, 2 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.367</td>
+                    <td>-0.122</td>
+                    <td>-0.935</td>
+                </tr>
+                <tr>
+                    <td><strong>HCT</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-success"><span style="color: green;">Normal</span></td>
+                    <td>0.074</td>
+                    <td>2/3 normal, 1 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.12</td>
+                    <td>-0.243</td>
+                    <td>-0.9</td>
+                </tr>
+                <tr>
+                    <td><strong>MCHC</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-success"><span style="color: green;">Normal</span></td>
+                    <td>0.123</td>
+                    <td>3/3 groups normal</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.352</td>
+                    <td>-0.365</td>
+                    <td>-0.317</td>
+                </tr>
+                <tr>
+                    <td><strong>MON</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-danger"><span style="color: red;">Non-normal</span></td>
+                    <td>0.001</td>
+                    <td>2/3 normal, 1 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.118</td>
+                    <td>0.768</td>
+                    <td>-0.119</td>
+                </tr>
+                <tr>
+                    <td><strong>LEU</strong></td>
+                    <td>75</td>
+                    <td>0</td>
+                    <td class="table-danger"><span style="color: red;">Non-normal</span></td>
+                    <td>0.026</td>
+                    <td>3/3 normal, 1 borderline</td>
+                    <td class="table-success"><span style="color: green;">Homogeneous</span></td>
+                    <td>0.516</td>
+                    <td>0.237</td>
+                    <td>-1.055</td>
+                </tr></tbody></table>
+        </div>
+        <div class="interpretation">
+            <h4>Interpretation Guide:</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Overall Normal Distribution:</strong><br>
+                    • <span style="color: green;">Normal</span>: Data follows normal distribution (p > 0.05) - parametric tests suitable<br>
+                    • <span style="color: red;">Non-normal</span>: Data deviates from normality (p ≤ 0.05) - consider non-parametric tests<br><br>
+                    <strong>Normality p-value:</strong><br>
+                    • p > 0.05: Accept normality assumption<br>
+                    • p ≤ 0.05: Reject normality assumption<br>
+                    • Based on Shapiro-Wilk (n≤50) or Anderson-Darling test (n>50)<br><br>
+                    <strong>Group Normality:</strong><br>
+                    • Shows fraction of groups that meet normality assumption<br>
+                    • Includes "borderline" flag for p-values between 0.04-0.06
+                </div>
+                <div class="col-md-6">
+                    <strong>Homogeneity of Variance:</strong><br>
+                    • <span style="color: green;">Homogeneous</span>: Equal variances across groups (p > 0.05)<br>
+                    • <span style="color: orange;">Heterogeneous</span>: Unequal variances (p ≤ 0.05) - use Welch corrections<br><br>
+                    <strong>Homogeneity p-value:</strong><br>
+                    • Primary: Levene test result (robust to non-normality)<br>
+                    • p > 0.05: Equal variances assumption met<br>
+                    <strong>CV% (Coefficient of Variation):</strong><br>
+                    • <15%: Low variability<br>
+                    • 15-35%: Moderate variability<br>
+                    • >35%: High variability<br><br>
+                    <strong>Outliers:</strong><br>
+                    • <5%: Acceptable level<br>
+                    • 5-10%: Moderate concern<br>
+                    • >10%: High concern<br><br>
+                    <strong>Recommended Tests:</strong><br>
+                    Based on normality, homogeneity, and data quality assessment
+                </div>
+            </div>
+        </div>
+        <h3>Normality Testing</h3>
+        <p>Assessment of normal distribution for each numeric variable:</p>
+        <div class="test-result not-significant">
+            <h4>wiek - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.7673<br>
+                    <strong>p-value:</strong> 0.0441<br>
+                    <strong>Normal Distribution:</strong> No
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> 0.333<br>
+                    <strong>Kurtosis:</strong> -0.801<br>
+                    <strong>Interpretation:</strong> BORDERLINE normality - requires attention (Anderson-Darling p = 0.044)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.0758)<br>
+                &nbsp;&nbsp;• CHOR2: Normal (Shapiro-Wilk p = 0.0812)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.7867)<br>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>hsCRP - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 3.4504<br>
+                    <strong>p-value:</strong> 0<br>
+                    <strong>Normal Distribution:</strong> No
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> 1.096<br>
+                    <strong>Kurtosis:</strong> 0.193<br>
+                    <strong>Interpretation:</strong> Clearly non-normal distribution (Anderson-Darling p = 0)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Non-normal (Shapiro-Wilk p = 0)<br>
+                &nbsp;&nbsp;• CHOR2: Non-normal (Shapiro-Wilk p = 0.0093)<br>
+                &nbsp;&nbsp;• KONTROLA: Non-normal (Shapiro-Wilk p = 0.0066)<br>
+            </div></div>
+        <div class="test-result significant">
+            <h4>ERY - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.5039<br>
+                    <strong>p-value:</strong> 0.1981<br>
+                    <strong>Normal Distribution:</strong> Yes
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> -0.18<br>
+                    <strong>Kurtosis:</strong> -0.863<br>
+                    <strong>Interpretation:</strong> Clearly normal distribution (Anderson-Darling p = 0.198)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.108)<br>
+                &nbsp;&nbsp;• CHOR2: Normal (Shapiro-Wilk p = 0.3296)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.6268)<br>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>PLT - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 1.8545<br>
+                    <strong>p-value:</strong> 1e-04<br>
+                    <strong>Normal Distribution:</strong> No
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> 0.633<br>
+                    <strong>Kurtosis:</strong> -0.661<br>
+                    <strong>Interpretation:</strong> Clearly non-normal distribution (Anderson-Darling p = 0)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.2912)<br>
+                &nbsp;&nbsp;• CHOR2: Non-normal (Shapiro-Wilk p = 0.0027)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.0632)<br>
+            </div></div>
+        <div class="test-result significant">
+            <h4>HGB - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.6806<br>
+                    <strong>p-value:</strong> 0.0726<br>
+                    <strong>Normal Distribution:</strong> Yes
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> -0.122<br>
+                    <strong>Kurtosis:</strong> -0.935<br>
+                    <strong>Interpretation:</strong> Normal distribution (Anderson-Darling p = 0.073)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.3521)<br>
+                &nbsp;&nbsp;• CHOR2: Normal (Shapiro-Wilk p = 0.0838)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.0743)<br>
+            </div></div>
+        <div class="test-result significant">
+            <h4>HCT - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.6763<br>
+                    <strong>p-value:</strong> 0.0744<br>
+                    <strong>Normal Distribution:</strong> Yes
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> -0.243<br>
+                    <strong>Kurtosis:</strong> -0.9<br>
+                    <strong>Interpretation:</strong> Normal distribution (Anderson-Darling p = 0.074)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.2928)<br>
+                &nbsp;&nbsp;• CHOR2: Non-normal (Shapiro-Wilk p = 0.0435)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.49)<br>
+            </div></div>
+        <div class="test-result significant">
+            <h4>MCHC - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.5853<br>
+                    <strong>p-value:</strong> 0.123<br>
+                    <strong>Normal Distribution:</strong> Yes
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> -0.365<br>
+                    <strong>Kurtosis:</strong> -0.317<br>
+                    <strong>Interpretation:</strong> Clearly normal distribution (Anderson-Darling p = 0.123)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.4256)<br>
+                &nbsp;&nbsp;• CHOR2: Normal (Shapiro-Wilk p = 0.1261)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.1813)<br>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>MON - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 1.4436<br>
+                    <strong>p-value:</strong> 9e-04<br>
+                    <strong>Normal Distribution:</strong> No
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> 0.768<br>
+                    <strong>Kurtosis:</strong> -0.119<br>
+                    <strong>Interpretation:</strong> Clearly non-normal distribution (Anderson-Darling p = 0.001)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.0585)<br>
+                &nbsp;&nbsp;• CHOR2: Non-normal (Shapiro-Wilk p = 0.0081)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.2904)<br>
+            </div></div>
+        <div class="test-result not-significant">
+            <h4>LEU - Anderson-Darling</h4>
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Test Statistic:</strong> 0.8609<br>
+                    <strong>p-value:</strong> 0.0258<br>
+                    <strong>Normal Distribution:</strong> No
+                </div>
+                <div class="col-md-6">
+                    <strong>Skewness:</strong> 0.237<br>
+                    <strong>Kurtosis:</strong> -1.055<br>
+                    <strong>Interpretation:</strong> BORDERLINE normality - requires attention (Anderson-Darling p = 0.026)
+                </div>
+            </div>
+            <div class="mt-2">
+                <strong>Group-wise Normality:</strong><br>
+                &nbsp;&nbsp;• CHOR1: Normal (Shapiro-Wilk p = 0.1128)<br>
+                &nbsp;&nbsp;• CHOR2: Normal (Shapiro-Wilk p = 0.5245)<br>
+                &nbsp;&nbsp;• KONTROLA: Normal (Shapiro-Wilk p = 0.0824)<br>
+            </div></div>
+        <div class="interpretation">
+            <strong>Normality Interpretation:</strong><br>
+            • p > 0.05: Data appears normally distributed<br>
+            • p ≤ 0.05: Data deviates from normal distribution<br>
+            • Skewness close to 0: Symmetric distribution<br>
+            • Kurtosis close to 0: Normal tail behavior
+        </div>
+        <h3>Visualizations</h3>
+        <p>The following plots illustrate the data distributions and patterns:</p>
+        <div class="plot-container">
+            <h4>Enhanced Wiek</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_wiek_20250609_131540.png" alt="Enhanced Wiek" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hscrp</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_hsCRP_20250609_131541.png" alt="Enhanced Hscrp" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Ery</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_ERY_20250609_131542.png" alt="Enhanced Ery" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Plt</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_PLT_20250609_131542.png" alt="Enhanced Plt" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hgb</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_HGB_20250609_131543.png" alt="Enhanced Hgb" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Hct</h4>
+            <img src="../plots/descriptive_stats/enhanced_histogram_HCT_20250609_131544.png" alt="Enhanced Hct" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Enhanced Plec</h4>
+            <img src="../plots/descriptive_stats/enhanced_barplot_plec_20250609_131545.png" alt="Enhanced Plec" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div>
+        <div class="plot-container">
+            <h4>Outlier Analysis</h4>
+            <img src="../plots/descriptive_stats/outlier_analysis_20250609_131546.png" alt="Outlier Analysis" class="img-fluid" style="max-width: 100%; height: auto;">
+        </div></div></div></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

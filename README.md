@@ -55,7 +55,7 @@ Program wtedy generuje cztery szczegółowe raporty HTML:
 - **Zaawansowana analiza inferential** z modelowaniem ANCOVA, regresją wielokrotną i analizą interakcji
 i łączy je poprzez indeks. **Wszystkie wykresy są zapisywane również jako osobne pliki PNG.**
 
-## Przykładowe dane z labolatoriów
+## Przykładowe dane z labolatoriów - raporty w output/reports
 1. Raport statystyczny automatycznie diagnozuje dane biomedyczne z trzech grup (CHOR1, CHOR2, KONTROLA, po 25 przypadków). Narzędzie rozpoznaje typy zmiennych, brakujące wartości oraz rozkłady - wskazało przede wszystkim nienormalność hsCRP, PLT i MON oraz graniczne odstępstwa dla wieku, HGB, HCT i LEU. Mimo to wariancje są jednorodne, dlatego algorytm proponuje Welch-ANOVA przy nierównych wariancjach albo Kruskal-Wallis, gdy rozkład jest wyraźnie odchylony. Wykresy gęstości i słupki płci ułatwiają wizualną ocenę. Analiza skrajnych obserwacji podkreśliła MON i hsCRP jako potencjalne outliery.
 
 
