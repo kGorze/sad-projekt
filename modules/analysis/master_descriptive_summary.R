@@ -333,6 +333,29 @@ create_master_numeric_table <- function(summary_list) {
   return(master_table)
 }
 
+# Generate explanations for continuous variables statistics table
+generate_continuous_stats_explanations <- function() {
+  
+  explanations <- c(
+    "• N: Number of valid (non-missing) observations for each variable",
+    "• Missing: Count of missing values (NA) that were excluded from calculations", 
+    "• Mean: Arithmetic average calculated as sum of all values divided by N",
+    "• SD: Standard deviation measuring variability around the mean (square root of variance)",
+    "• Median: Middle value when data is arranged in ascending order (50th percentile)",
+    "• Q25: First quartile, 25th percentile (25% of values fall below this point)",
+    "• Q75: Third quartile, 75th percentile (75% of values fall below this point)", 
+    "• Min: Smallest observed value in the dataset for each variable",
+    "• Max: Largest observed value in the dataset for each variable",
+    "• Range: Difference between maximum and minimum values (Max - Min)",
+    "• IQR: Interquartile range, difference between Q75 and Q25 (middle 50% spread)",
+    "• CV%: Coefficient of variation as percentage (SD/Mean × 100), relative variability measure",
+    "• Skewness: Measure of asymmetry; positive = right tail, negative = left tail, 0 = symmetric",
+    "• Kurtosis: Measure of tail heaviness; positive = heavy tails, negative = light tails, 0 = normal"
+  )
+  
+  return(explanations)
+}
+
 # Comprehensive categorical variables summary
 generate_comprehensive_categorical_summary <- function(data, categorical_vars, group_column = NULL) {
   

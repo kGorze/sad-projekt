@@ -241,12 +241,12 @@ create_enhanced_normality_interpretation <- function(test_name, p_value, normali
   base_text <- paste0(test_name, " p = ", p_formatted)
   
   switch(normality_flag,
-    "CLEARLY_NORMAL" = paste0("✓ Clearly normal distribution (", base_text, ")"),
-    "NORMAL" = paste0("✓ Normal distribution (", base_text, ")"),
-    "BORDERLINE_NON_NORMAL" = paste0("⚠ BORDERLINE normality - requires attention (", base_text, ")"),
-    "NON_NORMAL" = paste0("✗ Non-normal distribution (", base_text, ")"),
-    "CLEARLY_NON_NORMAL" = paste0("✗ Clearly non-normal distribution (", base_text, ")"),
-    "UNKNOWN" = paste0("? Unable to determine normality (", base_text, ")")
+    "CLEARLY_NORMAL" = paste0("Clearly normal distribution (", base_text, ")"),
+    "NORMAL" = paste0("Normal distribution (", base_text, ")"),
+    "BORDERLINE_NON_NORMAL" = paste0("BORDERLINE normality - requires attention (", base_text, ")"),
+    "NON_NORMAL" = paste0("Non-normal distribution (", base_text, ")"),
+    "CLEARLY_NON_NORMAL" = paste0("Clearly non-normal distribution (", base_text, ")"),
+    "UNKNOWN" = paste0("Unable to determine normality (", base_text, ")")
   )
 }
 
