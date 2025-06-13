@@ -1,4 +1,4 @@
-# Sprawozdanie SAD
+# Sprawozdanie SAD, wersja 0.0.38
 Gorzelańczyk Konrad, 159909, Bioinformatyka 4 semestr
 
 ### Struktura programu i funkcjonalności
