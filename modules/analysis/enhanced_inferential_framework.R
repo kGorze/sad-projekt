@@ -15,6 +15,7 @@ suppressPackageStartupMessages({
 # Source required modules
 source("modules/reporting/export_results.R")
 source("modules/analysis/assumptions_dashboard.R")
+source("modules/utils/statistical_helpers.R")
 
 # Main function: Enhanced inferential analysis with covariates
 perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", include_plots = TRUE, 
@@ -140,6 +141,9 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   cat("\n=== STEP 4: MODEL SELECTION AND COMPARISON ===\n")
   model_comparison <- perform_model_comparison(centered_data, dependent_vars, group_column, potential_covariates)
   result$model_comparison <- model_comparison
+  
+  # Step 4.5: Power Analysis removed - using existing power functions in post-processing
+  # Power analysis available via calculate_post_hoc_power() in statistical_helpers.R
   
   # Step 5: Effect Sizes and Confidence Intervals
   cat("\n=== STEP 5: EFFECT SIZES AND CONFIDENCE INTERVALS ===\n")
