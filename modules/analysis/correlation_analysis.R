@@ -5,9 +5,11 @@
 
 # Source reporting utilities
 source("modules/reporting/export_results.R")
+source("modules/analysis/assumptions_dashboard.R")
 
 # Main correlation analysis function
-perform_correlation_analysis <- function(data, group_column = NULL, variables = NULL, include_plots = TRUE) {
+perform_correlation_analysis <- function(data, group_column = NULL, variables = NULL, include_plots = TRUE, 
+                                       check_assumptions = TRUE) {
   
   # Create analysis result object
   result <- create_analysis_result("correlation_analysis")
@@ -32,6 +34,23 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
   }
   
   cat("- Analyzing correlations for", length(numeric_vars), "variables\n")
+  
+  # NOWY KROK: Comprehensive Assumptions Testing for Correlation Method Selection
+  if (check_assumptions) {
+    cat("\n=== STEP 0: ASSUMPTIONS TESTING FOR CORRELATION METHOD SELECTION ===\n")
+    assumptions_results <- tryCatch({
+      perform_assumptions_testing(data, numeric_vars, group_column)
+    }, error = function(e) {
+      cat("Warning: Assumptions testing failed:", e$message, "\n")
+      NULL
+    })
+    result$assumptions_analysis <- assumptions_results
+    
+    # Display correlation method recommendations based on assumptions
+    if (!is.null(assumptions_results)) {
+      display_correlation_method_recommendations(assumptions_results)
+    }
+  }
   
   # Step 1: Overall correlation analysis
   cat("\n=== STEP 1: OVERALL CORRELATION ANALYSIS ===\n")
@@ -318,20 +337,29 @@ perform_correlation_significance_tests <- function(data, variables, group_column
       
       if (nrow(pair_data) >= 3) {
         
-        # Determine best correlation method based on normality
-        method <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]])
+        # Determine best correlation method based on comprehensive normality testing
+        method_analysis <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]], var1, var2)
+        method <- method_analysis$method
         
-        # Perform correlation test
+        # Perform correlation test(s) based on enhanced method selection
         if (method == "pearson") {
           cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
+          secondary_test <- NULL
+        } else if (method == "both") {
+          # For borderline cases, calculate both correlations
+          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
+          secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+          method <- "pearson"  # Use Pearson as primary
         } else {
           cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+          secondary_test <- NULL
         }
         
         # Interpret correlation
         interpretation <- interpret_correlation_strength(cor_test$estimate)
         
-        overall_tests[[paste(var1, "vs", var2)]] <- list(
+        # Enhanced results with assumptions information
+        test_results <- list(
           variables = c(var1, var2),
           method = method,
           correlation = cor_test$estimate,
@@ -341,6 +369,8 @@ perform_correlation_significance_tests <- function(data, variables, group_column
           strength = interpretation$strength,
           direction = interpretation$direction,
           significance = ifelse(cor_test$p.value < 0.05, "significant", "not significant"),
+          method_selection_rationale = method_analysis$rationale,
+          assumptions_summary = method_analysis,
           interpretation = paste0(
             "There is a ", ifelse(cor_test$p.value < 0.05, "significant", "non-significant"),
             " ", interpretation$strength, " ", interpretation$direction,
@@ -348,6 +378,22 @@ perform_correlation_significance_tests <- function(data, variables, group_column
             ", p = ", format.pval(cor_test$p.value, digits = 3), ")"
           )
         )
+        
+        # Add secondary test results for borderline cases
+        if (!is.null(secondary_test)) {
+          secondary_interpretation <- interpret_correlation_strength(secondary_test$estimate)
+          test_results$secondary_method <- "spearman"
+          test_results$secondary_correlation <- secondary_test$estimate
+          test_results$secondary_p_value <- secondary_test$p.value
+          test_results$secondary_interpretation <- paste0(
+            "Spearman correlation (non-parametric): r = ", round(secondary_test$estimate, 3),
+            ", p = ", format.pval(secondary_test$p.value, digits = 3),
+            " (", secondary_interpretation$strength, " ", secondary_interpretation$direction, ")"
+          )
+          test_results$borderline_note <- "Both Pearson and Spearman correlations calculated due to borderline normality"
+        }
+        
+        overall_tests[[paste(var1, "vs", var2)]] <- test_results
       }
     }
   }
@@ -371,24 +417,46 @@ perform_correlation_significance_tests <- function(data, variables, group_column
           pair_data <- group_data[!is.na(group_data[[var1]]) & !is.na(group_data[[var2]]), c(var1, var2)]
           
           if (nrow(pair_data) >= 3) {
-            method <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]])
+            method_analysis <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]], var1, var2)
+            method <- method_analysis$method
             
+            # Handle enhanced method selection
             if (method == "pearson") {
               cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
+              secondary_test <- NULL
+            } else if (method == "both") {
+              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
+              secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+              method <- "pearson"  # Use Pearson as primary
             } else {
               cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+              secondary_test <- NULL
             }
             
             interpretation <- interpret_correlation_strength(cor_test$estimate)
             
-            group_tests[[as.character(group)]][[paste(var1, "vs", var2)]] <- list(
+            group_result <- list(
               correlation = cor_test$estimate,
               p_value = cor_test$p.value,
               method = method,
               strength = interpretation$strength,
               direction = interpretation$direction,
-              n = nrow(pair_data)
+              n = nrow(pair_data),
+              method_rationale = method_analysis$rationale,
+              assumptions = method_analysis
             )
+            
+            # Add secondary results for borderline cases
+            if (!is.null(secondary_test)) {
+              secondary_interpretation <- interpret_correlation_strength(secondary_test$estimate)
+              group_result$secondary_method <- "spearman"
+              group_result$secondary_correlation <- secondary_test$estimate
+              group_result$secondary_p_value <- secondary_test$p.value
+              group_result$secondary_strength <- secondary_interpretation$strength
+              group_result$secondary_direction <- secondary_interpretation$direction
+            }
+            
+            group_tests[[as.character(group)]][[paste(var1, "vs", var2)]] <- group_result
           }
         }
       }
@@ -401,8 +469,8 @@ perform_correlation_significance_tests <- function(data, variables, group_column
   ))
 }
 
-# Determine appropriate correlation method based on data characteristics
-determine_correlation_method <- function(x, y) {
+# Enhanced correlation method determination using assumptions dashboard
+determine_correlation_method <- function(x, y, var1_name = "Variable1", var2_name = "Variable2") {
   
   # Remove missing values
   complete_data <- complete.cases(x, y)
@@ -410,32 +478,60 @@ determine_correlation_method <- function(x, y) {
   y_clean <- y[complete_data]
   
   if (length(x_clean) < 3) {
-    return("spearman")  # Default to non-parametric if insufficient data
+    return(list(
+      method = "spearman",
+      rationale = "Insufficient data - defaulting to non-parametric",
+      x_assumptions = NULL,
+      y_assumptions = NULL
+    ))
   }
   
-  # Test normality for both variables
-  if (length(x_clean) >= 3 && length(x_clean) <= 50) {
-    # Use Shapiro-Wilk for small samples
-    x_normal <- shapiro.test(x_clean)$p.value > 0.05
-    y_normal <- shapiro.test(y_clean)$p.value > 0.05
-  } else if (length(x_clean) > 50) {
-    # Use Kolmogorov-Smirnov for larger samples
-    x_normal <- ks.test(x_clean, "pnorm", mean(x_clean), sd(x_clean))$p.value > 0.05
-    y_normal <- ks.test(y_clean, "pnorm", mean(y_clean), sd(y_clean))$p.value > 0.05
+  # Use assumptions dashboard functions for comprehensive normality testing
+  x_normality <- perform_optimal_normality_test(x_clean)
+  y_normality <- perform_optimal_normality_test(y_clean)
+  
+  # Enhanced decision logic with borderline handling
+  x_normal <- x_normality$normal
+  y_normal <- y_normality$normal
+  x_borderline <- x_normality$borderline
+  y_borderline <- y_normality$borderline
+  
+  # Statistical Decision Logic with Borderline Handling:
+  if (x_normal && y_normal && !x_borderline && !y_borderline) {
+    method <- "pearson"
+    rationale <- "Both variables clearly normal - parametric correlation appropriate"
+  } else if (x_normal && y_normal && (x_borderline || y_borderline)) {
+    method <- "both"  # Special flag for borderline cases
+    rationale <- "Both variables normal but with borderline cases - recommend both Pearson and Spearman"
+  } else if ((x_normal || y_normal) && !(x_borderline && y_borderline)) {
+    method <- "spearman"
+    rationale <- "Mixed normality - non-parametric correlation more robust"
   } else {
-    # Too few observations for reliable normality testing
-    return("spearman")
+    method <- "spearman"
+    rationale <- "Non-normal distribution(s) detected - non-parametric correlation required"
   }
   
-  # Use Pearson if both variables are normal, otherwise Spearman
-  # Statistical Decision Rationale:
-  # Pearson correlation: Assumes bivariate normality, measures linear relationships
-  # Spearman correlation: Non-parametric, measures monotonic relationships, robust to outliers
-  if (x_normal && y_normal) {
-    return("pearson")  # Both variables normal → parametric test appropriate
-  } else {
-    return("spearman")  # At least one variable non-normal → non-parametric test required
-  }
+  return(list(
+    method = method,
+    rationale = rationale,
+    x_assumptions = list(
+      variable = var1_name,
+      normal = x_normal,
+      borderline = x_borderline,
+      test = x_normality$test,
+      p_value = x_normality$p_value,
+      interpretation = x_normality$interpretation
+    ),
+    y_assumptions = list(
+      variable = var2_name,
+      normal = y_normal,
+      borderline = y_borderline,
+      test = y_normality$test,
+      p_value = y_normality$p_value,
+      interpretation = y_normality$interpretation
+    ),
+    n_observations = length(x_clean)
+  ))
 }
 
 # Interpret correlation strength and direction
@@ -1007,15 +1103,37 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
 }
 
 # Convenience function for quick correlation analysis with report
-quick_correlation_analysis <- function(data, group_column = NULL, variables = NULL, generate_report = TRUE) {
+quick_correlation_analysis <- function(data, group_column = NULL, variables = NULL, generate_report = TRUE, 
+                                     check_assumptions = TRUE) {
   
-  # Run correlation analysis
-  result <- perform_correlation_analysis(data, group_column, variables, include_plots = TRUE)
+  # Run correlation analysis with enhanced assumptions testing
+  result <- perform_correlation_analysis(data, group_column, variables, include_plots = TRUE, 
+                                       check_assumptions = check_assumptions)
   
   # Generate report if requested
   if (generate_report) {
     report_file <- quick_report(result)
     cat("Correlation analysis report generated:", report_file, "\n")
+    
+    # Display quick summary of assumptions if checked
+    if (check_assumptions && !is.null(result$assumptions_analysis)) {
+      cat("\n=== QUICK ASSUMPTIONS SUMMARY ===\n")
+      assumptions_summary <- result$assumptions_analysis$assumptions_summary
+      
+      if (!is.null(assumptions_summary)) {
+        normal_count <- sum(assumptions_summary$Overall_Normal, na.rm = TRUE)
+        total_vars <- nrow(assumptions_summary)
+        borderline_count <- sum(assumptions_summary$Borderline, na.rm = TRUE)
+        
+        cat("Variables tested:", total_vars, "\n")
+        cat("Normal distributions:", normal_count, "/", total_vars, "\n")
+        if (borderline_count > 0) {
+          cat("⚠️  Borderline normality cases:", borderline_count, "\n")
+        }
+        cat("See result$assumptions_analysis for detailed normality results.\n")
+      }
+    }
+    
     return(list(analysis_result = result, report_file = report_file))
   }
   
@@ -1346,4 +1464,70 @@ calculate_partial_correlations_for_group <- function(data, variables, group_colu
                            " (", sum(partial_formatted_table$significant_FDR, na.rm = TRUE), 
                            " significant after FDR correction)")
   ))
+}
+
+# Display correlation method recommendations based on assumptions testing
+display_correlation_method_recommendations <- function(assumptions_results) {
+  
+  if (is.null(assumptions_results$assumptions_summary)) {
+    return()
+  }
+  
+  summary_table <- assumptions_results$assumptions_summary
+  
+  cat("\n--- CORRELATION METHOD RECOMMENDATIONS ---\n")
+  
+  # Count method recommendations
+  pearson_count <- 0
+  spearman_count <- 0
+  borderline_count <- 0
+  
+  method_recommendations <- list()
+  
+  for (i in 1:nrow(summary_table)) {
+    var <- summary_table$Variable[i]
+    normal <- summary_table$Overall_Normal[i]
+    borderline <- summary_table$Borderline[i]
+    
+    if (normal && !borderline) {
+      method_recommendations[[var]] <- "Pearson (parametric)"
+      pearson_count <- pearson_count + 1
+    } else if (normal && borderline) {
+      method_recommendations[[var]] <- "Both Pearson & Spearman (borderline normality)"
+      borderline_count <- borderline_count + 1
+    } else {
+      method_recommendations[[var]] <- "Spearman (non-parametric)"
+      spearman_count <- spearman_count + 1
+    }
+  }
+  
+  # Display variable-specific recommendations
+  cat("Variable-specific normality assessment:\n")
+  for (var in names(method_recommendations)) {
+    cat("• ", var, ":", method_recommendations[[var]], "\n")
+  }
+  
+  # Overall strategy recommendation
+  cat("\n--- OVERALL CORRELATION STRATEGY ---\n")
+  
+  total_vars <- nrow(summary_table)
+  normal_percentage <- (pearson_count / total_vars) * 100
+  
+  if (normal_percentage >= 80) {
+    strategy <- "Primarily PEARSON correlations (most variables normal)"
+  } else if (normal_percentage >= 50) {
+    strategy <- "MIXED approach (both Pearson and Spearman as appropriate)"
+  } else {
+    strategy <- "Primarily SPEARMAN correlations (many non-normal variables)"
+  }
+  
+  cat("🎯 Recommended Strategy:", strategy, "\n")
+  cat("   - Variables suitable for Pearson:", pearson_count, "/", total_vars, "\n")
+  cat("   - Variables requiring Spearman:", spearman_count, "/", total_vars, "\n")
+  if (borderline_count > 0) {
+    cat("   - Variables with borderline normality:", borderline_count, "/", total_vars, "\n")
+    cat("   ⚠️  Borderline cases will use BOTH methods for comparison\n")
+  }
+  
+  cat("\n")
 } 

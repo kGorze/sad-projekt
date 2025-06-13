@@ -1,5 +1,11 @@
  # Residual transformation and robust regression
 
+#box-cox transformation
+
+
+
+
+
 # Library dependencies
 if (!require(MASS, quietly = TRUE)) {
   install.packages("MASS", repos = "https://cran.r-project.org")
@@ -116,37 +122,23 @@ fit_and_check_residuals <- function(data, variable, group_column, transformation
     clean_data$transformed_var <- sqrt(clean_data[[variable]])
     transformation_formula <- "sqrt"
   } else if (transformation == "boxcox") {
-    # Box-Cox transformation
-    tryCatch({
-      if (any(clean_data[[variable]] <= 0, na.rm = TRUE)) {
-        # Add constant to make all values positive
-        shift_value <- abs(min(clean_data[[variable]], na.rm = TRUE)) + 1
-        temp_var <- clean_data[[variable]] + shift_value
-      } else {
-        temp_var <- clean_data[[variable]]
-        shift_value <- 0
-      }
-      
-      # Find optimal lambda
-      bc_model <- lm(temp_var ~ as.factor(clean_data[[group_column]]))
-      bc_result <- boxcox(bc_model, plotit = FALSE)
-      optimal_lambda <- bc_result$x[which.max(bc_result$y)]
-      
-      # Apply Box-Cox transformation
-      if (abs(optimal_lambda) < 1e-6) {
-        clean_data$transformed_var <- log(temp_var)
-        transformation_formula <- paste0("log(", variable, " + ", shift_value, ")")
-      } else {
-        clean_data$transformed_var <- (temp_var^optimal_lambda - 1) / optimal_lambda
-        transformation_formula <- paste0("boxcox(", variable, ", λ=", round(optimal_lambda, 3), ")")
-      }
-      
-    }, error = function(e) {
+    # Use centralized Box-Cox transformation
+    source("modules/utils/statistical_helpers.R")
+    
+    # Apply Box-Cox transformation with group factor
+    group_factor <- as.factor(clean_data[[group_column]])
+    boxcox_result <- apply_boxcox_transformation(clean_data[[variable]], group_factor)
+    
+    if (!boxcox_result$success) {
       return(list(
-        error = paste("Box-Cox transformation failed:", e$message),
+        error = boxcox_result$error,
         residuals_normal = FALSE
       ))
-    })
+    }
+    
+    # Use transformed data
+    clean_data$transformed_var <- boxcox_result$transformed_data
+    transformation_formula <- boxcox_result$transformation_name
   } else {
     # Original variable
     clean_data$transformed_var <- clean_data[[variable]]

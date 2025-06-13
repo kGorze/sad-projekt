@@ -1,0 +1,67 @@
+================================================================================
+R STATISTICAL ANALYSIS SESSION LOG
+Session started: 2025-06-13 20:01:38.600701
+R Version: R version 4.4.3 (2025-02-28 ucrt)
+Working directory: C:/Users/konrad_guest/Documents/RProject/sad-projekt
+Command line args: --comparative_analysis --report
+Log level: INFO
+================================================================================
+
+[2025-06-13 20:01:38] [INFO] STEP: DATA LOADING - Loading data from: dane.csv
+[2025-06-13 20:01:39] [INFO] STEP: DATA PREPARATION COMPLETED - Dataset loaded with 75 rows and 11 columns
+[2025-06-13 20:01:40] [INFO] STEP: COMPARATIVE ANALYSIS - Starting comparative analysis between groups
+[2025-06-13 20:01:42] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:43] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:43] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:44] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:44] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:45] [R_WARNING] Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+[2025-06-13 20:01:45] [R_WARNING] Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+[2025-06-13 20:01:45] [R_WARNING] Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+[2025-06-13 20:01:55] [INFO] STEP: COMPARATIVE ANALYSIS COMPLETED - Group comparisons successfully completed
+[2025-06-13 20:01:55] [INFO] STEP: HTML REPORT GENERATION - Starting HTML report generation
+[2025-06-13 20:01:56] [INFO] STEP: HTML REPORT COMPLETED - Report saved to: comparative_analysis_report_20250613_200156.html
+
+================================================================================
+SESSION SUMMARY WITH DEBUGGING INFORMATION
+================================================================================
+Session duration: 0.3 minutes
+Total analysis steps: 6
+Total custom warnings: 0
+Total custom errors: 0
+Total R warnings captured: 8
+Total console output entries: 0
+Session ended: 2025-06-13 20:01:56.82842
+
+ANALYSIS STEPS COMPLETED:
+  1. DATA LOADING (20:01:38)
+  2. DATA PREPARATION COMPLETED (20:01:39)
+  3. COMPARATIVE ANALYSIS (20:01:40)
+  4. COMPARATIVE ANALYSIS COMPLETED (20:01:55)
+  5. HTML REPORT GENERATION (20:01:55)
+  6. HTML REPORT COMPLETED (20:01:56)
+
+R WARNINGS ENCOUNTERED (DEBUGGING INFO):
+  6x: Computation failed in `stat_signif()`.
+Caused by error in `Summary.factor()`:
+! 'min' not meaningful for factors
+  2x: Using `size` aesthetic for lines was deprecated in ggplot2 3.4.0.
+ℹ Please use `linewidth` instead.
+
+DEBUGGING RECOMMENDATIONS:
+
+================================================================================

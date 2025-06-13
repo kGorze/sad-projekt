@@ -18,7 +18,8 @@ source("modules/analysis/assumptions_dashboard.R")
 
 # Main function: Enhanced inferential analysis with covariates
 perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", include_plots = TRUE, 
-                                                include_interactions = "auto") {
+                                                include_interactions = "auto", 
+                                                check_assumptions = TRUE) {
   
   # Create analysis result object
   result <- create_analysis_result("enhanced_inferential")
@@ -79,6 +80,23 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   cat("- Analyzing", length(dependent_vars), "dependent variables\n")
   cat("- Identified", length(potential_covariates), "potential covariates:", paste(potential_covariates, collapse = ", "), "\n")
   cat("- Dependent variables:", paste(dependent_vars, collapse = ", "), "\n")
+  
+  # NOWY KROK: Comprehensive Assumptions Testing
+  if (check_assumptions) {
+    cat("\n=== STEP 0: COMPREHENSIVE ASSUMPTIONS TESTING ===\n")
+    assumptions_results <- tryCatch({
+      perform_assumptions_testing(centered_data, dependent_vars, group_column)
+    }, error = function(e) {
+      cat("Warning: Assumptions testing failed:", e$message, "\n")
+      NULL
+    })
+    result$assumptions_analysis <- assumptions_results
+    
+    # Display key assumption violations and recommendations
+    if (!is.null(assumptions_results)) {
+      display_assumption_summary(assumptions_results)
+    }
+  }
   
   # Step 1: Multiple Linear Regression with Covariates
   cat("\n=== STEP 1: MULTIPLE LINEAR REGRESSION WITH COVARIATES ===\n")
@@ -536,16 +554,13 @@ perform_model_comparison <- function(data, dependent_vars, group_column, covaria
       if (length(covariates) > 0) {
         models$covariates_only <- lm(as.formula(paste(var, "~", paste(covariates, collapse = " + "))), data = clean_data)
         
-        # Model 4: Group + Covariates (additive)
-        models$additive <- lm(as.formula(paste(var, "~", group_column, "+", paste(covariates, collapse = " + "))), data = clean_data)
-        
-        # Model 5: Group + Covariates + Interactions (if any significant)
+        # Model 4: Group + Covariates + Interactions (if any significant)
         # Check if any interactions are significant
         significant_interactions <- c()
         for (covariate in covariates) {
           interaction_formula <- as.formula(paste(var, "~", group_column, "*", covariate))
           interaction_model <- lm(interaction_formula, data = clean_data)
-          interaction_anova <- anova(models$additive, interaction_model)
+          interaction_anova <- anova(models$covariates_only, interaction_model)
           if (interaction_anova$`Pr(>F)`[2] < 0.1) {  # Use liberal threshold for model inclusion
             significant_interactions <- c(significant_interactions, paste(group_column, covariate, sep = ":"))
           }
@@ -848,18 +863,104 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
 
 # Convenience function for quick enhanced inferential analysis
 quick_enhanced_inferential <- function(data, group_column = "grupa", generate_report = TRUE, 
-                                     include_interactions = "auto") {
+                                     include_interactions = "auto", check_assumptions = TRUE) {
   
-  # Run enhanced inferential analysis
+  # Run enhanced inferential analysis with assumptions testing
   result <- perform_enhanced_inferential_analysis(data, group_column, include_plots = TRUE, 
-                                                 include_interactions = include_interactions)
+                                                 include_interactions = include_interactions,
+                                                 check_assumptions = check_assumptions)
   
   # Generate report if requested
   if (generate_report) {
     # Note: Would need to create specific report template for this analysis
     cat("Enhanced inferential analysis completed. Results stored in object.\n")
     cat("Use generate_enhanced_inferential_report(result) to create HTML report.\n")
+    
+    # Display quick summary of assumptions if checked
+    if (check_assumptions && !is.null(result$assumptions_analysis)) {
+      cat("\n=== QUICK ASSUMPTIONS SUMMARY ===\n")
+      assumptions_summary <- result$assumptions_analysis$assumptions_summary
+      
+      if (!is.null(assumptions_summary)) {
+        normal_count <- sum(assumptions_summary$Overall_Normal, na.rm = TRUE)
+        total_vars <- nrow(assumptions_summary)
+        borderline_count <- sum(assumptions_summary$Borderline, na.rm = TRUE)
+        
+        cat("Variables tested:", total_vars, "\n")
+        cat("Normal distributions:", normal_count, "/", total_vars, "\n")
+        if (borderline_count > 0) {
+          cat("⚠️  Borderline cases:", borderline_count, "\n")
+        }
+        cat("See result$assumptions_analysis for detailed results.\n")
+      }
+    }
   }
   
   return(result)
+}
+
+# NOWA FUNKCJA: Display assumption summary with recommendations
+display_assumption_summary <- function(assumptions_results) {
+  
+  if (is.null(assumptions_results$assumptions_summary)) {
+    return()
+  }
+  
+  summary_table <- assumptions_results$assumptions_summary
+  
+  cat("\n--- ASSUMPTIONS SUMMARY ---\n")
+  
+  # Check for assumption violations
+  violations <- list()
+  borderline_cases <- list()
+  
+  for (i in 1:nrow(summary_table)) {
+    var <- summary_table$Variable[i]
+    
+    # Check normality violations
+    if (!summary_table$Overall_Normal[i]) {
+      violations[[var]] <- c(violations[[var]], "Non-normal distribution")
+    }
+    
+    # Check borderline normality (Task H improvement)
+    if (summary_table$Borderline[i]) {
+      borderline_cases[[var]] <- c(borderline_cases[[var]], "Borderline normality")
+    }
+    
+    # Check homogeneity violations
+    if (!grepl("homogeneous|N/A", summary_table$Homogeneity[i], ignore.case = TRUE)) {
+      violations[[var]] <- c(violations[[var]], "Heterogeneous variances")
+    }
+  }
+  
+  # Display violations
+  if (length(violations) > 0) {
+    cat("⚠️  ASSUMPTION VIOLATIONS DETECTED:\n")
+    for (var in names(violations)) {
+      cat("  ", var, ":", paste(violations[[var]], collapse = ", "), "\n")
+    }
+  }
+  
+  # Display borderline cases
+  if (length(borderline_cases) > 0) {
+    cat("🔶 BORDERLINE CASES (require attention):\n")
+    for (var in names(borderline_cases)) {
+      cat("  ", var, ":", paste(borderline_cases[[var]], collapse = ", "), "\n")
+    }
+  }
+  
+  # Display test recommendations if available
+  if (!is.null(assumptions_results$test_recommendations)) {
+    cat("\n--- RECOMMENDED STATISTICAL TESTS ---\n")
+    
+    for (var in names(assumptions_results$test_recommendations)) {
+      rec <- assumptions_results$test_recommendations[[var]]
+      cat("• ", var, ":", rec$primary_test, "\n")
+      if (rec$assumption_flag %in% c("BORDERLINE_NORMAL", "BORDERLINE_NON_NORMAL")) {
+        cat("  ⚡ Action: ", rec$borderline_action, "\n")
+      }
+    }
+  }
+  
+  cat("\n")
 }

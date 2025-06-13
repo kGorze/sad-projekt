@@ -1,5 +1,9 @@
 # Statistical comparisons between independent groups
 # Supports multiple groups (>2) with appropriate statistical tests
+# 
+# UPDATED: Now uses centralized assumptions_dashboard.R for all assumption testing
+# REMOVED: Duplicate functions (assess_distributions, test_normality_*, assess_homogeneity, etc.)
+# USES: perform_assumptions_testing() from assumptions_dashboard.R for comprehensive testing
 
 
 # Package dependencies
@@ -218,135 +222,13 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
   return(result)
 }
 
-# Assess distributions for all variables
-assess_distributions <- function(data, variables, group_column) {
-  
-  distribution_results <- list()
-  
-  for (var in variables) {
-    cat("Analyzing distribution of", var, "...\n")
-    
-    var_results <- list(
-      variable = var,
-      overall_normality = test_normality_overall(data[[var]]),
-      group_normality = test_normality_by_group(data, var, group_column),
-      descriptive_stats = calculate_distribution_stats(data, var, group_column)
-    )
-    
-    distribution_results[[var]] <- var_results
-  }
-  
-  return(distribution_results)
-}
+# REMOVED: assess_distributions() - replaced by assumptions_dashboard.R perform_assumptions_testing()
 
-# Test normality for overall variable
-test_normality_overall <- function(variable) {
-  
-  # Remove missing values
-  clean_var <- variable[!is.na(variable)]
-  n <- length(clean_var)
-  
-  if (n < 3) {
-    return(list(
-      test = "insufficient_data",
-      p_value = NA,
-      normal = FALSE,
-      interpretation = "Insufficient data for normality testing"
-    ))
-  }
-  
-  # Choose appropriate test based on sample size
-  if (n <= 50) {
-    # Shapiro-Wilk test for small samples
-    test_result <- shapiro.test(clean_var)
-    test_name <- "Shapiro-Wilk"
-  } else {
-    # Anderson-Darling test for larger samples (more robust than KS for ties)
-    tryCatch({
-      if (requireNamespace("nortest", quietly = TRUE)) {
-        library(nortest)
-        test_result <- ad.test(clean_var)
-        test_name <- "Anderson-Darling"
-      } else {
-        # Fallback to Shapiro-Wilk for larger samples (subsampling if needed)
-        if (n > 5000) {
-          sample_indices <- sample(1:n, 5000)
-          test_result <- shapiro.test(clean_var[sample_indices])
-          test_name <- "Shapiro-Wilk (subsample)"
-        } else {
-          test_result <- shapiro.test(clean_var)
-          test_name <- "Shapiro-Wilk"
-        }
-      }
-    }, error = function(e) {
-      # Final fallback to Shapiro-Wilk
-      test_result <- shapiro.test(clean_var)
-      test_name <- "Shapiro-Wilk"
-    })
-  }
-  
-  is_normal <- test_result$p.value > 0.05
-  
-  interpretation <- ifelse(is_normal, 
-                          paste("Data appears normally distributed (", test_name, " p =", 
-                                format.pval(test_result$p.value, digits = 3), ")"),
-                          paste("Data deviates from normal distribution (", test_name, " p =", 
-                                format.pval(test_result$p.value, digits = 3), ")"))
-  
-  return(list(
-    test = test_name,
-    statistic = test_result$statistic,
-    p_value = test_result$p.value,
-    normal = is_normal,
-    interpretation = interpretation
-  ))
-}
+# REMOVED: test_normality_overall() - replaced by assumptions_dashboard.R perform_optimal_normality_test()
 
-# Test normality by group
-test_normality_by_group <- function(data, variable, group_column) {
-  
-  groups <- unique(data[[group_column]])
-  groups <- groups[!is.na(groups)]
-  
-  group_results <- list()
-  
-  for (group in groups) {
-    group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), ]
-    group_var <- group_data[[variable]]
-    
-    group_results[[as.character(group)]] <- test_normality_overall(group_var)
-  }
-  
-  return(group_results)
-}
+# REMOVED: test_normality_by_group() - replaced by assumptions_dashboard.R group testing
 
-# Calculate descriptive statistics for distribution assessment
-calculate_distribution_stats <- function(data, variable, group_column) {
-  
-  groups <- unique(data[[group_column]])
-  groups <- groups[!is.na(groups)]
-  
-  stats_list <- list()
-  
-  for (group in groups) {
-    group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), ]
-    group_var <- group_data[[variable]]
-    group_var <- group_var[!is.na(group_var)]
-    
-    if (length(group_var) > 0) {
-      stats_list[[as.character(group)]] <- list(
-        n = length(group_var),
-        mean = mean(group_var),
-        median = median(group_var),
-        sd = sd(group_var),
-        skewness = calculate_skewness(group_var),
-        kurtosis = calculate_kurtosis(group_var)
-      )
-    }
-  }
-  
-  return(stats_list)
-}
+# REMOVED: calculate_distribution_stats() - replaced by assumptions_dashboard.R descriptive measures
 
 # Updated statistical comparisons using centralized test recommendations
 perform_statistical_comparisons_updated <- function(data, numeric_vars, categorical_vars, group_column, test_recommendations) {
@@ -487,149 +369,11 @@ perform_anova_with_sensitivity_check <- function(data, variable, group_column) {
   ))
 }
 
-# Assess homogeneity of variances
-assess_homogeneity <- function(data, variables, group_column) {
-  
-  homogeneity_results <- list()
-  
-  for (var in variables) {
-    cat("Testing homogeneity of variances for", var, "...\n")
-    
-    # Prepare data for testing
-    clean_data <- data[!is.na(data[[var]]) & !is.na(data[[group_column]]), ]
-    
-    if (nrow(clean_data) < 6) {
-      homogeneity_results[[var]] <- list(
-        variable = var,
-        test = "insufficient_data",
-        p_value = NA,
-        homogeneous = FALSE,
-        interpretation = "Insufficient data for homogeneity testing"
-      )
-      next
-    }
-    
-    # Levene's test (more robust than Bartlett's test)
-    tryCatch({
-      levene_result <- leveneTest(clean_data[[var]], clean_data[[group_column]])
-      
-      is_homogeneous <- levene_result$`Pr(>F)`[1] > 0.05
-      
-      interpretation <- ifelse(is_homogeneous,
-                              paste("Variances appear homogeneous (Levene's test p =", 
-                                    format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"),
-                              paste("Variances are heterogeneous (Levene's test p =", 
-                                    format.pval(levene_result$`Pr(>F)`[1], digits = 3), ")"))
-      
-      homogeneity_results[[var]] <- list(
-        variable = var,
-        test = "Levene",
-        statistic = levene_result$`F value`[1],
-        p_value = levene_result$`Pr(>F)`[1],
-        homogeneous = is_homogeneous,
-        interpretation = interpretation
-      )
-      
-    }, error = function(e) {
-      homogeneity_results[[var]] <- list(
-        variable = var,
-        test = "error",
-        p_value = NA,
-        homogeneous = FALSE,
-        interpretation = paste("Error in homogeneity testing:", e$message)
-      )
-    })
-  }
-  
-  return(homogeneity_results)
-}
+# REMOVED: assess_homogeneity() - replaced by assumptions_dashboard.R homogeneity testing
 
-# Perform statistical comparisons based on assumptions
-perform_statistical_comparisons <- function(data, numeric_vars, categorical_vars, group_column, 
-                                          distribution_results, homogeneity_results) {
-  
-  test_results <- list()
-  recommendations <- list()
-  
-  # Test continuous variables
-  for (var in numeric_vars) {
-    cat("Performing comparison for", var, "...\n")
-    
-    # Get assumption test results
-    dist_result <- distribution_results[[var]]
-    homo_result <- homogeneity_results[[var]]
-    
-    # Determine appropriate test
-    test_choice <- determine_appropriate_test(dist_result, homo_result)
-    recommendations[[var]] <- test_choice
-    
-    # Perform the chosen test
-    if (test_choice$test_type == "anova") {
-      test_result <- perform_anova(data, var, group_column)
-    } else if (test_choice$test_type == "welch_anova") {
-      test_result <- perform_welch_anova(data, var, group_column)
-    } else if (test_choice$test_type == "kruskal_wallis") {
-      test_result <- perform_kruskal_wallis(data, var, group_column)
-    } else {
-      test_result <- list(
-        variable = var,
-        test_name = "No appropriate test",
-        p_value = NA,
-        interpretation = "Could not determine appropriate test"
-      )
-    }
-    
-    test_results[[var]] <- test_result
-  }
-  
-  # Test categorical variables
-  for (var in categorical_vars) {
-    cat("Performing chi-square test for", var, "...\n")
-    test_result <- perform_chi_square(data, var, group_column)
-    test_results[[var]] <- test_result
-    
-    recommendations[[var]] <- list(
-      test_type = "chi_square",
-      reasoning = "Categorical variable - chi-square test of independence"
-    )
-  }
-  
-  return(list(test_results = test_results, recommendations = recommendations))
-}
+# REMOVED: perform_statistical_comparisons() - replaced by perform_statistical_comparisons_updated() using assumptions_dashboard.R
 
-# Determine appropriate statistical test
-determine_appropriate_test <- function(dist_result, homo_result) {
-  
-  # Check if we have valid results
-  if (is.null(dist_result) || is.null(homo_result)) {
-    return(list(
-      test_type = "kruskal_wallis",
-      reasoning = "Missing assumption data - using non-parametric test"
-    ))
-  }
-  
-  # Count how many groups have normal distributions
-  normal_groups <- sum(sapply(dist_result$group_normality, function(x) x$normal), na.rm = TRUE)
-  total_groups <- length(dist_result$group_normality)
-  
-  # Decision logic
-  if (normal_groups == total_groups && homo_result$homogeneous) {
-    return(list(
-      test_type = "anova",
-      reasoning = "All groups normal + homogeneous variances → One-way ANOVA"
-    ))
-  } else if (normal_groups == total_groups && !homo_result$homogeneous) {
-    return(list(
-      test_type = "welch_anova",
-      reasoning = "All groups normal + heterogeneous variances → Welch's ANOVA"
-    ))
-  } else {
-    return(list(
-      test_type = "kruskal_wallis",
-      reasoning = "Non-normal distributions → Kruskal-Wallis test"
-    ))
-  }
-}
+# REMOVED: determine_appropriate_test() - replaced by assumptions_dashboard.R test recommendations
 
 # Calculate confidence interval for eta-squared
 calculate_eta_squared_ci <- function(anova_result, eta_squared) {
@@ -1991,31 +1735,13 @@ apply_fixes_to_main_results <- function(main_results, residual_fixes, data, grou
                   transformed_data <- sqrt(data[[var_name]])
                 }
               } else if (final_rec$transformation == "boxcox") {
-                # Use Box-Cox transformation
-                if (requireNamespace("car", quietly = TRUE)) {
-                  library(car)
-                  bc_result <- powerTransform(data[[var_name]] ~ 1)
-                  lambda <- bc_result$lambda
-                  if (abs(lambda) < 0.01) {
-                    # Lambda ≈ 0, use log transformation
-                    min_val <- min(data[[var_name]], na.rm = TRUE)
-                    if (min_val <= 0) {
-                      transformed_data <- log(data[[var_name]] + abs(min_val) + 1)
-                    } else {
-                      transformed_data <- log(data[[var_name]])
-                    }
-                  } else {
-                    # Apply power transformation
-                    transformed_data <- (data[[var_name]]^lambda - 1) / lambda
-                  }
-                } else {
-                  # Fallback to log transformation
-                  min_val <- min(data[[var_name]], na.rm = TRUE)
-                  if (min_val <= 0) {
-                    transformed_data <- log(data[[var_name]] + abs(min_val) + 1)
-                  } else {
-                    transformed_data <- log(data[[var_name]])
-                  }
+                # Use centralized Box-Cox transformation
+                source("modules/utils/statistical_helpers.R")
+                boxcox_result <- apply_boxcox_transformation(data[[var_name]])
+                transformed_data <- boxcox_result$transformed_data
+                
+                if (!boxcox_result$success) {
+                  cat("    Warning: Box-Cox transformation failed for", var_name, ":", boxcox_result$error, "\n")
                 }
               }
               

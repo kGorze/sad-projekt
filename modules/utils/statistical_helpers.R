@@ -1,6 +1,15 @@
 # Statistical calculation utilities
 # Centralized location for commonly used statistical calculation functions
 # Eliminates duplication across multiple analysis modules
+#
+# INCLUDES: Box-Cox transformation functions (centralized from multiple modules)
+# USED BY: comparative_analysis.R, residual_transformation.R, and others
+#
+# ENHANCED BOX-COX IMPLEMENTATION:
+# - Lambda constrained to mathematically recommended range (-3, 3)
+# - Detailed lambda interpretation and display
+# - Validation and warning system for out-of-range values
+# - Based on mathematical research showing optimal lambda typically in (-3, 3)
 
 # Calculate skewness of a numeric vector
 calculate_skewness <- function(x) {
@@ -260,4 +269,176 @@ interpret_distribution_shape <- function(x) {
     skewness_interpretation = skew_interp,
     kurtosis_interpretation = kurt_interp
   ))
+}
+
+# Interpret lambda value for Box-Cox transformation
+interpret_lambda_value <- function(lambda) {
+  if (is.na(lambda)) {
+    return("Cannot determine - lambda is NA")
+  }
+  
+  # Common lambda values and their interpretations
+  if (abs(lambda - 2) < 0.1) {
+    return("Square transformation (λ ≈ 2)")
+  } else if (abs(lambda - 1) < 0.1) {
+    return("No transformation needed (λ ≈ 1)")
+  } else if (abs(lambda - 0.5) < 0.1) {
+    return("Square root transformation (λ ≈ 0.5)")
+  } else if (abs(lambda) < 0.1) {
+    return("Natural log transformation (λ ≈ 0)")
+  } else if (abs(lambda - (-0.5)) < 0.1) {
+    return("Inverse square root transformation (λ ≈ -0.5)")
+  } else if (abs(lambda - (-1)) < 0.1) {
+    return("Inverse transformation (λ ≈ -1)")
+  } else if (abs(lambda - (-2)) < 0.1) {
+    return("Inverse square transformation (λ ≈ -2)")
+  } else if (lambda > 1) {
+    return(paste0("Power transformation (λ = ", round(lambda, 3), ") - increases right skew"))
+  } else if (lambda > 0 && lambda < 1) {
+    return(paste0("Power transformation (λ = ", round(lambda, 3), ") - reduces right skew"))
+  } else if (lambda < 0) {
+    return(paste0("Inverse power transformation (λ = ", round(lambda, 3), ") - strong skew correction"))
+  } else {
+    return(paste0("Custom transformation (λ = ", round(lambda, 3), ")"))
+  }
+}
+
+# CENTRALIZED BOX-COX TRANSFORMATION FUNCTION
+apply_boxcox_transformation <- function(x, group_factor = NULL, return_lambda = FALSE) {
+  
+  # Input validation
+  if (length(x) < 3 || all(is.na(x))) {
+    return(list(
+      transformed_data = x,
+      lambda = NA,
+      success = FALSE,
+      error = "Insufficient data for Box-Cox transformation",
+      method = "Box-Cox"
+    ))
+  }
+  
+  # Remove missing values for calculation
+  x_clean <- x[!is.na(x)]
+  
+  # Handle non-positive values by shifting
+  shift_value <- 0
+  if (any(x_clean <= 0)) {
+    shift_value <- abs(min(x_clean)) + 1
+    x_shifted <- x_clean + shift_value
+    cat("  Box-Cox: Shifted data by", shift_value, "to handle non-positive values\n")
+  } else {
+    x_shifted <- x_clean
+  }
+  
+  # Attempt Box-Cox transformation
+  tryCatch({
+    # Load required package
+    if (!requireNamespace("car", quietly = TRUE)) {
+      return(list(
+        transformed_data = log(x_shifted),  # Fallback to log
+        lambda = 0,
+        success = TRUE,
+        error = "car package not available - used log transformation as fallback",
+        method = "Log (Box-Cox fallback)",
+        shift_value = shift_value
+      ))
+    }
+    
+    library(car)
+    
+    # Find optimal lambda using powerTransform with constrained range (-3, 3)
+    # Rationale: Mathematical research shows optimal lambda values typically fall within (-3, 3)
+    # This range covers most practical transformations and prevents extreme values
+    if (!is.null(group_factor)) {
+      # With grouping factor
+      temp_data <- data.frame(y = x_shifted, group = group_factor[!is.na(x)])
+      bc_result <- powerTransform(y ~ group, data = temp_data, lambda = c(-3, 3))
+    } else {
+      # Without grouping factor  
+      bc_result <- powerTransform(x_shifted ~ 1, lambda = c(-3, 3))
+    }
+    
+    optimal_lambda <- bc_result$lambda
+    
+    # Validate lambda is within expected range
+    if (!is.na(optimal_lambda) && (optimal_lambda < -3 || optimal_lambda > 3)) {
+      cat("  Warning: Lambda =", round(optimal_lambda, 3), "is outside recommended range (-3, 3)\n")
+      # Constrain to valid range
+      optimal_lambda <- max(-3, min(3, optimal_lambda))
+      cat("  Constrained lambda to:", round(optimal_lambda, 3), "\n")
+    }
+    
+    # Apply transformation based on lambda
+    if (abs(optimal_lambda) < 1e-6) {
+      # Lambda ≈ 0: use log transformation
+      transformed_values <- log(x_shifted)
+      transformation_name <- paste0("log(x", if(shift_value > 0) paste0(" + ", shift_value) else "", ")")
+    } else {
+      # Lambda ≠ 0: use power transformation
+      transformed_values <- (x_shifted^optimal_lambda - 1) / optimal_lambda
+      transformation_name <- paste0("Box-Cox(x", if(shift_value > 0) paste0(" + ", shift_value) else "", 
+                                   ", λ=", round(optimal_lambda, 3), ")")
+    }
+    
+    # Map back to original data structure (including NAs)
+    transformed_data <- rep(NA, length(x))
+    transformed_data[!is.na(x)] <- transformed_values
+    
+    result <- list(
+      transformed_data = transformed_data,
+      lambda = optimal_lambda,
+      success = TRUE,
+      error = NULL,
+      method = "Box-Cox",
+      transformation_name = transformation_name,
+      shift_value = shift_value,
+      original_range = range(x_clean),
+      transformed_range = range(transformed_values)
+    )
+    
+    # Return lambda if requested (for compatibility)
+    if (return_lambda) {
+      result$lambda_only <- optimal_lambda
+    }
+    
+    # Display detailed lambda information
+    cat("  Box-Cox transformation successful: λ =", round(optimal_lambda, 3), "\n")
+    
+    # Interpret lambda value
+    lambda_interpretation <- interpret_lambda_value(optimal_lambda)
+    cat("  Lambda interpretation:", lambda_interpretation, "\n")
+    
+    # Add lambda interpretation to result
+    result$lambda_interpretation <- lambda_interpretation
+    
+    return(result)
+    
+  }, error = function(e) {
+    # Fallback to log transformation
+    log_transformed <- log(x_shifted)
+    transformed_data <- rep(NA, length(x))
+    transformed_data[!is.na(x)] <- log_transformed
+    
+    return(list(
+      transformed_data = transformed_data,
+      lambda = 0,
+      success = TRUE,
+      error = paste("Box-Cox failed, used log fallback:", e$message),
+      method = "Log (Box-Cox fallback)",
+      transformation_name = paste0("log(x", if(shift_value > 0) paste0(" + ", shift_value) else "", ")"),
+      shift_value = shift_value
+    ))
+  })
+}
+
+# CONVENIENCE FUNCTION: Apply Box-Cox and return only transformed data
+boxcox_transform <- function(x, group_factor = NULL) {
+  result <- apply_boxcox_transformation(x, group_factor)
+  return(result$transformed_data)
+}
+
+# CONVENIENCE FUNCTION: Get optimal lambda only
+get_boxcox_lambda <- function(x, group_factor = NULL) {
+  result <- apply_boxcox_transformation(x, group_factor, return_lambda = TRUE)
+  return(result$lambda)
 } 
