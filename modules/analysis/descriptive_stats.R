@@ -1,8 +1,8 @@
 # Descriptive statistics and group characteristics
 # Supports independent groups analysis for medical data
 
-
-# Reporting utilities
+# Load required modules
+source("modules/utils/statistical_helpers.R")
 source("modules/reporting/export_results.R")
 
 # Centralized modules are loaded in main.R
@@ -426,10 +426,10 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
         sd_val <- sd(var_data)
         
         p <- ggplot(data, aes(x = .data[[var]])) +
-          geom_histogram(aes(y = ..density..), bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
-          geom_density(color = "red", size = 1.2, alpha = 0.8) +
+          geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
+          geom_density(color = "red", linewidth = 1.2, alpha = 0.8) +
           stat_function(fun = dnorm, args = list(mean = mean_val, sd = sd_val), 
-                       color = "blue", linetype = "dashed", size = 1) +
+                       color = "blue", linetype = "dashed", linewidth = 1) +
           labs(title = paste("Distribution Analysis of", var),
                subtitle = paste("Red: Actual density, Blue dashed: Normal distribution"),
                x = var, y = "Density") +
@@ -439,8 +439,8 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
         
         if (!is.null(group_column)) {
           p <- ggplot(data, aes(x = .data[[var]], fill = .data[[group_column]])) +
-            geom_histogram(aes(y = ..density..), bins = 30, alpha = 0.7, position = "identity") +
-            geom_density(aes(color = .data[[group_column]]), alpha = 0.8, size = 1.2) +
+            geom_histogram(aes(y = after_stat(density)), bins = 30, alpha = 0.7, position = "identity") +
+            geom_density(aes(color = .data[[group_column]]), alpha = 0.8, linewidth = 1.2) +
             facet_wrap(as.formula(paste("~", group_column))) +
             labs(title = paste("Distribution Analysis of", var, "by", group_column),
                  subtitle = "Histograms with density overlays by group",
@@ -674,29 +674,7 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
   ))
 }
 
-# Skewness calculation
-calculate_skewness <- function(x) {
-  x <- x[!is.na(x)]
-  n <- length(x)
-  if (n < 3) return(NA)
-  
-  mean_x <- mean(x)
-  sd_x <- sd(x)
-  skew <- sum((x - mean_x)^3) / ((n - 1) * sd_x^3)
-  return(skew)
-}
-
-# Kurtosis calculation
-calculate_kurtosis <- function(x) {
-  x <- x[!is.na(x)]
-  n <- length(x)
-  if (n < 4) return(NA)
-  
-  mean_x <- mean(x)
-  sd_x <- sd(x)
-  kurt <- sum((x - mean_x)^4) / ((n - 1) * sd_x^4) - 3
-  return(kurt)
-}
+# Note: calculate_skewness and calculate_kurtosis are now sourced from statistical_helpers.R
 
 # Convenience function for quick descriptive analysis with report
 quick_descriptive_analysis <- function(data, group_column = NULL, generate_report = TRUE) {

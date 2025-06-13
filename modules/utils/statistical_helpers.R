@@ -42,37 +42,9 @@ calculate_kurtosis <- function(x) {
   return(kurt)
 }
 
-# Calculate coefficient of variation (CV) in percentage
-calculate_cv <- function(x) {
-  if (length(x) < 2 || all(is.na(x))) return(NA)
-  
-  x <- x[!is.na(x)]
-  mean_x <- mean(x)
-  sd_x <- sd(x)
-  
-  if (mean_x == 0) return(NA)
-  
-  cv <- (sd_x / mean_x) * 100
-  return(cv)
-}
-
-# Calculate robust measures: median absolute deviation (MAD)
-calculate_mad <- function(x) {
-  if (length(x) < 2 || all(is.na(x))) return(NA)
-  
-  x <- x[!is.na(x)]
-  mad_value <- mad(x, na.rm = TRUE)
-  return(mad_value)
-}
-
-# Calculate interquartile range (IQR)
-calculate_iqr <- function(x) {
-  if (length(x) < 4 || all(is.na(x))) return(NA)
-  
-  x <- x[!is.na(x)]
-  iqr_value <- IQR(x, na.rm = TRUE)
-  return(iqr_value)
-}
+# Note: CV can be calculated directly as (sd(x, na.rm=TRUE)/mean(x, na.rm=TRUE))*100
+# Note: MAD can be calculated directly as mad(x, na.rm=TRUE)
+# Note: IQR can be calculated directly as IQR(x, na.rm=TRUE)
 
 # Test if a variable is approximately normal based on skewness and kurtosis
 is_approximately_normal <- function(x, skew_threshold = 1.0, kurt_threshold = 1.0) {
@@ -89,13 +61,7 @@ is_approximately_normal <- function(x, skew_threshold = 1.0, kurt_threshold = 1.
   return(skew_ok && kurt_ok)
 }
 
-# Calculate standardized z-scores
-calculate_z_scores <- function(x) {
-  if (length(x) < 2 || all(is.na(x))) return(rep(NA, length(x)))
-  
-  z_scores <- scale(x)[, 1]
-  return(z_scores)
-}
+# Note: Z-scores can be calculated directly as scale(x)[, 1]
 
 # Calculate modified z-scores using median and MAD
 calculate_modified_z_scores <- function(x) {
@@ -132,7 +98,7 @@ detect_iqr_outliers <- function(x, multiplier = 1.5) {
 detect_z_outliers <- function(x, threshold = 3) {
   if (length(x) < 2) return(rep(FALSE, length(x)))
   
-  z_scores <- abs(calculate_z_scores(x))
+  z_scores <- abs(scale(x)[, 1])  # Using built-in scale() directly
   outliers <- z_scores > threshold
   outliers[is.na(z_scores)] <- FALSE
   
@@ -170,46 +136,6 @@ detect_outliers_summary <- function(x) {
     outlier_count = outlier_count,
     outlier_percentage = round(outlier_percentage, 2)
   ))
-}
-
-# Calculate basic summary statistics
-calculate_basic_summary <- function(x) {
-  if (length(x) == 0 || all(is.na(x))) {
-    return(list(
-      n = 0,
-      n_missing = length(x),
-      mean = NA,
-      median = NA,
-      sd = NA,
-      min = NA,
-      max = NA,
-      q25 = NA,
-      q75 = NA
-    ))
-  }
-  
-  x_clean <- x[!is.na(x)]
-  n_valid <- length(x_clean)
-  n_missing <- sum(is.na(x))
-  
-  summary_stats <- list(
-    n = n_valid,
-    n_missing = n_missing,
-    mean = mean(x_clean),
-    median = median(x_clean),
-    sd = sd(x_clean),
-    min = min(x_clean),
-    max = max(x_clean),
-    q25 = quantile(x_clean, 0.25),
-    q75 = quantile(x_clean, 0.75)
-  )
-  
-  # Round numeric values
-  summary_stats <- lapply(summary_stats, function(val) {
-    if (is.numeric(val) && !is.na(val)) round(val, 4) else val
-  })
-  
-  return(summary_stats)
 }
 
 # Calculate distribution shape interpretation

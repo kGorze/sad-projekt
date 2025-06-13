@@ -168,8 +168,8 @@ calculate_overall_correlations <- function(data, variables) {
         pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
         pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
         
-        # Spearman correlation test
-        spearman_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "spearman")
+        # Spearman correlation test with exact = FALSE to avoid ties warning
+        spearman_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "spearman", exact = FALSE)
         spearman_p_values[i, j] <- spearman_test$p.value
         
         # Store for FDR correction
@@ -267,8 +267,8 @@ calculate_group_correlations <- function(data, variables, group_column) {
             pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
             pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
             
-            spearman_test <- cor.test(group_data[[i]], group_data[[j]], method = "spearman")
-            spearman_p[i, j] <- spearman_test$p.value
+                    spearman_test <- cor.test(group_data[[i]], group_data[[j]], method = "spearman", exact = FALSE)
+        spearman_p[i, j] <- spearman_test$p.value
             
             # Store for FDR correction
             spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
@@ -348,10 +348,10 @@ perform_correlation_significance_tests <- function(data, variables, group_column
         } else if (method == "both") {
           # For borderline cases, calculate both correlations
           cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-          secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+          secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
           method <- "pearson"  # Use Pearson as primary
         } else {
-          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
           secondary_test <- NULL
         }
         
@@ -426,10 +426,10 @@ perform_correlation_significance_tests <- function(data, variables, group_column
               secondary_test <- NULL
             } else if (method == "both") {
               cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-              secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+              secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
               method <- "pearson"  # Use Pearson as primary
             } else {
-              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman")
+              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
               secondary_test <- NULL
             }
             

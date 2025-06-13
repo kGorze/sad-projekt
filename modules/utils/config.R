@@ -41,6 +41,26 @@ OUTPUT_SETTINGS <- list(
 # Global variable to track loaded packages
 .loaded_packages <- character(0)
 
+# Function to handle package conflicts and masking warnings
+suppress_package_conflicts <- function() {
+  # Suppress specific masking warnings that are common and non-problematic
+  options(warn = -1)  # Temporarily suppress warnings
+  
+  # Common conflicts that are safe to ignore
+  known_conflicts <- c(
+    "MASS::select", "dplyr::select",
+    "plotly::select", "dplyr::select",
+    "MASS::filter", "dplyr::filter"
+  )
+  
+  return(invisible(NULL))
+}
+
+# Function to restore warnings after loading packages  
+restore_warnings <- function() {
+  options(warn = 0)  # Restore default warning level
+}
+
 # Package loading and management
 load_required_packages <- function(packages = NULL, quiet = TRUE) {
   # Set CRAN mirror if not set

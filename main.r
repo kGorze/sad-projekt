@@ -11,9 +11,12 @@ if (!require(optparse, quietly = TRUE)) {
 # Configuration and package loading
 source("modules/utils/config.R")
 
-# Package loading
+# Package loading with improved conflict handling
 cat("Loading required packages...\n")
+# Suppress package conflict warnings temporarily  
+suppress_package_conflicts()
 load_required_packages(quiet = TRUE)
+restore_warnings()
 
 # Module loading
 source("modules/utils/logging.R")

@@ -1012,23 +1012,35 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
       # Determine unique groups for pairwise comparisons
       groups <- unique(data[[group_column]])
       groups <- groups[!is.na(groups)]
-      pairwise_comparisons <- combn(groups, 2, simplify = FALSE)
-
-      # Choose overall test based on number of groups
-      overall_method <- if (length(groups) > 2) "anova" else "t.test"
-
-      # Ensure group column is factor and get clean data
+      
+      # Ensure group column is factor and get clean data first
       plot_data <- data[!is.na(data[[var]]) & !is.na(data[[group_column]]), ]
       plot_data[[group_column]] <- as.factor(plot_data[[group_column]])
+      
+      # Now create pairwise comparisons using factor levels
+      factor_levels <- levels(plot_data[[group_column]])
+      pairwise_comparisons <- if(length(factor_levels) > 1) combn(factor_levels, 2, simplify = FALSE) else NULL
+
+      # Choose overall test based on number of groups
+      overall_method <- if (length(factor_levels) > 2) "anova" else "t.test"
       
       # Create enhanced boxplot with statistical tests
       p <- ggboxplot(plot_data, x = group_column, y = var,
                      color = group_column, palette = "jco",
-                     add = "jitter", add.params = list(alpha = 0.3)) +
-        stat_compare_means(method = overall_method,
-                           label.y = max(plot_data[[var]], na.rm = TRUE) * 1.1) +
-        stat_compare_means(comparisons = pairwise_comparisons,
-                           method = "t.test", label = "p.signif") +
+                     add = "jitter", add.params = list(alpha = 0.3))
+      
+      # Add statistical comparisons only if there are multiple groups
+      if (length(factor_levels) > 1) {
+        p <- p + stat_compare_means(method = overall_method,
+                                   label.y = max(plot_data[[var]], na.rm = TRUE) * 1.1)
+        
+        if (!is.null(pairwise_comparisons) && length(pairwise_comparisons) > 0) {
+          p <- p + stat_compare_means(comparisons = pairwise_comparisons,
+                                     method = "t.test", label = "p.signif")
+        }
+      }
+      
+      p <- p +
         labs(title = paste("Enhanced Comparison of", var, "across groups"),
              subtitle = "With statistical significance tests and effect sizes",
              x = group_column, y = var) +
@@ -1064,7 +1076,7 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
         geom_density(alpha = 0.6) +
         geom_vline(data = group_means,
                    aes(xintercept = mean_val, color = .data[[group_column]]), 
-                   linetype = "dashed", size = 1) +
+                   linetype = "dashed", linewidth = 1) +
         labs(title = paste("Density Distribution of", var, "by Group"),
              subtitle = "Dashed lines show group means",
              x = var, y = "Density", fill = "Group", color = "Group") +
