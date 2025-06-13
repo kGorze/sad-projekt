@@ -492,8 +492,8 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
                         <strong>Original Model</strong><br>
                         <strong>Residual Normality:</strong> ', 
                         ifelse(orig$residuals_normal, 
-                               paste0("✓ Normal (p = ", round(orig$normality_p, 4), ")"),
-                               paste0("⚠ Non-normal (p = ", round(orig$normality_p, 4), ")")), '<br>
+                               paste0("OK: Normal (p = ", round(orig$normality_p, 4), ")"),
+                               paste0("WARNING: Non-normal (p = ", round(orig$normality_p, 4), ")")), '<br>
                         <strong>R²:</strong> ', round(orig$r_squared, 4), '
                     </div>
                 </div>')
@@ -507,13 +507,13 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
           recommendation_class <- "alert-secondary"
           
           if (final$transformation == "original") {
-            recommendation_text <- "✓ Use original model (residuals are normal)"
+            recommendation_text <- "OK: Use original model (residuals are normal)"
             recommendation_class <- "alert-success"
           } else if (!is.null(final$robust) && final$robust) {
-            recommendation_text <- paste0("🛡 Use ", final$method_name, " (robust regression)")
+            recommendation_text <- paste0("ROBUST: Use ", final$method_name, " (robust regression)")
             recommendation_class <- "alert-primary"
           } else {
-            recommendation_text <- paste0("🔧 Use ", final$transformation, " transformation")
+            recommendation_text <- paste0("TRANSFORM: Use ", final$transformation, " transformation")
             recommendation_class <- "alert-info"
           }
           

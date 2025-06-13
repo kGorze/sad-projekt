@@ -1128,7 +1128,7 @@ quick_correlation_analysis <- function(data, group_column = NULL, variables = NU
         cat("Variables tested:", total_vars, "\n")
         cat("Normal distributions:", normal_count, "/", total_vars, "\n")
         if (borderline_count > 0) {
-          cat("⚠️  Borderline normality cases:", borderline_count, "\n")
+          cat("WARNING: Borderline normality cases:", borderline_count, "\n")
         }
         cat("See result$assumptions_analysis for detailed normality results.\n")
       }
@@ -1521,12 +1521,12 @@ display_correlation_method_recommendations <- function(assumptions_results) {
     strategy <- "Primarily SPEARMAN correlations (many non-normal variables)"
   }
   
-  cat("🎯 Recommended Strategy:", strategy, "\n")
+  cat("STRATEGY:", strategy, "\n")
   cat("   - Variables suitable for Pearson:", pearson_count, "/", total_vars, "\n")
   cat("   - Variables requiring Spearman:", spearman_count, "/", total_vars, "\n")
   if (borderline_count > 0) {
     cat("   - Variables with borderline normality:", borderline_count, "/", total_vars, "\n")
-    cat("   ⚠️  Borderline cases will use BOTH methods for comparison\n")
+    cat("   WARNING: Borderline cases will use BOTH methods for comparison\n")
   }
   
   cat("\n")

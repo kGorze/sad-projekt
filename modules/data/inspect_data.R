@@ -191,7 +191,7 @@ analyze_group_structure <- function(data) {
       group_info$is_balanced <- group_info$balance_ratio <= 1.5
 
       if (group_info$balance_ratio > 2) {
-        cat(sprintf("⚠ Unbalanced groups detected (ratio: %.2f)\n", group_info$balance_ratio))
+        cat(sprintf("WARNING: Unbalanced groups detected (ratio: %.2f)\n", group_info$balance_ratio))
       }
     } else {
       group_info$balance_ratio <- NA

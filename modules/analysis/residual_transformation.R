@@ -31,7 +31,7 @@ fix_model_residual_issues <- function(data, variables, group_column = "grupa") {
     
     # Step 2: If residuals are non-normal, try transformations
     if (!original_model_result$residuals_normal) {
-      cat("⚠ Non-normal residuals detected for", var, "(p =", round(original_model_result$normality_p, 4), ")\n")
+      cat("WARNING: Non-normal residuals detected for", var, "(p =", round(original_model_result$normality_p, 4), ")\n")
       cat("Trying data transformations...\n")
       
       # Try log transformation (if all values are positive)
@@ -61,7 +61,7 @@ fix_model_residual_issues <- function(data, variables, group_column = "grupa") {
       
       # Step 3: If transformations don't work, use robust regression
       if (!best_transformation$residuals_normal) {
-        cat("⚠ Transformations failed. Fitting robust regression...\n")
+        cat("WARNING: Transformations failed. Fitting robust regression...\n")
         
         # Huber M-estimator
         huber_result <- fit_robust_regression(data, var, group_column, "huber")
@@ -582,13 +582,13 @@ apply_residual_fixes_to_analysis <- function(data, group_column = "grupa") {
       final <- var_result$final_recommendation
       
       if (final$transformation != "original" && !isTRUE(final$robust)) {
-        cat("🔧", var_name, ": Fixed with", final$transformation, "transformation\n")
+        cat("FIXED:", var_name, ": Fixed with", final$transformation, "transformation\n")
         fixed_by_transformation <- fixed_by_transformation + 1
       } else if (isTRUE(final$robust)) {
-        cat("🛡", var_name, ": Fixed with robust regression (", final$method_name, ")\n")
+        cat("ROBUST:", var_name, ": Fixed with robust regression (", final$method_name, ")\n")
         fixed_by_robust <- fixed_by_robust + 1
       } else {
-        cat("⚠", var_name, ": Still has residual issues\n")
+        cat("WARNING:", var_name, ": Still has residual issues\n")
         still_problematic <- still_problematic + 1
       }
     }

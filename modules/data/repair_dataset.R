@@ -276,25 +276,25 @@ detect_missing_patterns <- function(data) {
   cat("Pattern Detection Results:\n")
   
   if (length(completely_missing) > 0) {
-    cat(sprintf("⚠ %d variables completely missing: %s\n", 
+        cat(sprintf("WARNING: %d variables completely missing: %s\n",
                 length(completely_missing), paste(completely_missing, collapse = ", ")))
   }
   
   if (length(high_missing) > 0) {
-    cat(sprintf("⚠ %d variables with >50%% missing: %s\n", 
+    cat(sprintf("WARNING: %d variables with >50%% missing: %s\n", 
                 length(high_missing), paste(high_missing, collapse = ", ")))
   }
   
   if (length(rows_multiple_missing) > 0) {
-    cat(sprintf("⚠ %d subjects with multiple missing values\n", length(rows_multiple_missing)))
+    cat(sprintf("WARNING: %d subjects with multiple missing values\n", length(rows_multiple_missing)))
   }
   
   if (nrow(high_corr_pairs) > 0) {
-    cat(sprintf("⚠ Correlated missingness detected between %d variable pairs\n", nrow(high_corr_pairs)))
+    cat(sprintf("WARNING: Correlated missingness detected between %d variable pairs\n", nrow(high_corr_pairs)))
   }
   
   if (length(group_patterns) > 0) {
-    cat("⚠ Group-specific missing patterns detected:\n")
+    cat("WARNING: Group-specific missing patterns detected:\n")
     for (group in names(group_patterns)) {
       missing_vars <- names(group_patterns[[group]])
       cat(sprintf("  - Group %s: %s\n", group, paste(missing_vars, collapse = ", ")))
@@ -304,7 +304,7 @@ detect_missing_patterns <- function(data) {
   if (length(completely_missing) == 0 && length(high_missing) == 0 && 
       length(rows_multiple_missing) == 0 && nrow(high_corr_pairs) == 0 && 
       length(group_patterns) == 0) {
-    cat("✓ No concerning missing data patterns detected\n")
+    cat(" No concerning missing data patterns detected\n")
   }
   
   return(patterns)
@@ -371,13 +371,13 @@ test_mcar_simplified <- function(data) {
                 # For small samples, use a more lenient approach
                 max_prop_diff <- max(props) - min(props)
                 if (max_prop_diff > 0.2) {  # 20% difference threshold
-                  cat(sprintf("• %s: Large differences in missing proportions by group\n", col))
+                  cat(sprintf(" %s: Large differences in missing proportions by group\n", col))
                   cat("  → Suggests NOT completely random\n")
                   return(list(conclusion = "Not MCAR", p_value = NA))
                 }
               } else {
                 chi_test <- chisq.test(missing_by_group)
-                cat(sprintf("• %s: Missing patterns differ by group (p=%.3f)\n", 
+                cat(sprintf(" %s: Missing patterns differ by group (p=%.3f)\n", 
                             col, chi_test$p.value))
                 
                 if (chi_test$p.value < 0.05) {
@@ -426,17 +426,17 @@ test_mar_patterns <- function(data) {
               t_test <- t.test(age_missing, age_present)
               
               if (t_test$p.value < 0.1) {  # More lenient threshold
-                cat(sprintf("• %s missingness related to age (p=%.3f)\n", col, t_test$p.value))
+                cat(sprintf(" %s missingness related to age (p=%.3f)\n", col, t_test$p.value))
                 cat(sprintf("  Mean age when missing: %.1f vs present: %.1f\n", 
                             mean(age_missing), mean(age_present)))
                 mar_evidence[[col]] <- "age_related"
               }
             } else {
-              cat(sprintf("• %s: Insufficient observations for age comparison\n", col))
+              cat(sprintf(" %s: Insufficient observations for age comparison\n", col))
             }
           }
         }, error = function(e) {
-          cat(sprintf("• %s: Age relationship test failed - %s\n", col, e$message))
+          cat(sprintf(" %s: Age relationship test failed - %s\n", col, e$message))
         })
       }
       
@@ -450,14 +450,14 @@ test_mar_patterns <- function(data) {
             chi_test <- chisq.test(missing_by_gender)
             
             if (chi_test$p.value < 0.1) {
-              cat(sprintf("• %s missingness related to gender (p=%.3f)\n", col, chi_test$p.value))
+              cat(sprintf(" %s missingness related to gender (p=%.3f)\n", col, chi_test$p.value))
               mar_evidence[[col]] <- "gender_related"
             }
           } else {
-            cat(sprintf("• %s: Insufficient data for gender analysis\n", col))
+            cat(sprintf(" %s: Insufficient data for gender analysis\n", col))
           }
         }, error = function(e) {
-          cat(sprintf("• %s: Gender relationship test failed - %s\n", col, e$message))
+          cat(sprintf(" %s: Gender relationship test failed - %s\n", col, e$message))
         })
       }
       
@@ -471,21 +471,21 @@ test_mar_patterns <- function(data) {
             chi_test <- chisq.test(missing_by_group)
             
             if (chi_test$p.value < 0.1) {
-              cat(sprintf("• %s missingness related to group (p=%.3f)\n", col, chi_test$p.value))
+              cat(sprintf(" %s missingness related to group (p=%.3f)\n", col, chi_test$p.value))
               mar_evidence[[col]] <- "group_related"
             }
           } else {
-            cat(sprintf("• %s: Insufficient data for group analysis\n", col))
+            cat(sprintf(" %s: Insufficient data for group analysis\n", col))
           }
         }, error = function(e) {
-          cat(sprintf("• %s: Group relationship test failed - %s\n", col, e$message))
+          cat(sprintf(" %s: Group relationship test failed - %s\n", col, e$message))
         })
       }
     }
   }
   
   if (length(mar_evidence) == 0) {
-    cat("• No clear MAR patterns detected\n")
+    cat(" No clear MAR patterns detected\n")
   }
   
   return(mar_evidence)
@@ -526,7 +526,7 @@ assess_mnar_likelihood <- function(data) {
           extreme_low <- sum(observed_values <= q01)
           
           if (extreme_high > length(observed_values) * 0.05) {
-            cat(sprintf("• %s: Many high values present - missing might be low values\n", param))
+            cat(sprintf(" %s: Many high values present - missing might be low values\n", param))
             mnar_risks[[param]] <- "threshold_effect"
           }
         }
@@ -542,7 +542,7 @@ assess_mnar_likelihood <- function(data) {
       total_group_missing <- sum(group_missing)
       
       if (total_group_missing > nrow(group_data) * 0.3) {
-        cat(sprintf("• Group %s has high overall missingness - possible systematic exclusion\n", group))
+        cat(sprintf(" Group %s has high overall missingness - possible systematic exclusion\n", group))
         mnar_risks[[paste0("group_", group)]] <- "systematic_exclusion"
       }
     }
@@ -602,7 +602,7 @@ analyze_medical_missing_context <- function(data) {
           missing_pct <- 100 * missing_count / nrow(group_data)
           
           if (missing_pct > 5) {  # Report if >5% missing
-            cat(sprintf("  • %-8s: %d missing (%.1f%%)\n", test, missing_count, missing_pct))
+            cat(sprintf("   %-8s: %d missing (%.1f%%)\n", test, missing_count, missing_pct))
             
             # Clinical interpretation
             if (group == "KONTROLA" && missing_pct > 10) {
@@ -631,7 +631,7 @@ analyze_medical_missing_context <- function(data) {
           age_diff <- age_complete - age_missing
           
           if (abs(age_diff) > 3) {  # More than 3 years difference
-            cat(sprintf("• %-8s: Mean age complete %.1f vs missing %.1f (diff: %.1f years)\n", 
+            cat(sprintf(" %-8s: Mean age complete %.1f vs missing %.1f (diff: %.1f years)\n", 
                         test, age_complete, age_missing, age_diff))
             
             if (age_diff > 0) {
@@ -672,7 +672,7 @@ generate_missing_data_recommendations <- function(patterns, mechanisms, medical_
   }
   
   if (length(mechanisms$mnar) > 0) {
-    recommendations <- c(recommendations, "⚠ Possible MNAR patterns - consider sensitivity analysis with different assumptions")
+    recommendations <- c(recommendations, "WARNING: Possible MNAR patterns - consider sensitivity analysis with different assumptions")
   }
   
   # Medical context recommendations
@@ -685,7 +685,7 @@ generate_missing_data_recommendations <- function(patterns, mechanisms, medical_
     }
     
     if (has_systematic) {
-      recommendations <- c(recommendations, "⚠ Systematic issues detected in basic tests - investigate data collection procedures")
+      recommendations <- c(recommendations, "WARNING: Systematic issues detected in basic tests - investigate data collection procedures")
     }
   }
   
@@ -1206,7 +1206,7 @@ perform_missing_data_sensitivity_analysis <- function(data, missing_analysis) {
       cat("  ✓ Multiple imputation (MICE) completed with 5 imputations\n\n")
       
     } else {
-      cat("  ⚠ MICE package not available - skipping multiple imputation\n\n")
+      cat("  WARNING: MICE package not available - skipping multiple imputation\n\n")
       results[["multiple_mice"]] <- list(
         success = FALSE, 
         error = "MICE package not available"

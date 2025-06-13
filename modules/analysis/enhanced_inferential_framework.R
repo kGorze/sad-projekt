@@ -889,7 +889,7 @@ quick_enhanced_inferential <- function(data, group_column = "grupa", generate_re
         cat("Variables tested:", total_vars, "\n")
         cat("Normal distributions:", normal_count, "/", total_vars, "\n")
         if (borderline_count > 0) {
-          cat("⚠️  Borderline cases:", borderline_count, "\n")
+          cat("WARNING -   Borderline cases:", borderline_count, "\n")
         }
         cat("See result$assumptions_analysis for detailed results.\n")
       }
@@ -935,7 +935,7 @@ display_assumption_summary <- function(assumptions_results) {
   
   # Display violations
   if (length(violations) > 0) {
-    cat("⚠️  ASSUMPTION VIOLATIONS DETECTED:\n")
+    cat("WARNING -   ASSUMPTION VIOLATIONS DETECTED:\n")
     for (var in names(violations)) {
       cat("  ", var, ":", paste(violations[[var]], collapse = ", "), "\n")
     }
@@ -943,7 +943,7 @@ display_assumption_summary <- function(assumptions_results) {
   
   # Display borderline cases
   if (length(borderline_cases) > 0) {
-    cat("🔶 BORDERLINE CASES (require attention):\n")
+    cat("WARNING -   BORDERLINE CASES (require attention):\n")
     for (var in names(borderline_cases)) {
       cat("  ", var, ":", paste(borderline_cases[[var]], collapse = ", "), "\n")
     }
@@ -957,7 +957,7 @@ display_assumption_summary <- function(assumptions_results) {
       rec <- assumptions_results$test_recommendations[[var]]
       cat("• ", var, ":", rec$primary_test, "\n")
       if (rec$assumption_flag %in% c("BORDERLINE_NORMAL", "BORDERLINE_NON_NORMAL")) {
-        cat("  ⚡ Action: ", rec$borderline_action, "\n")
+        cat(" Action: ", rec$borderline_action, "\n")
       }
     }
   }

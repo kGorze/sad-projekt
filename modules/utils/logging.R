@@ -189,7 +189,7 @@ log_data_quality <- function(issue_type, details, severity = "WARNING") {
   }
   
   # Also print to console
-  cat(paste0("⚠ DATA QUALITY ", severity, ": ", issue_type, " - ", details, "\n"))
+  cat(paste0("WARNING - DATA QUALITY ", severity, ": ", issue_type, " - ", details, "\n"))
 }
 
 # Log statistical test results
@@ -232,7 +232,7 @@ log_statistical_results <- function(test_name, results, interpretation = NULL) {
   }
   
   # Also print to console
-  cat(paste0("📊 Statistical Test: ", test_name, "\n"))
+  cat(paste0("Statistical Test: ", test_name, "\n"))
   if (!is.null(interpretation)) {
     cat(paste0("   Interpretation: ", interpretation, "\n"))
   }
@@ -268,7 +268,7 @@ log_warning <- function(message, context = NULL) {
   }
   
   # Also print to console
-  cat(paste0("⚠ WARNING: ", message, "\n"))
+  cat(paste0("WARNING: ", message, "\n"))
   if (!is.null(context)) {
     cat(paste0("   Context: ", context, "\n"))
   }
@@ -303,7 +303,7 @@ log_error <- function(message, context = NULL) {
   }
   
   # Also print to console
-  cat(paste0("❌ ERROR: ", message, "\n"))
+  cat(paste0("ERROR: ", message, "\n"))
   if (!is.null(context)) {
     cat(paste0("   Context: ", context, "\n"))
   }
@@ -525,10 +525,10 @@ generate_summary_log <- function() {
   # Add debugging recommendations
   summary_lines <- c(summary_lines, "DEBUGGING RECOMMENDATIONS:")
   if (length(.log_data$r_warnings) > 50) {
-    summary_lines <- c(summary_lines, "  ⚠ High number of R warnings - investigate data quality")
+    summary_lines <- c(summary_lines, "  WARNING: High number of R warnings - investigate data quality")
   }
   if (length(.log_data$r_warnings) == 0) {
-    summary_lines <- c(summary_lines, "  ✅ No R warnings - clean execution")
+    summary_lines <- c(summary_lines, "  OK: No R warnings - clean execution")
   }
   if (session_duration > 5) {
     summary_lines <- c(summary_lines, "  ⏱ Long execution time - consider performance optimization")

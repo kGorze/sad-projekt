@@ -1,6 +1,7 @@
 # Descriptive statistics and group characteristics
 # Supports independent groups analysis for medical data
 
+
 # Load required modules
 source("modules/utils/statistical_helpers.R")
 source("modules/reporting/export_results.R")
@@ -404,6 +405,7 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
     library(ggpubr) 
     library(GGally)
     library(dplyr)
+    library(scales)
   })
   
   # Create plots directory if it doesn't exist
@@ -416,61 +418,116 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
   
   cat("Creating advanced descriptive visualizations...\n")
   
-  # 1. Enhanced histograms with density overlays and normality curves
+  # Helper function to calculate optimal plot parameters
+  calculate_plot_parameters <- function(var_data) {
+    n_obs <- length(var_data)
+    data_range <- max(var_data) - min(var_data)
+    
+    # Handle edge cases
+    if (data_range == 0) {
+      # All values are the same - use fixed parameters
+      return(list(
+        binwidth = 1,
+        bandwidth = 1,
+        x_limits = c(min(var_data) - 2, max(var_data) + 2),
+        n_obs = n_obs
+      ))
+    }
+    
+    # Sturges' rule for binwidth (adjusted for practical use)
+    optimal_binwidth <- data_range / (1 + 3.322 * log10(n_obs))
+    binwidth <- max(0.1, min(optimal_binwidth, data_range / 15))
+    
+    # Scott's rule for bandwidth (with practical limits)
+    var_sd <- sd(var_data)
+    var_iqr <- IQR(var_data)
+    
+    # Handle cases where sd or IQR might be 0
+    if (var_sd == 0) var_sd <- data_range / 4  # Fallback
+    if (var_iqr == 0) var_iqr <- data_range / 2  # Fallback
+    
+    bw_scott <- 3.5 * var_sd * n_obs^(-1/3)
+    bw_nrd <- 0.9 * min(var_sd, var_iqr / 1.34) * n_obs^(-1/5)
+    bw_optimal <- max(min(bw_scott, bw_nrd), binwidth / 3, data_range / 100)
+    
+    # Axis limits with buffer for kernel density
+    x_min <- min(var_data)
+    x_max <- max(var_data)
+    x_range <- x_max - x_min
+    x_buffer <- max(x_range * 0.05, 2 * bw_optimal)  # Buffer for kernel
+    x_limits <- c(x_min - x_buffer, x_max + x_buffer)
+    
+    return(list(
+      binwidth = binwidth,
+      bandwidth = bw_optimal,
+      x_limits = x_limits,
+      n_obs = n_obs
+    ))
+  }
+  
+  # 1. Histograms with density overlays and normality curves
+  # Improvements: consistent binwidth, controlled bandwidth, unified axis limits
   if (length(numeric_vars) > 0) {
     for (var in numeric_vars[1:min(6, length(numeric_vars))]) {
       tryCatch({
-        # Calculate normal distribution parameters
+        # Calculate data and distribution parameters
         var_data <- data[[var]][!is.na(data[[var]])]
         mean_val <- mean(var_data)
         sd_val <- sd(var_data)
         
-        p <- ggplot(data, aes(x = .data[[var]])) +
-          geom_histogram(aes(y = after_stat(density)), bins = 30, fill = "steelblue", alpha = 0.7, color = "white") +
-          geom_density(color = "red", linewidth = 1.2, alpha = 0.8) +
-          stat_function(fun = dnorm, args = list(mean = mean_val, sd = sd_val), 
-                       color = "blue", linetype = "dashed", linewidth = 1) +
-          labs(title = paste("Distribution Analysis of", var),
-               subtitle = paste("Red: Actual density, Blue dashed: Normal distribution"),
-               x = var, y = "Density") +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                plot.subtitle = element_text(hjust = 0.5, size = 10))
+        # Get optimal plot parameters using helper function
+        plot_params <- calculate_plot_parameters(var_data)
         
-        if (!is.null(group_column)) {
-          p <- ggplot(data, aes(x = .data[[var]], fill = .data[[group_column]])) +
-            geom_histogram(aes(y = after_stat(density)), bins = 30, alpha = 0.7, position = "identity") +
-            geom_density(aes(color = .data[[group_column]]), alpha = 0.8, linewidth = 1.2) +
-            facet_wrap(as.formula(paste("~", group_column))) +
-            labs(title = paste("Distribution Analysis of", var, "by", group_column),
-                 subtitle = "Histograms with density overlays by group",
+        if (is.null(group_column)) {
+          p <- ggplot(data, aes(x = .data[[var]])) +
+            geom_histogram(aes(y = after_stat(density)), binwidth = plot_params$binwidth, 
+                          fill = "steelblue", alpha = 0.7, color = "white") +
+            geom_density(color = "red", linewidth = 1.2, alpha = 0.8, bw = plot_params$bandwidth) +
+            stat_function(fun = dnorm, args = list(mean = mean_val, sd = sd_val), 
+                         color = "blue", linetype = "dashed", linewidth = 1) +
+            scale_x_continuous(limits = plot_params$x_limits, 
+                              expand = expansion(mult = 0, add = 0)) +
+            labs(title = paste("Distribution Analysis of", var),
+                 subtitle = paste("Red: Actual density, Blue dashed: Normal distribution (n =", plot_params$n_obs, ")"),
                  x = var, y = "Density") +
             theme_minimal() +
             theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                  plot.subtitle = element_text(hjust = 0.5, size = 10)) +
+                  plot.subtitle = element_text(hjust = 0.5, size = 10))
+        } else {
+          p <- ggplot(data, aes(x = .data[[var]], fill = .data[[group_column]])) +
+            geom_histogram(aes(y = after_stat(density)), binwidth = plot_params$binwidth, 
+                          alpha = 0.7, position = "identity", color = "black", linewidth = 0.3) +
+            geom_density(aes(color = .data[[group_column]]), alpha = 0.8, 
+                        linewidth = 1.2, bw = plot_params$bandwidth) +
+            facet_wrap(as.formula(paste("~", group_column))) +
+            scale_x_continuous(limits = plot_params$x_limits, 
+                              expand = expansion(mult = 0, add = 0),
+                              breaks = scales::pretty_breaks(n = 6)) +
+            labs(title = paste("Distribution Analysis of", var, "by", group_column),
+                 subtitle = paste("Unified axis limits for comparison (binwidth =", round(plot_params$binwidth, 2), 
+                                 ", bw =", round(plot_params$bandwidth, 2), ")"),
+                 x = var, y = "Density") +
+            theme_minimal() +
+            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
+                  plot.subtitle = element_text(hjust = 0.5, size = 10),
+                  strip.text = element_text(face = "bold")) +
             scale_fill_brewer(type = "qual", palette = "Set2") +
             scale_color_brewer(type = "qual", palette = "Set2")
         }
         
-        plot_filename <- file.path(output_path, paste0("enhanced_histogram_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+        plot_filename <- file.path(output_path, paste0("histogram_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
         ggsave(plot_filename, plot = p, width = 12, height = 8, dpi = 300)
         
-        plots[[paste0("enhanced_histogram_", var)]] <- p
-        plot_files[[paste0("enhanced_histogram_", var)]] <- plot_filename
-        cat("Created enhanced histogram for", var, "\n")
+        plots[[paste0("histogram_", var)]] <- p
+        plot_files[[paste0("histogram_", var)]] <- plot_filename
+        cat("Created histogram for", var, "with optimized binwidth (", round(plot_params$binwidth, 2), 
+            ") and bandwidth (", round(plot_params$bandwidth, 2), ")\n")
         
-      }, error = function(e) {
-        cat("Error creating enhanced histogram for", var, ":", e$message, "\n")
-      })
+              }, error = function(e) {
+          cat("Error creating histogram for", var, ":", e$message, "\n")
+        })
     }
   }
-  
-  # Note: Q-Q plots moved to comparative_analysis.R (normality assumption testing for group comparisons)
-  
-    # Note: Enhanced boxplots and violin plots moved to comparative_analysis.R (group comparisons)
-  # Note: Q-Q plots moved to comparative_analysis.R (assumption testing for group comparisons)
-  
-  # Note: Correlation heatmap moved to correlation_analysis.R module to avoid redundancy
   
   # 6. Pairs plot for numeric variables (if not too many)
   if (length(numeric_vars) >= 3 && length(numeric_vars) <= 6) {
@@ -504,7 +561,7 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
     })
   }
   
-  # 7. Enhanced bar plots for categorical variables
+  # 7. Bar plots for categorical variables
   if (length(categorical_vars) > 0) {
     for (var in categorical_vars[1:min(4, length(categorical_vars))]) {
       
@@ -561,16 +618,16 @@ create_descriptive_plots <- function(data, numeric_vars, categorical_vars, group
                   axis.text.x = element_text(angle = 45, hjust = 1))
         }
         
-        plot_filename <- file.path(output_path, paste0("enhanced_barplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+        plot_filename <- file.path(output_path, paste0("barplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
         ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
         
-        plots[[paste0("enhanced_barplot_", var)]] <- p
-        plot_files[[paste0("enhanced_barplot_", var)]] <- plot_filename
-        cat("Created enhanced barplot for", var, "\n")
+        plots[[paste0("barplot_", var)]] <- p
+        plot_files[[paste0("barplot_", var)]] <- plot_filename
+        cat("Created barplot for", var, "\n")
         
-      }, error = function(e) {
-        cat("Error creating enhanced barplot for", var, ":", e$message, "\n")
-      })
+              }, error = function(e) {
+          cat("Error creating barplot for", var, ":", e$message, "\n")
+        })
     }
   }
   

@@ -154,7 +154,7 @@ validate_group_independence <- function(data, group_column) {
     unused_levels <- setdiff(all_levels, groups)
 
     if (length(unused_levels) > 0) {
-      cat(sprintf("⚠ Unused factor levels detected: %s\n", paste(unused_levels, collapse = ", ")))
+      cat(sprintf("WARNING: Unused factor levels detected: %s\n", paste(unused_levels, collapse = ", ")))
     }
   } else {
     groups <- unique(data[[group_column]][!is.na(data[[group_column]])])
@@ -261,13 +261,13 @@ validate_data_types_for_stats <- function(data) {
               if(length(factor_cols) > 0) paste(factor_cols, collapse = ", ") else "none"))
   
   if (length(character_cols) > 0) {
-    cat(sprintf("⚠ Character columns detected: %s (consider converting to factors)\n", 
+    cat(sprintf("WARNING: Character columns detected: %s (consider converting to factors)\n", 
                 paste(character_cols, collapse = ", ")))
     warnings <- c(warnings, "Character columns detected - may need conversion to factors")
   }
   
   if (length(logical_cols) > 0) {
-    cat(sprintf("⚠ Logical columns detected: %s (consider converting to factors)\n", 
+    cat(sprintf("WARNING: Logical columns detected: %s (consider converting to factors)\n", 
                 paste(logical_cols, collapse = ", ")))
     warnings <- c(warnings, "Logical columns detected - may need conversion to factors")
   }
@@ -275,7 +275,7 @@ validate_data_types_for_stats <- function(data) {
   # Check for adequate variables for analysis
   if (length(numeric_cols) < 2) {
     warnings <- c(warnings, "Few numeric variables may limit analysis options")
-    cat("⚠ Few numeric variables available for correlation/regression analysis\n")
+    cat("WARNING: Few numeric variables available for correlation/regression analysis\n")
   }
   
   # Check factor levels
@@ -283,10 +283,10 @@ validate_data_types_for_stats <- function(data) {
     n_levels <- nlevels(data[[col]])
     if (n_levels < 2) {
       warnings <- c(warnings, sprintf("Factor '%s' has only %d level(s)", col, n_levels))
-      cat(sprintf("⚠ Factor '%s' has only %d level(s)\n", col, n_levels))
+      cat(sprintf("WARNING: Factor '%s' has only %d level(s)\n", col, n_levels))
     } else if (n_levels > 10) {
       warnings <- c(warnings, sprintf("Factor '%s' has many levels (%d)", col, n_levels))
-      cat(sprintf("⚠ Factor '%s' has many levels (%d) - may need grouping\n", col, n_levels))
+              cat(sprintf("WARNING: Factor '%s' has many levels (%d) - may need grouping\n", col, n_levels))
     }
   }
   
@@ -323,7 +323,7 @@ validate_statistical_assumptions <- function(data, group_column) {
   
   if (length(numeric_cols) == 0) {
     warnings <- c(warnings, "No numeric variables for assumption testing")
-    cat("⚠ No numeric variables available for assumption testing\n")
+    cat("WARNING: No numeric variables available for assumption testing\n")
     return(list(warnings = warnings, results = assumption_results))
   }
   
@@ -336,7 +336,7 @@ validate_statistical_assumptions <- function(data, group_column) {
     complete_data <- data[!is.na(data[[col]]) & !is.na(data[[group_column]]), ]
     
     if (nrow(complete_data) < 10) {
-      cat(sprintf("  ⚠ Insufficient data for assumption testing (n=%d)\n", nrow(complete_data)))
+      cat(sprintf("  WARNING: Insufficient data for assumption testing (n=%d)\n", nrow(complete_data)))
       warnings <- c(warnings, sprintf("Insufficient data for assumption testing: %s", col))
       next
     }
@@ -346,14 +346,14 @@ validate_statistical_assumptions <- function(data, group_column) {
       tryCatch({
         shapiro_test <- shapiro.test(complete_data[[col]])
         if (shapiro_test$p.value < 0.05) {
-          cat(sprintf("  ⚠ Possible non-normality detected (p=%.3f)\n", shapiro_test$p.value))
+          cat(sprintf("  WARNING: Possible non-normality detected (p=%.3f)\n", shapiro_test$p.value))
           warnings <- c(warnings, sprintf("Possible non-normality in %s", col))
         } else {
           cat(sprintf("  ✓ Normality assumption reasonable (p=%.3f)\n", shapiro_test$p.value))
         }
         assumption_results[[col]]$normality <- shapiro_test
       }, error = function(e) {
-        cat(sprintf("  ⚠ Normality test failed for %s\n", col))
+        cat(sprintf("  WARNING: Normality test failed for %s\n", col))
       })
     } else {
       cat(sprintf("  → Large sample (n=%d) - CLT may apply\n", nrow(complete_data)))
@@ -367,7 +367,7 @@ validate_statistical_assumptions <- function(data, group_column) {
       min_var <- min(group_vars, na.rm = TRUE)
       
       if (max_var / min_var > 4) {  # Rule of thumb: variance ratio > 4
-        cat(sprintf("  ⚠ Unequal variances detected (ratio=%.2f)\n", max_var / min_var))
+        cat(sprintf("  WARNING: Unequal variances detected (ratio=%.2f)\n", max_var / min_var))
         warnings <- c(warnings, sprintf("Unequal variances in %s", col))
       } else {
         cat(sprintf("  ✓ Variance homogeneity reasonable (ratio=%.2f)\n", max_var / min_var))
@@ -383,7 +383,7 @@ validate_statistical_assumptions <- function(data, group_column) {
                            complete_data[[col]] > (q3 + 3 * iqr), na.rm = TRUE)
     
     if (extreme_outliers > 0) {
-      cat(sprintf("  ⚠ %d extreme outliers detected\n", extreme_outliers))
+              cat(sprintf("  WARNING: %d extreme outliers detected\n", extreme_outliers))
       warnings <- c(warnings, sprintf("Extreme outliers in %s", col))
     } else {
       cat("  ✓ No extreme outliers detected\n")
@@ -426,12 +426,12 @@ validate_statistical_power <- function(data, group_column) {
   # Basic power assessment based on sample sizes
   if (min_group_size < 5) {
     warnings <- c(warnings, "Very low power expected due to small group sizes")
-    cat("⚠ Very low statistical power expected (group size < 5)\n")
+    cat("WARNING: Very low statistical power expected (group size < 5)\n")
   } else if (min_group_size < 10) {
     warnings <- c(warnings, "Low power for detecting small effect sizes")
-    cat("⚠ Low power for detecting small effect sizes (group size < 10)\n")
+          cat("WARNING: Low power for detecting small effect sizes (group size < 10)\n")
   } else if (min_group_size < 20) {
-    cat("⚠ Moderate power - may miss small effect sizes (group size < 20)\n")
+          cat("WARNING: Moderate power - may miss small effect sizes (group size < 20)\n")
     warnings <- c(warnings, "Moderate power - may miss small effect sizes")
   } else {
     cat("✓ Adequate power for detecting medium to large effect sizes\n")
@@ -441,7 +441,7 @@ validate_statistical_power <- function(data, group_column) {
   balance_ratio <- if (length(nonzero_sizes) > 1) max(nonzero_sizes) / min(nonzero_sizes) else NA
   if (!is.na(balance_ratio) && balance_ratio > 2) {
     warnings <- c(warnings, "Unbalanced design may reduce power")
-    cat(sprintf("⚠ Unbalanced design detected (ratio=%.2f)\n", balance_ratio))
+          cat(sprintf("WARNING: Unbalanced design detected (ratio=%.2f)\n", balance_ratio))
   } else {
     cat("✓ Reasonably balanced design\n")
   }
@@ -463,9 +463,9 @@ generate_validation_report <- function(validation_results, issues, warnings) {
   
   # Overall status
   if (length(issues) == 0) {
-    cat("✓ VALIDATION PASSED: Data is ready for statistical analysis\n")
+    cat("VALIDATION PASSED: Data is ready for statistical analysis\n")
   } else {
-    cat("✗ VALIDATION FAILED: Critical issues must be addressed\n")
+    cat("VALIDATION FAILED: Critical issues must be addressed\n")
   }
   
   # Critical issues
