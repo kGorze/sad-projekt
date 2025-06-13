@@ -66,9 +66,170 @@ perform_group_comparisons <- function(data, group_column = "grupa", include_plot
     } else {
       cat("  - No Cohen's D values calculated for", var, "\n")
     }
-  }
+    }
   result$effect_sizes <- effect_size_results
+
+  # Step 3.5: BOOTSTRAP CONFIDENCE INTERVALS FOR EFFECT SIZES (Type II Error Control)
+  cat("\n=== STEP 3.5: BOOTSTRAP CONFIDENCE INTERVALS FOR ROBUST EFFECT SIZE ESTIMATION ===\n")
+  bootstrap_results <- list()
+  groups <- unique(data[[group_column]])
   
+  if (length(groups) == 2) {
+    for (var in numeric_vars) {
+      cat("Calculating bootstrap CI for Cohen's d for", var, "...\n")
+      bootstrap_ci <- bootstrap_effect_size_ci(data, var, group_column, n_bootstrap = 1000, conf_level = 0.95)
+      
+      if (is.null(bootstrap_ci$error)) {
+        bootstrap_results[[var]] <- bootstrap_ci
+        cat(sprintf("  - Bootstrap CI [%.3f, %.3f] (mean = %.3f)\n", 
+                   bootstrap_ci$ci_lower, bootstrap_ci$ci_upper, bootstrap_ci$bootstrap_mean))
+      } else {
+        cat("  - Bootstrap failed:", bootstrap_ci$error, "\n")
+        bootstrap_results[[var]] <- list(error = bootstrap_ci$error)
+      }
+    }
+    result$bootstrap_effect_sizes <- bootstrap_results
+    cat("- Bootstrap confidence intervals completed\n")
+  } else if (length(groups) >= 3) {
+    # Bootstrap eta-squared for multiple groups
+    for (var in numeric_vars) {
+      cat("Calculating bootstrap CI for eta-squared for", var, "...\n")
+      bootstrap_eta <- bootstrap_eta_squared_ci(data, var, group_column, n_bootstrap = 1000, conf_level = 0.95)
+      
+      if (is.null(bootstrap_eta$error)) {
+        bootstrap_results[[var]] <- bootstrap_eta
+        cat(sprintf("  - Bootstrap eta² CI [%.3f, %.3f] (mean = %.3f)\n", 
+                   bootstrap_eta$ci_lower, bootstrap_eta$ci_upper, bootstrap_eta$bootstrap_mean))
+      } else {
+        cat("  - Bootstrap failed:", bootstrap_eta$error, "\n")
+        bootstrap_results[[var]] <- list(error = bootstrap_eta$error)
+      }
+    }
+    result$bootstrap_effect_sizes <- bootstrap_results
+    cat("- Bootstrap confidence intervals for eta-squared completed\n")
+  } else {
+    cat("- Insufficient groups for bootstrap analysis\n")
+  }
+
+  # Step 3.6: EQUIVALENCE TESTING (Addressing Type II Error via TOST)
+  cat("\n=== STEP 3.6: EQUIVALENCE TESTING FOR PRACTICAL SIGNIFICANCE ===\n")
+  equivalence_results <- list()
+  
+  if (length(groups) == 2) {
+    for (var in numeric_vars) {
+      cat("Performing equivalence test for", var, "...\n")
+      equiv_test <- equivalence_test(data, var, group_column, equivalence_bound = 0.2)
+      
+      if (is.null(equiv_test$error)) {
+        equivalence_results[[var]] <- equiv_test
+        cat(sprintf("  - %s (p = %.4f)\n", equiv_test$interpretation, equiv_test$p_value_equivalence))
+      } else {
+        cat("  - Equivalence test failed:", equiv_test$error, "\n")
+        equivalence_results[[var]] <- list(error = equiv_test$error)
+      }
+    }
+    result$equivalence_tests <- equivalence_results
+    cat("- Equivalence testing completed\n")
+  } else {
+    cat("- Skipping equivalence tests (requires exactly 2 groups)\n")
+  }
+
+  # Step 3.7: SENSITIVITY ANALYSIS WITH MULTIPLE STATISTICAL APPROACHES
+  cat("\n=== STEP 3.7: SENSITIVITY ANALYSIS FOR ROBUST CONCLUSIONS ===\n")
+  sensitivity_results <- list()
+  
+  if (length(groups) == 2) {
+    for (var in numeric_vars) {
+      cat("Performing two-group sensitivity analysis for", var, "...\n")
+      sens_analysis <- sensitivity_analysis(data, var, group_column)
+      
+      if (!is.null(sens_analysis$summary)) {
+        sensitivity_results[[var]] <- sens_analysis
+        cat(sprintf("  - %d methods tested: %s\n", 
+                   sens_analysis$summary$methods_tested, 
+                   sens_analysis$summary$robust_conclusion))
+        
+        # Show method consistency  
+        if (!is.na(sens_analysis$summary$consistent_significance)) {
+          if (sens_analysis$summary$consistent_significance) {
+            cat("  - All methods agree on significance\n")
+          } else {
+            cat("  - Methods show mixed results - interpret with caution\n")
+          }
+        }
+      } else {
+        sensitivity_results[[var]] <- list(error = "Sensitivity analysis failed")
+      }
+    }
+    result$sensitivity_analysis <- sensitivity_results
+    cat("- Two-group sensitivity analysis completed\n")
+  } else if (length(groups) >= 3) {
+    for (var in numeric_vars) {
+      cat("Performing multi-group sensitivity analysis for", var, "...\n")
+      multigroup_sens <- multigroup_sensitivity_analysis(data, var, group_column)
+      
+      if (!is.null(multigroup_sens$summary)) {
+        sensitivity_results[[var]] <- multigroup_sens
+        cat(sprintf("  - %d methods tested (%d groups): %s\n", 
+                   multigroup_sens$summary$methods_tested,
+                   multigroup_sens$summary$n_groups,
+                   multigroup_sens$summary$robust_conclusion))
+        
+        # Show method consistency  
+        if (!is.na(multigroup_sens$summary$consistent_significance)) {
+          if (multigroup_sens$summary$consistent_significance) {
+            cat("  - All methods agree on significance\n")
+          } else {
+            cat("  - Methods show mixed results - interpret with caution\n")
+          }
+        }
+      } else {
+        sensitivity_results[[var]] <- list(error = "Multi-group sensitivity analysis failed")
+      }
+    }
+    result$sensitivity_analysis <- sensitivity_results
+    cat("- Multi-group sensitivity analysis completed\n")
+  } else {
+    cat("- Insufficient groups for sensitivity analysis\n")
+  }
+
+  # Step 3.8: MISSING DATA SENSITIVITY ANALYSIS
+  cat("\n=== STEP 3.8: MISSING DATA SENSITIVITY ANALYSIS ===\n")
+  missing_data_results <- list()
+  
+  for (var in numeric_vars) {
+    missing_count <- sum(is.na(data[[var]]))
+    if (missing_count > 0) {
+      cat("Analyzing missing data sensitivity for", var, "(", missing_count, "missing values)...\n")
+      missing_sens <- missing_data_sensitivity(data, var, group_column, n_imputations = 5)
+      
+      if (is.null(missing_sens$error)) {
+        missing_data_results[[var]] <- missing_sens
+        cat(sprintf("  - %s: p = %.4f (consistency: %.4f)\n", 
+                   ifelse(missing_sens$significant, "Significant", "Non-significant"),
+                   missing_sens$pooled_p_value, missing_sens$p_value_consistency))
+        
+        if (missing_sens$robust_conclusion) {
+          cat("  - Results are robust across imputations\n")
+        } else {
+          cat("  - Results vary across imputations - interpret with caution\n")
+        }
+      } else {
+        cat("  - Missing data analysis failed:", missing_sens$error, "\n")
+        missing_data_results[[var]] <- list(error = missing_sens$error)
+      }
+    } else {
+      cat(var, "- No missing data\n")
+    }
+  }
+  
+  if (length(missing_data_results) > 0) {
+    result$missing_data_sensitivity <- missing_data_results
+    cat("- Missing data sensitivity analysis completed\n")
+  } else {
+    cat("- No variables with missing data found\n")
+  }
+
   # Step 4: Enhanced Inferential Analysis (Multiple Regression & ANCOVA)
   cat("\n=== STEP 4: ENHANCED INFERENTIAL ANALYSIS ===\n")
   
