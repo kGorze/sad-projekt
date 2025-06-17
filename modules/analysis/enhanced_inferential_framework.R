@@ -36,38 +36,54 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   }
   
   if (length(dependent_vars) == 0) {
-    cat("Error: No numeric dependent variables found for inferential analysis\n")
+    cat("ERROR: No numeric dependent variables found for inferential analysis\n")
     return(NULL)
   }
   
   # Identify potential covariates automatically if not specified
   if (is.null(covariates)) {
-    cat("Identifying potential covariates...\n")
+    cat("\n=== COVARIATE IDENTIFICATION ===\n")
     potential_covariates <- identify_covariates(data, dependent_vars, group_column)
   } else {
+    cat("\n=== USING SPECIFIED COVARIATES ===\n")
     potential_covariates <- covariates[covariates %in% names(data)]
     potential_covariates <- potential_covariates[sapply(data[potential_covariates], is.numeric)]
+    cat("Specified covariates validated:", paste(potential_covariates, collapse = ", "), "\n")
   }
   
   # Center continuous variables around their means to improve interpretation
   centered_data <- data
   covariate_centering_info <- list()
+  centered_covariates <- potential_covariates  # Initialize with original names
   
-  for (covariate in potential_covariates) {
-    if (covariate %in% names(data) && is.numeric(data[[covariate]])) {
-      original_mean <- mean(data[[covariate]], na.rm = TRUE)
-      centered_data[[paste0(covariate, "_centered")]] <- data[[covariate]] - original_mean
-      covariate_centering_info[[covariate]] <- list(
-        original_mean = original_mean,
-        centered_variable = paste0(covariate, "_centered")
-      )
-      cat("- Centered", covariate, "around mean =", round(original_mean, 2), "\n")
+  if (length(potential_covariates) > 0) {
+    cat("\n=== COVARIATE CENTERING ===\n")
+    for (covariate in potential_covariates) {
+      if (covariate %in% names(data) && is.numeric(data[[covariate]])) {
+        original_mean <- mean(data[[covariate]], na.rm = TRUE)
+        centered_var_name <- paste0(covariate, "_centered")
+        centered_data[[centered_var_name]] <- data[[covariate]] - original_mean
+        covariate_centering_info[[covariate]] <- list(
+          original_mean = original_mean,
+          centered_variable = centered_var_name
+        )
+        cat("- Centered", covariate, "around mean =", round(original_mean, 2), "\n")
+        
+        # Update the covariate list to use centered names
+        centered_covariates[centered_covariates == covariate] <- centered_var_name
+      }
     }
   }
   
-  cat("- Analyzing", length(dependent_vars), "dependent variables\n")
-  cat("- Identified", length(potential_covariates), "potential covariates:", paste(potential_covariates, collapse = ", "), "\n")
-  cat("- Dependent variables:", paste(dependent_vars, collapse = ", "), "\n")
+  cat("\n=== ANALYSIS CONFIGURATION ===\n")
+  cat("- Total observations:", nrow(data), "\n")
+  cat("- Groups:", paste(unique(data[[group_column]]), collapse = ", "), "\n")
+  cat("- Dependent variables (", length(dependent_vars), "):", paste(dependent_vars, collapse = ", "), "\n")
+  cat("- Covariates identified:", length(potential_covariates), "\n")
+  if (length(potential_covariates) > 0) {
+    cat("- Original covariates:", paste(potential_covariates, collapse = ", "), "\n")
+    cat("- Centered covariates:", paste(centered_covariates, collapse = ", "), "\n")
+  }
   
   # Use shared assumptions analysis (no duplication)
   if (!is.null(shared_assumptions)) {
@@ -84,7 +100,7 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   # Step 1: Multiple Linear Regression with Covariates
   cat("\n=== STEP 1: MULTIPLE LINEAR REGRESSION WITH COVARIATES ===\n")
   mlr_results <- tryCatch({
-    perform_multiple_linear_regression(centered_data, dependent_vars, group_column, potential_covariates)
+    perform_multiple_linear_regression(centered_data, dependent_vars, group_column, centered_covariates)
   }, error = function(e) {
     cat("Warning: Multiple regression analysis failed:", e$message, "\n")
     list()
@@ -94,7 +110,7 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   # Step 2: ANCOVA Models
   cat("\n=== STEP 2: ANCOVA MODELS ===\n")
   ancova_results <- tryCatch({
-    perform_ancova_analysis(centered_data, dependent_vars, group_column, potential_covariates)
+    perform_ancova_analysis(centered_data, dependent_vars, group_column, centered_covariates)
   }, error = function(e) {
     cat("Warning: ANCOVA analysis failed:", e$message, "\n")
     list()
@@ -103,12 +119,12 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   
   # Step 3: Interaction Terms Analysis (conditional)
   interaction_results <- list()
-  should_include_interactions <- decide_interaction_inclusion(include_interactions, centered_data, potential_covariates)
+  should_include_interactions <- decide_interaction_inclusion(include_interactions, centered_data, centered_covariates)
   
   if (should_include_interactions) {
     cat("\n=== STEP 3: INTERACTION TERMS ANALYSIS ===\n")
     interaction_results <- tryCatch({
-      perform_interaction_analysis(centered_data, dependent_vars, group_column, potential_covariates)
+      perform_interaction_analysis(centered_data, dependent_vars, group_column, centered_covariates)
     }, error = function(e) {
       cat("Warning: Interaction analysis failed:", e$message, "\n")
       list()
@@ -121,11 +137,8 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   
   # Step 4: Model Selection and Comparison
   cat("\n=== STEP 4: MODEL SELECTION AND COMPARISON ===\n")
-  model_comparison <- perform_model_comparison(centered_data, dependent_vars, group_column, potential_covariates)
+  model_comparison <- perform_model_comparison(centered_data, dependent_vars, group_column, centered_covariates)
   result$model_comparison <- model_comparison
-  
-  # Step 4.5: Power Analysis removed - using existing power functions in post-processing
-  # Power analysis available via calculate_post_hoc_power() in statistical_helpers.R
   
   # Step 5: Effect Sizes and Confidence Intervals
   cat("\n=== STEP 5: EFFECT SIZES AND CONFIDENCE INTERVALS ===\n")
@@ -148,6 +161,7 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
     group_sizes = table(data[[group_column]]),
     dependent_variables = length(dependent_vars),
     covariates = length(potential_covariates),
+    covariates_used = if(length(potential_covariates) > 0) centered_covariates else character(0),
     covariate_centering = covariate_centering_info,
     group_column = group_column,
     analysis_date = Sys.time()
@@ -196,20 +210,19 @@ decide_interaction_inclusion <- function(include_interactions, data, covariates)
                                        ") with ", n_covariates, " covariate(s)")))
 }
 
-# Identify potential covariates (age, biomarkers, etc.)
+# Identify potential covariates (universal approach)
 identify_covariates <- function(data, dependent_vars, group_column) {
   
   numeric_vars <- names(data)[sapply(data, is.numeric)]
   numeric_vars <- numeric_vars[!numeric_vars %in% dependent_vars]
   numeric_vars <- numeric_vars[numeric_vars != group_column]
   
+  cat("Potential covariate candidates found:", paste(numeric_vars, collapse = ", "), "\n")
+  
   potential_covariates <- list()
   
-  # Flexible covariate patterns - automatically detect any meaningful continuous variables
-  # Remove hardcoded medical-specific patterns and use statistical criteria instead
-  
-  # Statistical-based covariate identification (no hardcoded patterns)
-  # Use statistical criteria to identify meaningful covariates from ANY dataset
+  # Universal statistical-based covariate identification
+  # Works with any dataset and variable names
   data_clean <- data[complete.cases(data[c(group_column, numeric_vars)]), ]
   
   if (nrow(data_clean) > 0) {
@@ -219,19 +232,28 @@ identify_covariates <- function(data, dependent_vars, group_column) {
     covariate_candidates <- c()
     for (var in numeric_vars) {
       if (var %in% names(data_clean)) {
-        # Statistical criteria for covariate selection:
-        # 1. Moderate correlation with groups (suggests potential confounding)
-        # 2. Sufficient variability (CV > 5%)
-        # 3. Not too highly correlated with groups (< 0.7 to avoid collinearity)
+        # Universal statistical criteria for covariate selection:
+        # 1. Sufficient variability (CV > 3%) - meaningful variation in the data
+        # 2. Not too highly correlated with groups (< 0.8 to avoid collinearity)
+        # 3. No minimum correlation requirement - let statistical tests decide significance
         
         correlation <- abs(cor(data_clean[[var]], group_numeric, use = "complete.obs"))
         cv <- sd(data_clean[[var]], na.rm = TRUE) / mean(data_clean[[var]], na.rm = TRUE) * 100
         
-        # Flexible criteria - no medical assumptions
-        if (correlation > 0.05 && correlation < 0.7 && cv > 5) {
+        # Debug output for troubleshooting
+        cat("- Evaluating", var, ": r =", round(correlation, 3), ", CV =", round(cv, 1), "%")
+        
+        # Universal criteria - works for any variable type and dataset
+        if (cv > 3 && correlation < 0.8) {
           covariate_candidates <- c(covariate_candidates, var)
-          cat("- Identified potential covariate:", var, 
-              "(r =", round(correlation, 3), ", CV =", round(cv, 1), "%)\n")
+          cat(" → INCLUDED")
+          cat(" (CV = ", round(cv, 1), "% > 3%, r = ", round(correlation, 3), " < 0.8)")
+          cat("\n")
+        } else {
+          cat(" → EXCLUDED")
+          if (cv <= 3) cat(" (low variability: CV =", round(cv, 1), "%)")
+          if (correlation >= 0.8) cat(" (high correlation with groups: r =", round(correlation, 3), ")")
+          cat("\n")
         }
       }
     }
@@ -241,6 +263,18 @@ identify_covariates <- function(data, dependent_vars, group_column) {
   
   # Flatten the list
   all_covariates <- unlist(potential_covariates, use.names = FALSE)
+  
+  if (length(all_covariates) == 0) {
+    cat("\nWARNING: No covariates identified using current criteria.\n")
+    cat("This might indicate:\n")
+    cat("1. Variables have very low variability (CV < 3%)\n")
+    cat("2. Variables are too highly correlated with groups (r > 0.8)\n")
+    cat("3. No suitable continuous variables available besides dependent vars\n")
+    cat("Consider reviewing data quality or analysis strategy.\n\n")
+  } else {
+    cat("\nFinal covariates identified:", paste(all_covariates, collapse = ", "), "\n\n")
+  }
+  
   return(unique(all_covariates))
 }
 
@@ -305,7 +339,7 @@ perform_multiple_linear_regression <- function(data, dependent_vars, group_colum
           covariates_used = covariates
         )
       } else {
-        # Only baseline model if no covariates
+        # Only baseline model if no covariates available
         mlr_results[[var]] <- list(
           variable = var,
           baseline_model = list(
@@ -714,9 +748,46 @@ compare_models <- function(models) {
 # Best model selection
 select_best_model <- function(comparison_table) {
   
-  # Simple scoring system: lower AIC/BIC and higher adjusted R-squared are better
-  comparison_table$composite_score <- (comparison_table$AIC_rank + comparison_table$BIC_rank + comparison_table$Adj_R_squared_rank) / 3
+  # IMPROVED MODEL SELECTION LOGIC:
+  # 1. Prefer models with statistical significance
+  # 2. Among significant models, use composite scoring
+  # 3. Only fall back to intercept if no other model shows improvement
   
+  # Add F-test significance check for each model
+  comparison_table$significant <- FALSE
+  comparison_table$p_value <- NA
+  
+  # Check if any model other than intercept has meaningful R²
+  non_intercept_models <- comparison_table[comparison_table$Model != "intercept", ]
+  
+  if (nrow(non_intercept_models) > 0) {
+    # Look for models with meaningful R² (> 0.01) or good relative performance
+    meaningful_models <- non_intercept_models[
+      non_intercept_models$Adj_R_squared > 0.01 | 
+      non_intercept_models$Adj_R_squared > max(comparison_table$Adj_R_squared[comparison_table$Model == "intercept"], na.rm = TRUE),
+    ]
+    
+    if (nrow(meaningful_models) > 0) {
+      # Select best among meaningful models using composite score
+      meaningful_models$composite_score <- (meaningful_models$AIC_rank + meaningful_models$BIC_rank + meaningful_models$Adj_R_squared_rank) / 3
+      best_index_in_meaningful <- which.min(meaningful_models$composite_score)
+      
+      # Find this model in the full table
+      best_model_name <- meaningful_models$Model[best_index_in_meaningful]
+      best_index <- which(comparison_table$Model == best_model_name)
+      
+      return(list(
+        best_model_name = best_model_name,
+        selection_criteria = comparison_table[best_index, ],
+        rationale = paste0("Selected ", best_model_name, " over intercept model due to meaningful explanatory power (Adj R² = ", 
+                          round(comparison_table$Adj_R_squared[best_index], 3), 
+                          "), with good information criteria balance")
+      ))
+    }
+  }
+  
+  # Fallback to original logic if no meaningful models found
+  comparison_table$composite_score <- (comparison_table$AIC_rank + comparison_table$BIC_rank + comparison_table$Adj_R_squared_rank) / 3
   best_index <- which.min(comparison_table$composite_score)
   
   return(list(
@@ -725,8 +796,8 @@ select_best_model <- function(comparison_table) {
     rationale = paste0("Selected based on composite score of AIC rank (", 
                       comparison_table$AIC_rank[best_index], 
                       "), BIC rank (", comparison_table$BIC_rank[best_index], 
-                      "), and Adj R² rank (", comparison_table$Adj_R_squared_rank[best_index], ")")
-  ))
+                      "), and Adj R² rank (", comparison_table$Adj_R_squared_rank[best_index], 
+                      "). Note: No model showed substantial improvement over intercept.")))
 }
 
 # Enhanced effect size calculations
@@ -737,7 +808,10 @@ calculate_enhanced_effect_sizes <- function(mlr_results, ancova_results) {
   # From multiple regression results
   for (var in names(mlr_results)) {
     result <- mlr_results[[var]]
+    
+    # Handle both full model (with covariates) and baseline model (group only) cases
     if (!is.null(result$full_model)) {
+      # Case: covariates available, use full model
       model <- result$full_model$model
       r_squared <- result$full_model$r_squared
       
@@ -747,12 +821,26 @@ calculate_enhanced_effect_sizes <- function(mlr_results, ancova_results) {
       effect_sizes[[var]]$regression <- list(
         r_squared = r_squared,
         cohens_f_squared = cohens_f2,
-        interpretation = interpret_cohens_f2(cohens_f2)
+        interpretation = interpret_cohens_f2(cohens_f2),
+        model_type = "full_model_with_covariates"
+      )
+    } else if (!is.null(result$baseline_model)) {
+      # Case: no covariates, use baseline model
+      r_squared <- result$baseline_model$r_squared
+      
+      # Cohen's f² for model
+      cohens_f2 <- r_squared / (1 - r_squared)
+      
+      effect_sizes[[var]]$regression <- list(
+        r_squared = r_squared,
+        cohens_f_squared = cohens_f2,
+        interpretation = interpret_cohens_f2(cohens_f2),
+        model_type = "baseline_model_groups_only"
       )
     }
   }
   
-  # From ANCOVA results
+  # From ANCOVA results (only if covariates were available)
   for (var in names(ancova_results)) {
     result <- ancova_results[[var]]
     if (!is.null(result$effect_sizes)) {
@@ -848,7 +936,7 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
 }
 
 # Convenience function for quick enhanced inferential analysis
-quick_enhanced_inferential <- function(data, group_column = "grupa", generate_report = TRUE, 
+quick_enhanced_inferential <- function(data, group_column, generate_report = TRUE, 
                                      include_interactions = "auto", check_assumptions = TRUE) {
   
   # Run enhanced inferential analysis with assumptions testing

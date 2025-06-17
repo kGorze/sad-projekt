@@ -1,81 +1,72 @@
 # Statistical comparisons between independent groups
 # Supports multiple groups (>2) with appropriate statistical tests
-# 
-# UPDATED: Now uses shared assumptions analysis from descriptive_stats to eliminate duplication
-# REMOVED: Duplicate perform_assumptions_testing() - uses pre-computed results
-# USES: Shared assumptions results from descriptive_stats module
-# REFACTORED: Main function split into modular components for better maintainability
 
-# Package dependencies
 source("modules/reporting/export_results.R")
 source("modules/analysis/enhanced_posthoc.R")
-
-# REFACTORED: Main function - now modular and cleaner
 perform_group_comparisons <- function(data, group_column = "grupa", include_plots = TRUE, include_power_analysis = TRUE, 
                                      shared_assumptions = NULL) {
   
   result <- create_analysis_result("comparative_analysis")
-  cat("Starting comparative analysis...\n")
+  cat("\n=== COMPARATIVE ANALYSIS WORKFLOW ===\n")
   
-  # Initialize analysis components
   variables <- identify_analysis_variables(data, group_column)
   result <- setup_assumptions_analysis(result, shared_assumptions, data, variables, group_column)
   
-  # Core statistical analysis pipeline
   result <- perform_core_statistical_tests(result, data, variables, group_column)
   result <- calculate_comprehensive_effect_sizes(result, data, variables, group_column)
   result <- perform_advanced_analyses(result, data, variables, group_column)
   result <- apply_residual_diagnostics(result, data, group_column)
   result <- perform_enhanced_posthoc_wrapper(data, result, group_column)
   
-  # Generate visualizations and finalize
   if (include_plots) {
     result <- generate_comparative_visualizations(result, data, variables, group_column)
   }
   
   result <- finalize_analysis_results(result, data, group_column, include_power_analysis)
   
-  cat("\nComparative analysis completed successfully.\n")
+  cat("\n=== COMPARATIVE ANALYSIS COMPLETED ===\n")
   return(result)
 }
 
-# REFACTORED: Extract variable identification logic
 identify_analysis_variables <- function(data, group_column) {
   numeric_vars <- names(data)[sapply(data, is.numeric)]
   categorical_vars <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
   
-  # Remove group column from analysis
   numeric_vars <- numeric_vars[numeric_vars != group_column]
   categorical_vars <- categorical_vars[categorical_vars != group_column]
   
-  cat("- Analyzing", length(numeric_vars), "continuous variables\n")
-  cat("- Analyzing", length(categorical_vars), "categorical variables\n")
+  cat("Data overview:\n")
+  cat("  - Continuous variables:", length(numeric_vars), "\n")
+  cat("  - Categorical variables:", length(categorical_vars), "\n")
+  cat("  - Analysis groups:", length(unique(data[[group_column]])), "\n\n")
   
   return(list(numeric = numeric_vars, categorical = categorical_vars))
 }
 
-# REFACTORED: Assumptions analysis setup
 setup_assumptions_analysis <- function(result, shared_assumptions, data, variables, group_column) {
   if (!is.null(shared_assumptions)) {
-    cat("\n=== STEP 1: USING SHARED ASSUMPTIONS ANALYSIS ===\n")
-    cat("- Reusing comprehensive assumptions testing from descriptive stats (eliminates duplication)\n")
+    cat("STEP 1: Statistical Assumptions Validation\n")
+    cat("─────────────────────────────────────────\n")
+    cat("Using shared assumptions analysis (optimized workflow)\n")
     result$assumptions_analysis <- shared_assumptions
     result$distribution_analysis <- shared_assumptions$normality_tests
     result$homogeneity_analysis <- shared_assumptions$homogeneity_tests
   } else {
-    cat("\n=== STEP 1: ASSUMPTIONS TESTING FALLBACK ===\n")
-    cat("- Warning: No shared assumptions provided, performing fresh analysis\n")
+    cat("STEP 1: Statistical Assumptions Testing\n")
+    cat("───────────────────────────────────────\n")
+    cat("WARNING: Performing independent assumptions analysis\n")
     assumptions_results <- perform_assumptions_testing(data, variables$numeric, group_column)
     result$assumptions_analysis <- assumptions_results
     result$distribution_analysis <- assumptions_results$normality_tests
     result$homogeneity_analysis <- assumptions_results$homogeneity_tests
   }
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Core statistical tests - simplified
 perform_core_statistical_tests <- function(result, data, variables, group_column) {
-  cat("\n=== STEP 2: STATISTICAL COMPARISONS ===\n")
+  cat("STEP 2: Statistical Hypothesis Testing\n")
+  cat("──────────────────────────────────────\n")
   
   test_recommendations <- result$assumptions_analysis$test_recommendations
   comparison_results <- perform_statistical_comparisons_updated(
@@ -84,38 +75,39 @@ perform_core_statistical_tests <- function(result, data, variables, group_column
   
   result$test_results <- comparison_results$test_results
   result$test_recommendations <- test_recommendations
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Unified effect size calculation
 calculate_comprehensive_effect_sizes <- function(result, data, variables, group_column) {
-  cat("\n=== STEP 3: COMPREHENSIVE EFFECT SIZE ANALYSIS ===\n")
+  cat("STEP 3: Effect Size Quantification\n")
+  cat("──────────────────────────────────\n")
   
-  # Cohen's D for all numeric variables
   result$effect_sizes <- calculate_all_cohens_d(data, variables$numeric, group_column)
   
-  # Bootstrap confidence intervals
   groups <- unique(data[[group_column]])
   result$bootstrap_effect_sizes <- calculate_bootstrap_effect_sizes(data, variables$numeric, group_column, groups)
   
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Advanced analyses - consolidated
 perform_advanced_analyses <- function(result, data, variables, group_column) {
   groups <- unique(data[[group_column]])
   
-  # Conditional analyses based on group structure
+  cat("STEP 4: Advanced Statistical Analyses\n")
+  cat("────────────────────────────────────\n")
+  
   if (length(groups) == 2) {
     result <- perform_two_group_advanced_analysis(result, data, variables$numeric, group_column)
   } else if (length(groups) >= 3) {
     result <- perform_multi_group_advanced_analysis(result, data, variables$numeric, group_column)
   }
   
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Simplified effect size calculations
 calculate_all_cohens_d <- function(data, numeric_vars, group_column) {
   effect_size_results <- list()
   
@@ -132,9 +124,8 @@ calculate_all_cohens_d <- function(data, numeric_vars, group_column) {
   return(effect_size_results)
 }
 
-# REFACTORED: Bootstrap analysis - unified approach
 calculate_bootstrap_effect_sizes <- function(data, numeric_vars, group_column, groups) {
-  cat("\n=== BOOTSTRAP CONFIDENCE INTERVALS ===\n")
+  cat("  Bootstrap confidence intervals\n")
   bootstrap_results <- list()
   
   bootstrap_function <- if (length(groups) == 2) {
@@ -146,15 +137,14 @@ calculate_bootstrap_effect_sizes <- function(data, numeric_vars, group_column, g
   effect_type <- if (length(groups) == 2) "Cohen's d" else "eta-squared"
   
   for (var in numeric_vars) {
-    cat("Calculating bootstrap CI for", effect_type, "for", var, "...\n")
+    cat("    -", var, ":")
     bootstrap_result <- bootstrap_function(var)
     
     if (is.null(bootstrap_result$error)) {
       bootstrap_results[[var]] <- bootstrap_result
-      cat(sprintf("  - Bootstrap %s CI [%.3f, %.3f] (mean = %.3f)\n", 
-                 effect_type, bootstrap_result$ci_lower, bootstrap_result$ci_upper, bootstrap_result$bootstrap_mean))
+      cat(sprintf(" [%.3f, %.3f]\n", bootstrap_result$ci_lower, bootstrap_result$ci_upper))
     } else {
-      cat("  - Bootstrap failed:", bootstrap_result$error, "\n")
+      cat(" failed\n")
       bootstrap_results[[var]] <- list(error = bootstrap_result$error)
     }
   }
@@ -162,39 +152,32 @@ calculate_bootstrap_effect_sizes <- function(data, numeric_vars, group_column, g
   return(bootstrap_results)
 }
 
-# REFACTORED: Two-group specific analyses
 perform_two_group_advanced_analysis <- function(result, data, numeric_vars, group_column) {
-  cat("\n=== TWO-GROUP ADVANCED ANALYSES ===\n")
+  cat("  Two-group equivalence and sensitivity testing\n")
   
-  # Equivalence testing
   equivalence_results <- list()
   for (var in numeric_vars) {
-    cat("Performing equivalence test for", var, "...\n")
+    cat("    - Equivalence test:", var, "\n")
     equiv_test <- equivalence_test(data, var, group_column, equivalence_bound = 0.2)
     equivalence_results[[var]] <- if (is.null(equiv_test$error)) equiv_test else list(error = equiv_test$error)
   }
   result$equivalence_tests <- equivalence_results
   
-  # Sensitivity analysis
   result$sensitivity_analysis <- perform_sensitivity_analysis_batch(data, numeric_vars, group_column, "two_group")
   
   return(result)
 }
 
-# REFACTORED: Multi-group specific analyses  
 perform_multi_group_advanced_analysis <- function(result, data, numeric_vars, group_column) {
-  cat("\n=== MULTI-GROUP ADVANCED ANALYSES ===\n")
+  cat("  Multi-group sensitivity and robustness testing\n")
   
-  # Multi-group sensitivity analysis
   result$sensitivity_analysis <- perform_sensitivity_analysis_batch(data, numeric_vars, group_column, "multi_group")
   
-  # Missing data sensitivity
   result$missing_data_sensitivity <- perform_missing_data_analysis(data, numeric_vars, group_column)
   
   return(result)
 }
 
-# REFACTORED: Batch sensitivity analysis
 perform_sensitivity_analysis_batch <- function(data, numeric_vars, group_column, analysis_type) {
   sensitivity_results <- list()
   
@@ -205,56 +188,54 @@ perform_sensitivity_analysis_batch <- function(data, numeric_vars, group_column,
   }
   
   for (var in numeric_vars) {
-    cat("Performing", analysis_type, "sensitivity analysis for", var, "...\n")
+    cat("    - Sensitivity test:", var, "...")
     sens_result <- analysis_function(data, var, group_column)
     
     if (!is.null(sens_result$summary)) {
       sensitivity_results[[var]] <- sens_result
-      consistency_msg <- if (sens_result$summary$consistent_significance) "All methods agree" else "Mixed results"
-      cat("  -", sens_result$summary$methods_tested, "methods tested:", consistency_msg, "\n")
+      consistency_msg <- if (sens_result$summary$consistent_significance) "consistent" else "mixed"
+      cat(" ", consistency_msg, "\n")
     } else {
       sensitivity_results[[var]] <- list(error = "Sensitivity analysis failed")
+      cat(" failed\n")
     }
   }
   
   return(sensitivity_results)
 }
 
-# REFACTORED: Missing data analysis
 perform_missing_data_analysis <- function(data, numeric_vars, group_column) {
-  cat("\n=== MISSING DATA SENSITIVITY ANALYSIS ===\n")
+  cat("    Missing data sensitivity analysis\n")
   missing_data_results <- list()
   
   for (var in numeric_vars) {
     missing_count <- sum(is.na(data[[var]]))
     if (missing_count > 0) {
-      cat("Analyzing missing data sensitivity for", var, "(", missing_count, "missing values)...\n")
+      cat("      -", var, "(", missing_count, "missing):")
       missing_sens <- missing_data_sensitivity(data, var, group_column, n_imputations = 5)
       
       if (is.null(missing_sens$error)) {
         missing_data_results[[var]] <- missing_sens
         robustness_msg <- if (missing_sens$robust_conclusion) "robust" else "variable"
-        cat("  - Results are", robustness_msg, "across imputations\n")
+        cat(" ", robustness_msg, "\n")
       } else {
-        cat("  - Missing data analysis failed:", missing_sens$error, "\n")
+        cat(" failed\n")
         missing_data_results[[var]] <- list(error = missing_sens$error)
       }
     } else {
-      cat(var, "- No missing data\n")
+      cat("      -", var, ": complete\n")
     }
   }
   
   return(missing_data_results)
 }
 
-# REMOVED: Enhanced inferential analysis - this belongs to enhanced_inferential_framework.R module
-# Each module should have clear separation of concerns:
-# - comparative_analysis.R: group comparisons, statistical tests, effect sizes
-# - enhanced_inferential_framework.R: regression, ANCOVA, interactions
+
 
 # REFACTORED: Residual diagnostics application
 apply_residual_diagnostics <- function(result, data, group_column) {
-  cat("\n=== RESIDUAL DIAGNOSTICS AND FIXES ===\n")
+  cat("STEP 5: Model Diagnostics & Corrections\n")
+  cat("───────────────────────────────────────\n")
   
   if (file.exists("modules/analysis/residual_transformation.R")) {
     source("modules/analysis/residual_transformation.R")
@@ -262,54 +243,56 @@ apply_residual_diagnostics <- function(result, data, group_column) {
     residual_fixes_result <- tryCatch({
       apply_residual_fixes_to_analysis(data, group_column)
     }, error = function(e) {
-      cat("Note: Residual transformation analysis failed:", e$message, "\n")
+      cat("WARNING: Residual transformation analysis failed:", e$message, "\n")
       NULL
     })
     
     if (!is.null(residual_fixes_result)) {
       result$residual_fixes <- residual_fixes_result
       result <- apply_fixes_to_main_results(result, residual_fixes_result, data, group_column)
-      cat("- Residual transformation analysis completed\n")
+      cat("Model diagnostics completed\n")
     }
   } else {
-    cat("Residual transformation module not found. Skipping residual fixes.\n")
+    cat("WARNING: Residual transformation module not found\n")
   }
   
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Enhanced post-hoc wrapper - fixed recursive call
 perform_enhanced_posthoc_wrapper <- function(data, result, group_column) {
-  cat("\n=== ENHANCED POST HOC ANALYSIS ===\n")
+  cat("STEP 6: Post-hoc Comparisons\n")
+  cat("────────────────────────────\n")
   enhanced_posthoc_results <- perform_enhanced_posthoc_analysis(data, result, group_column)
   result$enhanced_posthoc <- enhanced_posthoc_results
   
   if (length(enhanced_posthoc_results) > 0) {
-    cat("- Enhanced post hoc analysis completed for", length(enhanced_posthoc_results), "variables\n")
+    cat("Post-hoc analysis completed for", length(enhanced_posthoc_results), "variables\n")
     result$posthoc_summary <- create_comprehensive_posthoc_summary(enhanced_posthoc_results)
   } else {
-    cat("- No significant omnibus tests found requiring post hoc analysis\n")
+    cat("No significant omnibus tests requiring post-hoc analysis\n")
   }
   
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Visualization generation
 generate_comparative_visualizations <- function(result, data, variables, group_column) {
-  cat("\n=== GENERATING VISUALIZATIONS ===\n")
+  cat("STEP 7: Statistical Visualizations\n")
+  cat("──────────────────────────────────\n")
   
   plots_output_path <- file.path("output", "plots", "comparative_analysis")
   plots_result <- create_comparative_plots(data, variables$numeric, variables$categorical, group_column, plots_output_path)
   
   result$plots <- plots_result$plots
   result$plot_files <- plots_result$plot_files
-  cat("- Generated", length(plots_result$plots), "comparison plots\n")
-  cat("- Saved", length(plots_result$plot_files), "plot files\n")
+  cat("Generated", length(plots_result$plots), "statistical plots\n")
+  cat("Saved to:", plots_output_path, "\n")
   
+  cat("\n")
   return(result)
 }
 
-# REFACTORED: Final result preparation
 finalize_analysis_results <- function(result, data, group_column, include_power_analysis) {
   # Map data structures for HTML report compatibility
   result <- map_distribution_analysis(result)
@@ -319,7 +302,6 @@ finalize_analysis_results <- function(result, data, group_column, include_power_
   return(result)
 }
 
-# REFACTORED: Distribution analysis mapping
 map_distribution_analysis <- function(result) {
   if (!is.null(result$assumptions_analysis) && !is.null(result$assumptions_analysis$normality_tests)) {
     result$distribution_analysis <- list()
@@ -355,7 +337,6 @@ map_distribution_analysis <- function(result) {
   return(result)
 }
 
-# REFACTORED: Test recommendations mapping
 map_test_recommendations <- function(result) {
   if (!is.null(result$assumptions_analysis) && !is.null(result$assumptions_analysis$test_recommendations)) {
     mapped_recommendations <- lapply(result$assumptions_analysis$test_recommendations, function(rec_data) {
@@ -370,7 +351,6 @@ map_test_recommendations <- function(result) {
   return(result)
 }
 
-# REFACTORED: Metadata addition
 add_analysis_metadata <- function(result, data, group_column, include_power_analysis) {
   variables <- identify_analysis_variables(data, group_column)
   
@@ -388,19 +368,12 @@ add_analysis_metadata <- function(result, data, group_column, include_power_anal
   return(result)
 }
 
-# REFACTORED: Helper function for null coalescing
 `%||%` <- function(x, y) if (is.null(x)) y else x
 
-# REFACTORED: Helper for normality interpretation
 create_normality_interpretation <- function(test_result) {
   paste0(test_result$test, " (p = ", format.pval(test_result$p_value, digits = 4), ") - ",
          ifelse(test_result$p_value > 0.05, "Normal", "Non-normal"))
 }
-
-# REMOVED: assess_distributions() - replaced by assumptions_dashboard.R perform_assumptions_testing()
-# REMOVED: test_normality_overall() - replaced by assumptions_dashboard.R perform_optimal_normality_test()  
-# REMOVED: test_normality_by_group() - replaced by assumptions_dashboard.R group testing
-# REMOVED: calculate_distribution_stats() - replaced by assumptions_dashboard.R descriptive measures
 
 # Updated statistical comparisons using centralized test recommendations
 perform_statistical_comparisons_updated <- function(data, numeric_vars, categorical_vars, group_column, test_recommendations) {
@@ -551,12 +524,6 @@ perform_anova_with_sensitivity_check <- function(data, variable, group_column) {
     borderline_handling = "Dual test approach due to borderline normality assumptions"
   ))
 }
-
-# REMOVED: assess_homogeneity() - replaced by assumptions_dashboard.R homogeneity testing
-
-# REMOVED: perform_statistical_comparisons() - replaced by perform_statistical_comparisons_updated() using assumptions_dashboard.R
-
-# REMOVED: determine_appropriate_test() - replaced by assumptions_dashboard.R test recommendations
 
 # Calculate confidence interval for eta-squared
 calculate_eta_squared_ci <- function(anova_result, eta_squared) {
