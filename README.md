@@ -1,77 +1,86 @@
-# Sprawozdanie SAD, wersja 0.0.38
-Gorzelańczyk Konrad, 159909, Bioinformatyka 4 semestr
+# DCCI Medical Data, version 0.0.60
 
-### Struktura programu i funkcjonalności
+### Program structure and functionality
 
-Program składa się z **modularnej architektury obejmującej cztery główne moduły analityczne**, każdy odpowiedzialny za inny aspekt analizy statystycznej. Wszystkie moduły współpracują ze sobą, tworząc kompleksowy system analizy danych.
+The program follows a **modular architecture with four main analytical modules**, each responsible for a different aspect of statistical analysis. All modules work together to form a comprehensive data-analysis system.
 
-- **Moduł przygotowania danych**
+* **Data-Preparation Module**
+
 ```bash
-# Automatyczne przygotowanie danych z domyślnymi ustawieniami i różnymi plikami wejściowymi
-Rscript main.R --input dane.csv --export
+# Automatic data preparation with default settings and various input files
+Rscript main.R --input data.csv --export
 ```
-Program automatycznie wczytuje dane, rozpoznaje typy zmiennych i kolumnę grupującą, klasyfikuje braki (MCAR, MAR, MNAR) i dobiera optymalną imputację: regresję dla MAR, MICE przy licznych brakach lub proste techniki dla MCAR, z analizą wrażliwości. Outliery wykrywa IQR-em, Z-score i zmodyfikowanym Z-score, następnie winsoryzuje, usuwa lub log-transformuje je, a gdy > 15 % obserwacji to odstające, automatycznie rekomenduje testy nieparametryczne. Wszystkie działania są dokładnie udokumentowane w raporcie końcowym.
 
-- **Moduł statystyk opisowych**
+The program automatically loads the data, detects variable types and the grouping column, classifies missingness (MCAR, MAR, MNAR) and chooses the optimal imputation method: regression for MAR, MICE for many missing values, or simple techniques for MCAR, with a sensitivity analysis. Outliers are detected with IQR, Z-score, and modified Z-score, then winsorised, removed, or log-transformed; if > 15 % of observations are outliers, the system automatically recommends non-parametric tests. Every step is fully documented in the final report.
+
+* **Descriptive-Statistics Module**
+
 ```bash
-# Generowanie statystyk opisowych z raportem HTML
-Rscript main.R --descriptive_stats --input dane.csv --report --export
+# Generate descriptive statistics with an HTML report
+Rscript main.R --descriptive_stats --input data.csv --report --export
 ```
-Drugi moduł generuje kompleksowe charakterystyki dla każdej grupy badawczej. Program automatycznie oblicza podstawowe miary tendencji centralnej (średnia, mediana), miary rozproszenia (odchylenie standardowe, rozstęp międzykwartylowy), oraz miary kształtu rozkładu (skośność, kurtoza). Wyniki są prezentowane oprócz konsoli w przejrzystych tabelach HTML z kolorowym kodowaniem ułatwiającym interpretację. Program automatycznie dostosowuje liczbę miejsc dziesiętnych do charakteru zmiennej i generuje dodatkowe statystyki jak współczynnik zmienności dla lepszego zrozumienia danych.
 
-- **Moduł analizy porównawczej**
+This module produces a comprehensive profile for each study group. It automatically computes measures of central tendency (mean, median), dispersion (standard deviation, interquartile range) and distribution shape (skewness, kurtosis). Results are shown in the console and in clear HTML tables with colour-coding to aid interpretation. The program adapts the number of decimal places to each variable, and adds extra metrics such as the coefficient of variation for deeper insight.
+
+* **Comparative-Analysis Module**
+
 ```bash
-# Analiza porównawcza z raportem HTML
-Rscript main.R --comparative_analysis --input dane.csv --report --export
+# Comparative analysis with an HTML report
+Rscript main.R --comparative_analysis --input data.csv --report --export
 ```
-Moduł 3 najpierw testuje normalność (Shapiro-Wilk < 50, Anderson-Darling ≥ 50) i równość wariancji (Levene, Bartlett, Fligner), po czym automatycznie wybiera ANOVA, ANOVA Welcha, Kruskala-Wallisa lub X^2, oblicza wielkości efektu i post-hoc z korekcją wielokrotną. Równocześnie imputuje braki: średnia/mediana przy nielicznych MCAR, regresja przy zależnościach, MICE przy licznych złożonych wzorcach, a raport pokazuje, jak te decyzje wpływają na wnioski.
 
-- **Moduł analizy korelacji**
+First, the module checks normality (Shapiro–Wilk < 50 cases, Anderson–Darling ≥ 50) and homogeneity of variance (Levene, Bartlett, Fligner). It then automatically selects ANOVA, Welch’s ANOVA, Kruskal–Wallis, or χ², calculates effect sizes, and performs post-hoc tests with multiple-comparison corrections. Missing values are imputed on the fly: mean/median for sparse MCAR, regression for patterned missingness, MICE for complex cases. The report shows how these choices influence the conclusions.
+
+* **Correlation-Analysis Module**
+
 ```bash
-# Analiza korelacji z raportem HTML
-Rscript main.R --correlation_analysis --input dane.csv --report --export
+# Correlation analysis with an HTML report
+Rscript main.R --correlation_analysis --input data.csv --report --export
 ```
-Czwarty moduł bada wzajemne relacje między zmiennymi. Program automatycznie wybiera między korelacją Pearsona (dla danych normalnych) a korelacją Spearmana (dla danych nienormalnych). System implementuje korekcję FDR (False Discovery Rate) dla kontroli błędu I rodzaju przy wielokrotnych porównaniach. Wyniki są prezentowane w formie macierzy korelacji z kolorowym kodowaniem siły związków oraz szczegółowych tabel pokazujących istotne korelacje z interpretacją siły związku.
 
+This module explores relationships among variables, choosing Pearson’s correlation for normal data or Spearman’s for non-normal data. It applies FDR (False Discovery Rate) correction to control Type I error under multiple testing. Results appear as a correlation matrix with colour-coded strengths and detailed tables listing significant correlations with an interpretation of effect size.
 
+* **Advanced Inferential-Analysis Module**
 
-- **Moduł zaawansowanej analizy inferencjalnej** 
 ```bash
-# Zaawansowana analiza inferential z raportem
-Rscript main.R --enhanced_inferential --input dane.csv --report --export
+# Enhanced inferential analysis with a report
+Rscript main.R --enhanced_inferential --input data.csv --report --export
 ```
-Moduł 5 wyszukuje zmienne towarzyszące o umiarkowanej korelacji z grupą (około 5-80%) i współczynniku zmienności przekraczającym 5%. Te zmienne są centrowane wokół własnej średniej, a następnie porównuje się modele zawierające tylko informację o grupie z modelami rozszerzonymi o kowariancje, wykorzystując regresję wielokrotną i analizę kowariancji. Obliczane są średnie marginalne i kontrasty parami. Jeżeli próba liczy co najmniej 75 obserwacji (oraz co najmniej 20 przypadków na każdą zmienną towarzyszącą), moduł bada także interakcję między grupą a kowariancją. Optymalny model wybiera przy pomocy kryterium informacyjnego Akaike’a, kryterium Bayesa oraz skorygowanego współczynnika determinacji. W końcu raportuje wielkość efektu jako częściowe eta kwadrat dla analiz kowariancji i współczynnik f kwadrat dla regresji.
-## Raporty wyjściowe
 
-Istnieje opcja zrobienia kompleksowej analizy danych poprzez zjednoczony raport, który składa się z wszystkich innych:
+Module 5 searches for covariates moderately correlated with the group (≈ 5–80 %) and with a coefficient of variation > 5 %. These variables are centred on their own means, and models containing only the group factor are compared with models that add the covariates, using multiple regression and ANCOVA. Marginal means and pairwise contrasts are computed. If the sample has at least 75 observations (and ≥ 20 cases per covariate), the module also tests the group × covariate interaction. The optimal model is chosen with Akaike and Bayesian information criteria plus adjusted R². Effect sizes are reported as partial η² for ANCOVA and f² for regression.
+
+## Output reports
+
+A full data analysis can be produced via a unified report:
+
 ```bash
 Rscript main.R --unified_dashboard
 ```
 
-Program wtedy generuje cztery szczegółowe raporty HTML:
-- **Statystyki opisowe** z charakterystykami grup i testami założeń
-- **Analiza porównawcza** z testami różnic międzygrupowych 
-- **Analiza korelacji** ze wszystkimi istotnymi związkami i kontrolą FDR
-- **Zaawansowana analiza inferential** z modelowaniem ANCOVA, regresją wielokrotną i analizą interakcji
-i łączy je poprzez indeks. **Wszystkie wykresy są zapisywane również jako osobne pliki PNG.**
+The program then generates four detailed HTML reports:
 
-## Przykładowe dane z labolatoriów - raporty w output/reports
-1. Raport statystyczny automatycznie diagnozuje dane biomedyczne z trzech grup (CHOR1, CHOR2, KONTROLA, po 25 przypadków). Narzędzie rozpoznaje typy zmiennych, brakujące wartości oraz rozkłady - wskazało przede wszystkim nienormalność hsCRP, PLT i MON oraz graniczne odstępstwa dla wieku, HGB, HCT i LEU. Mimo to wariancje są jednorodne, dlatego algorytm proponuje Welch-ANOVA przy nierównych wariancjach albo Kruskal-Wallis, gdy rozkład jest wyraźnie odchylony. Wykresy gęstości i słupki płci ułatwiają wizualną ocenę. Analiza skrajnych obserwacji podkreśliła MON i hsCRP jako potencjalne outliery.
+* **Descriptive statistics** with group profiles and assumption tests
+* **Comparative analysis** with between-group tests
+* **Correlation analysis** showing all significant associations with FDR control
+* **Advanced inferential analysis** with ANCOVA, multiple regression, and interaction tests
 
+and links them through an index page. **All plots are also saved separately as PNG files.**
 
-2. Analiza korelacji pokazuje mapę wzajemnych zależności między dziewięcioma zmiennymi krwi w 75 obserwacjach i trzech grupach. Globalnie dominują dodatnie związki erytrocytowe: HGB-HCT (r = 0,85), ERY-HGB (0,70) i ERY-HCT (0,67). Umiarkowane zależności to HGB-MCHC (+0,49) oraz ujemne PLT-MCHC (-0,32) i wiek-MCHC/LEU (-0,31). W CHOR1 wyróżnia się hsCRP-MON (+0,58) oraz mocny klaster HGB-HCT-MCHC. CHOR2 potwierdza silne trójkowe powiązania erytrocytowe, lecz bez istotnych związków zapalnych. W grupie kontrolnej wiek dodatnio koreluje z ERY i ujemnie z LEU, a ERY sprzęga się zarówno z PLT, jak i odwrotnie z MCHC. Macierze i histogram pokazują, że większość współczynników oscyluje wokół zera, podkreślając selektywność odkrytych relacji statystycznych.
+## Sample laboratory data – reports in `output/reports`
 
+1. The statistical report automatically diagnoses biomedical data from three groups (DISEASE1, DISEASE2, CONTROL; 25 cases each). It detects variable types, missing values, and distributions – highlighting pronounced non-normality for hsCRP, PLT, and MON, with borderline deviations for age, HGB, HCT, and LEU. Variances are homogeneous, so the algorithm proposes Welch’s ANOVA when variances differ, or Kruskal–Wallis when the distribution is clearly skewed. Density plots and sex bar charts aid visual assessment. Outlier analysis flags MON and hsCRP as potential outliers.
 
-3. W porównawczej analizie trzech równolicznych grup (CHOR1, CHOR2, KONTROLA) przetestowano dziewięć zmiennych ciągłych i jedną kategorialną, każdorazowo dobierając test na podstawie normalności i homogeniczności wariancji. Większość parametrów nie różniła się istotnie między grupami (wiek, hsCRP, ERY, PLT, MON, LEU, płeć). Statystycznie znaczące różnice ujawniono dla hemoglobiny, hematokrytu i MCHC (Welch-ANOVA, p ≤ 0,013), efekty były duże (d 0,87-1,07) i miały wysoką moc (> 85 %). Transformacje log lub metody nieparametryczne zabezpieczały modele z nienormalnymi resztami.
+2. The correlation analysis maps relationships among nine blood variables in 75 observations across three groups. Positive erythrocyte-related links dominate globally: HGB–HCT (r = 0.85), ERY–HGB (0.70), ERY–HCT (0.67). Moderate associations include HGB–MCHC (+0.49) and negative PLT–MCHC (-0.32) and age–MCHC/LEU (-0.31). In DISEASE1, hsCRP–MON (+0.58) and a strong HGB–HCT–MCHC cluster stand out. DISEASE2 confirms robust erythrocyte triplets but lacks significant inflammatory links. In controls, age correlates positively with ERY and negatively with LEU, while ERY aligns positively with PLT and inversely with MCHC. Matrices and histograms show most coefficients hover near zero, underlining the selectivity of the detected relationships.
 
-4. Analiza wpływów testuje dla każdej z dziewięciu zmiennych dwa proste modele: sam wyraz wolny („intercept”) versus „group-only”. Kryterium AIC/BIC i skorygowane R² wskazało, że dla większości parametrów (wiek, hsCRP, ERY, PLT, MON, LEU) najlepszy jest model bez efektu grupy. Różnice między CHOR1, CHOR2 i kontrolą nie poprawiają dopasowania. Jedynie HGB (Adj R² $\approx$ 0,17), HCT (0,07) i MCHC (0,13) korzystają z modelu „group-only”, potwierdzając wcześniejsze wyniki ANOVA. Nie stwierdzono interakcji grupa $\times$ kowariaty, co oznacza jednolity efekt grupy w całej próbie. Łącznie wskazuje to na selektywny, lecz stabilny wpływ choroby na parametry erytrocytarne.
+3. The comparative analysis of the three equal groups tests nine continuous and one categorical variable, choosing the test each time based on normality and variance homogeneity. Most parameters do not differ significantly between groups (age, hsCRP, ERY, PLT, MON, LEU, sex). Significant differences emerge for haemoglobin, haematocrit, and MCHC (Welch’s ANOVA, p ≤ 0.013); effect sizes are large (d 0.87–1.07) with high power (> 85 %). Log transformations or non-parametric methods safeguard models with non-normal residuals.
 
+4. Influence analysis fits two simple models for each of the nine variables: intercept-only vs. group-only. AIC/BIC and adjusted R² indicate that for most parameters (age, hsCRP, ERY, PLT, MON, LEU) the intercept model is best—group membership does not improve fit. Only HGB (Adj R² ≈ 0.17), HCT (0.07), and MCHC (0.13) benefit from the group-only model, confirming earlier ANOVA results. No group × covariate interactions are found, implying a uniform group effect across the sample. Overall, this points to a selective yet stable impact of disease on erythrocyte parameters.
 
-## Architektura projektu
+## Project architecture
 
-### Główny skrypt main.r
+### Main script `main.r`
 
-Plik main.r ładuje wszystkie wymienione moduły i definiuje interfejs wiersza poleceń, dzięki któremu można uruchamiać poszczególne analizy:
+The file `main.r` loads all listed modules and defines a command-line interface for running individual analyses:
 
 ```R
 source("modules/utils/config.R")
@@ -90,40 +99,36 @@ source("modules/reporting/generate_report.R")
 source("modules/reporting/export_results.R")
 ```
 
+### Module structure
 
-### Struktura modułów
-
+```
 modules/
-- analysis/     implementacja głównych analiz statystycznych
-- data/         wczytywanie, inspekcja i naprawa danych
-- reporting/    generowanie raportów i eksport wyników
-- utils/        konfiguracja, logowanie i funkcje pomocnicze
+- analysis/    core statistical-analysis implementations
+- data/        data loading, inspection, and repair
+- reporting/   report generation and result export
+- utils/       configuration, logging, and helper functions
+```
 
+### Files in `modules/analysis`
 
-### Pliki w modules/analysis
-descriptive_stats.R, comparative_analysis.R, correlation_analysis.R – główne moduły analityczne realizujące odpowiednio statystyki opisowe, porównania grup oraz analizy korelacji.
+* `descriptive_stats.R`, `comparative_analysis.R`, `correlation_analysis.R` – main analytical modules for descriptive statistics, group comparisons, and correlation analysis.
+* `enhanced_inferential_framework.R` – advanced inferential analysis (ANCOVA, regression, interactions).
+* `assumptions_dashboard.R`, `master_descriptive_summary.R`, `enhanced_posthoc.R`, `residual_transformation.R` – support functions for assumption testing, descriptive summaries, post-hoc analysis, and residual diagnostics.
 
-enhanced_inferential_framework.R – moduł rozszerzonej analizy inferencyjnej (ANCOVA, regresja, interakcje).
+### Files in `modules/data`
 
-assumptions_dashboard.R, master_descriptive_summary.R, enhanced_posthoc.R, residual_transformation.R – wspierające funkcje dotyczące testów założeń, podsumowania opisowego, analizy post‑hoc oraz diagnostyki reszt.
+* `fetch_dataset.R` – loads a CSV file, detects encoding, and converts data types.
+* `inspect_data.R`, `validate_data.R` – check dataset structure and validity.
+* `repair_dataset.R` – performs missing-value analysis, imputation, outlier detection, and produces a data-cleaning report.
 
-### Pliki w modules/data
-fetch_dataset.R – wczytuje plik CSV, wykrywa kodowanie i konwertuje typy danych
+### Files in `modules/reporting`
 
-inspect_data.R, validate_data.R – sprawdzają strukturę i poprawność zbioru.
+* `generate_report.R` – creates HTML reports for any analysis module, combining results and plots.
+* `export_results.R` – saves tables and outputs to `output/tables`.
 
-repair_dataset.R – wykonuje analizę braków, imputację, wykrywanie/outlierów i generuje raport z czyszczenia danych
+### Files in `modules/utils`
 
-### Pliki w modules/reporting
-generate_report.R – tworzy raporty HTML dla dowolnego modułu analizy, łącząc wyniki i wykresy
-
-export_results.R – zapisuje tabele i dane wyjściowe do katalogu output/tables.
-
-### Pliki w modules/utils
-config.R – przechowuje globalne ustawienia analizy (poziom istotności, parametry wykresów itp.)
-
-logging.R – obsługa logów wykonywanych kroków i błędów podczas analizy
-
-plotting_utils.R – narzędzia do zarządzania urządzeniami graficznymi oraz bezpiecznego zapisu wykresów
-
-statistical_helpers.R – funkcje statystyczne wykorzystywane w analizach (np. liczenie skośności, kurtozy, z-score)
+* `config.R` – global analysis settings (significance level, plot parameters, etc.).
+* `logging.R` – logging of analysis steps and errors.
+* `plotting_utils.R` – tools for managing graphic devices and safely saving plots.
+* `statistical_helpers.R` – statistical functions used in analyses (e.g., skewness, kurtosis, z-score).
