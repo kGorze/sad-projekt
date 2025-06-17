@@ -175,7 +175,7 @@ perform_optimal_normality_test <- function(variable_data) {
   # Task H: Enhanced normality classification with borderline flags
   p_value <- test_result$p.value
   is_normal <- p_value > 0.05
-  is_borderline <- p_value > 0.01 & p_value <= 0.10  # Borderline range
+  is_borderline <- p_value > 0.01 & p_value <= 0.05  # Fixed: Borderline range 0.01-0.05
   
   # Create detailed classification
   normality_flag <- determine_normality_flag(p_value)
@@ -622,35 +622,57 @@ generate_test_recommendations <- function(normality_results, homogeneity_results
     mostly_normal <- (group_normal_count / total_groups) >= 0.7
     has_borderline <- overall_borderline || group_borderline_count > 0
     
-    # Determine homogeneity status
+    # Determine homogeneity status - FIXED LOGIC
     variances_homogeneous <- TRUE
     if (!is.null(homo_result)) {
-      homogeneity_recommendation <- homo_result$recommendation
-      variances_homogeneous <- grepl("Homogeneous", homogeneity_recommendation)
+      # Use Levene test result directly (primary determinant)
+      if (!is.null(homo_result$levene_test) && !is.null(homo_result$levene_test$homogeneous)) {
+        variances_homogeneous <- homo_result$levene_test$homogeneous
+      } else {
+        # Fallback to recommendation text parsing
+        homogeneity_recommendation <- homo_result$recommendation
+        variances_homogeneous <- grepl("homogeneous", homogeneity_recommendation, ignore.case = TRUE)
+      }
     }
     
-    # Task H: Enhanced recommendation logic with borderline handling
-    if (overall_normal && mostly_normal && variances_homogeneous && !has_borderline) {
-      recommended_test <- "One-way ANOVA"
-      post_hoc <- "Tukey HSD"
-      rationale <- "Normal distribution and homogeneous variances"
-      assumption_flag <- "CLEAR"
-    } else if (overall_normal && mostly_normal && variances_homogeneous && has_borderline) {
-      recommended_test <- "One-way ANOVA with sensitivity check"
-      post_hoc <- "Tukey HSD + Kruskal-Wallis verification"
-      rationale <- "Normal distribution with borderline cases - verify with non-parametric"
-      assumption_flag <- "BORDERLINE_NORMAL"
-    } else if ((overall_normal || mostly_normal) && !variances_homogeneous) {
-      recommended_test <- "Welch's ANOVA"
-      post_hoc <- "Games-Howell"
-      rationale <- "Normal distribution but heterogeneous variances"
-      assumption_flag <- "VARIANCE_VIOLATION"
-    } else if (has_borderline && !overall_normal) {
-      recommended_test <- "Kruskal-Wallis test (borderline normality)"
-      post_hoc <- "Dunn's test with Bonferroni correction"
-      rationale <- "Borderline normality detected - non-parametric approach recommended"
-      assumption_flag <- "BORDERLINE_NON_NORMAL"
+    # Task H: Enhanced recommendation logic with borderline handling - FIXED LOGIC
+    # Priority 1: Handle borderline cases first (most important fix)
+    if (has_borderline) {
+      if (overall_normal || mostly_normal) {
+        # Borderline with some normality - conservative parametric with sensitivity
+        if (variances_homogeneous) {
+          recommended_test <- "One-way ANOVA with sensitivity check"
+          post_hoc <- "Tukey HSD + Kruskal-Wallis verification"
+          rationale <- "Borderline normality detected - parametric with non-parametric verification"
+          assumption_flag <- "BORDERLINE_NORMAL"
+        } else {
+          recommended_test <- "Welch's ANOVA"
+          post_hoc <- "Games-Howell"
+          rationale <- "Borderline normality with heterogeneous variances"
+          assumption_flag <- "BORDERLINE_NORMAL"
+        }
+      } else {
+        # Borderline leaning non-normal - use non-parametric
+        recommended_test <- "Kruskal-Wallis test (borderline normality)"
+        post_hoc <- "Dunn's test with Bonferroni correction"
+        rationale <- "Borderline normality detected - non-parametric approach recommended"
+        assumption_flag <- "BORDERLINE_NON_NORMAL"
+      }
+    } else if (overall_normal && mostly_normal) {
+      # Clear normality cases
+      if (variances_homogeneous) {
+        recommended_test <- "One-way ANOVA"
+        post_hoc <- "Tukey HSD"
+        rationale <- "Normal distribution and homogeneous variances"
+        assumption_flag <- "CLEAR"
+      } else {
+        recommended_test <- "Welch's ANOVA"
+        post_hoc <- "Games-Howell"
+        rationale <- "Normal distribution but heterogeneous variances"
+        assumption_flag <- "VARIANCE_VIOLATION"
+      }
     } else {
+      # Clear non-normality
       recommended_test <- "Kruskal-Wallis test"
       post_hoc <- "Dunn's test with Bonferroni correction"
       rationale <- "Non-normal distribution or other assumption violations"

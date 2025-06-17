@@ -2327,6 +2327,79 @@ generate_executive_summary <- function(key_findings) {
 }
 
 # TASK 3: Generate centralized assumptions section to eliminate duplication
+# Helper function: Consistent normality classification across the system
+classify_normality_status <- function(test_info) {
+  # Extract p-value and flags
+  p_value <- test_info$p_value
+  
+  # Consistent classification logic (matches assumptions_dashboard.R)
+  if (is.na(p_value)) {
+    return(list(
+      status = "Unknown",
+      html_status = '<span style="color: gray; font-weight: bold;">Unknown</span>',
+      row_class = "table-secondary"
+    ))
+  }
+  
+  # Use borderline flag if available, otherwise fall back to p-value thresholds
+  if (!is.null(test_info$borderline) && test_info$borderline) {
+    return(list(
+      status = "Borderline",
+      html_status = '<span style="color: orange; font-weight: bold;">Borderline</span>',
+      row_class = "table-warning"
+    ))
+  } else if (!is.null(test_info$normal) && test_info$normal) {
+    return(list(
+      status = "Normal", 
+      html_status = '<span style="color: green; font-weight: bold;">Normal</span>',
+      row_class = "table-success"
+    ))
+  } else if (p_value > 0.05) {
+    return(list(
+      status = "Normal",
+      html_status = '<span style="color: green; font-weight: bold;">Normal</span>',
+      row_class = "table-success"
+    ))
+  } else if (p_value > 0.01) {
+    return(list(
+      status = "Borderline",
+      html_status = '<span style="color: orange; font-weight: bold;">Borderline</span>',
+      row_class = "table-warning"
+    ))
+  } else {
+    return(list(
+      status = "Non-normal",
+      html_status = '<span style="color: red; font-weight: bold;">Non-normal</span>',
+      row_class = "table-danger"
+    ))
+  }
+}
+
+# Helper function: Fix interpretation consistency
+fix_interpretation_consistency <- function(interpretation, status, test_name, p_value) {
+  # If interpretation doesn't match status, fix it
+  if (is.null(interpretation) || interpretation == "N/A") {
+    p_formatted <- format.pval(p_value, digits = 3)
+    base_text <- paste0(test_name, " p = ", p_formatted)
+    
+    if (status == "Borderline") {
+      return(paste0("BORDERLINE normality - requires attention (", base_text, ")"))
+    } else if (status == "Normal") {
+      return(paste0("Normal distribution (", base_text, ")"))
+    } else if (status == "Non-normal") {
+      return(paste0("Non-normal distribution (", base_text, ")"))
+    }
+  }
+  
+  # Check if interpretation contradicts status and fix if needed
+  if (status == "Borderline" && !grepl("BORDERLINE|borderline", interpretation, ignore.case = TRUE)) {
+    p_formatted <- format.pval(p_value, digits = 3)
+    return(paste0("BORDERLINE normality - requires attention (", test_name, " p = ", p_formatted, ")"))
+  }
+  
+  return(interpretation)
+}
+
 generate_centralized_assumptions_section <- function(results) {
   
   # Check if we have assumptions data from either descriptive stats or comparative analysis
@@ -2377,18 +2450,18 @@ generate_centralized_assumptions_section <- function(results) {
       test_info <- if (!is.null(norm_test$overall_test)) norm_test$overall_test else norm_test
       descriptive_info <- norm_test$descriptive_measures
       
-      # Determine row class based on normality
-      row_class <- if (!is.null(test_info$normal) && test_info$normal) "table-success" 
-                  else if (!is.null(test_info$borderline) && test_info$borderline) "table-warning"
-                  else "table-danger"
+      # Use consistent classification across system
+      classification <- classify_normality_status(test_info)
+      row_class <- classification$row_class
+      normality_status <- classification$html_status
       
-      normality_status <- if (!is.null(test_info$borderline) && test_info$borderline) {
-        '<span style="color: orange; font-weight: bold;">Borderline</span>'
-      } else if (!is.null(test_info$normal) && test_info$normal) {
-        '<span style="color: green; font-weight: bold;">Normal</span>'
-      } else {
-        '<span style="color: red; font-weight: bold;">Non-normal</span>'
-      }
+      # Fix interpretation consistency
+      fixed_interpretation <- fix_interpretation_consistency(
+        test_info$interpretation, 
+        classification$status, 
+        test_info$test, 
+        test_info$p_value
+      )
       
       content <- paste0(content, '
                 <tr class="', row_class, '">
@@ -2399,7 +2472,7 @@ generate_centralized_assumptions_section <- function(results) {
                     <td>', normality_status, '</td>
                     <td>', ifelse(!is.null(descriptive_info$skewness), round(descriptive_info$skewness, 3), "N/A"), '</td>
                     <td>', ifelse(!is.null(descriptive_info$kurtosis), round(descriptive_info$kurtosis, 3), "N/A"), '</td>
-                    <td>', ifelse(!is.null(test_info$interpretation), test_info$interpretation, "N/A"), '</td>
+                    <td>', ifelse(!is.null(fixed_interpretation), fixed_interpretation, "N/A"), '</td>
                 </tr>')
     }
     
