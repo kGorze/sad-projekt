@@ -77,6 +77,20 @@ parse_arguments <- function() {
   return(opt)
 }
 
+# Helper function to run analysis with consistent logging
+run_single_analysis <- function(analysis_type, analysis_function, data, description) {
+  log_analysis_step(toupper(analysis_type), paste("Starting", description))
+  cat("Running", description, "...\n")
+  
+  analysis_results <- execute_with_warning_capture(analysis_function)
+  
+  if (!is.null(analysis_results)) {
+    log_analysis_step(paste(toupper(analysis_type), "COMPLETED"), paste(description, "successfully completed"))
+  }
+  
+  return(analysis_results)
+}
+
 # Run analysis based on command line arguments
 run_analysis_with_args <- function(args) {
   
@@ -129,75 +143,45 @@ run_analysis_with_args <- function(args) {
   analysis_results <- NULL
   analysis_type <- NULL
   
+  # Source enhanced inferential framework once if needed
+  if (args$enhanced_inferential || args$unified_dashboard) {
+    source("modules/analysis/enhanced_inferential_framework.R")
+  }
+  
   if (args$comparative_analysis) {
-    log_analysis_step("COMPARATIVE ANALYSIS", "Starting comparative analysis between groups")
-    cat("Running comparative analysis...\n")
     analysis_type <- "comparative_analysis"
-    
-    # Use the implemented comparative analysis function with warning capture
-    analysis_results <- execute_with_warning_capture({
-      perform_group_comparisons(
-        data = medical_data, 
-        group_column = "grupa", 
-        include_plots = TRUE
-      )
-    })
-    
-    if (!is.null(analysis_results)) {
-      log_analysis_step("COMPARATIVE ANALYSIS COMPLETED", "Group comparisons successfully completed")
-    }
-    # Clean up any unwanted graphics files after analysis
-    cleanup_unwanted_graphics_files()
+    analysis_results <- run_single_analysis(
+      analysis_type, 
+      function() perform_group_comparisons(data = medical_data, group_column = "grupa", include_plots = TRUE),
+      medical_data,
+      "comparative analysis between groups"
+    )
   }
   
   if (args$correlation_analysis) {
-    log_analysis_step("CORRELATION ANALYSIS", "Starting correlation analysis of variables")
-    cat("Running correlation analysis...\n")
     analysis_type <- "correlation_analysis"
-    
-    # Use the implemented correlation analysis function with warning capture
-    analysis_results <- execute_with_warning_capture({
-      perform_correlation_analysis(
-        data = medical_data, 
-        group_column = "grupa",
-        variables = NULL,  # Will auto-detect numeric variables
-        include_plots = TRUE
-      )
-    })
-    
-    if (!is.null(analysis_results)) {
-      log_analysis_step("CORRELATION ANALYSIS COMPLETED", "Correlation analysis successfully completed")
-    }
-    # Clean up any unwanted graphics files after analysis
-    cleanup_unwanted_graphics_files()
+    analysis_results <- run_single_analysis(
+      analysis_type,
+      function() perform_correlation_analysis(data = medical_data, group_column = "grupa", variables = NULL, include_plots = TRUE),
+      medical_data,
+      "correlation analysis of variables"
+    )
   }
   
   if (args$descriptive_stats) {
-    log_analysis_step("DESCRIPTIVE STATISTICS", "Starting descriptive statistics generation")
-    cat("Running descriptive statistics...\n")
     analysis_type <- "descriptive_stats"
-    
-    # Use the implemented descriptive statistics function with warning capture
-    analysis_results <- execute_with_warning_capture({
-      generate_descriptive_stats(
-        data = medical_data, 
-        group_column = "grupa", 
-        include_plots = TRUE
-      )
-    })
-    
-    if (!is.null(analysis_results)) {
-      log_analysis_step("DESCRIPTIVE STATISTICS COMPLETED", "Descriptive statistics successfully generated")
-    }
-    # Clean up any unwanted graphics files after analysis
-    cleanup_unwanted_graphics_files()
+    analysis_results <- run_single_analysis(
+      analysis_type,
+      function() generate_descriptive_stats(data = medical_data, group_column = "grupa", include_plots = TRUE),
+      medical_data,
+      "descriptive statistics generation"
+    )
   }
   
   if (args$statistical_tests) {
     log_analysis_step("STATISTICAL TESTS", "Starting statistical tests (placeholder)")
     cat("Running statistical tests...\n")
     analysis_type <- "statistical_tests"
-    # Placeholder for future statistical tests implementation
     analysis_results <- list(
       analysis_type = "statistical_tests",
       message = "Statistical tests module ready for implementation",
@@ -213,27 +197,13 @@ run_analysis_with_args <- function(args) {
   }
   
   if (args$enhanced_inferential) {
-    log_analysis_step("ENHANCED INFERENTIAL ANALYSIS", "Starting enhanced inferential analysis with covariates")
-    cat("Running enhanced inferential analysis (MLR, ANCOVA, interactions)...\n")
     analysis_type <- "enhanced_inferential"
-    
-    # Source the enhanced inferential framework
-    source("modules/analysis/enhanced_inferential_framework.R")
-    
-    # Use the implemented enhanced inferential analysis function with warning capture
-    analysis_results <- execute_with_warning_capture({
-      perform_enhanced_inferential_analysis(
-        data = medical_data, 
-        group_column = "grupa", 
-        include_plots = TRUE
-      )
-    })
-    
-    if (!is.null(analysis_results)) {
-      log_analysis_step("ENHANCED INFERENTIAL ANALYSIS COMPLETED", "Enhanced inferential analysis successfully completed")
-    }
-    # Clean up any unwanted graphics files after analysis
-    cleanup_unwanted_graphics_files()
+    analysis_results <- run_single_analysis(
+      analysis_type,
+      function() perform_enhanced_inferential_analysis(data = medical_data, group_column = "grupa", include_plots = TRUE),
+      medical_data,
+      "enhanced inferential analysis with covariates"
+    )
   }
   
   if (args$unified_dashboard) {
@@ -241,60 +211,50 @@ run_analysis_with_args <- function(args) {
     cat("Generating unified dashboard with all analyses...\n")
     analysis_type <- "unified_dashboard"
     
-    # Source the enhanced inferential framework for the complete analysis
-    source("modules/analysis/enhanced_inferential_framework.R")
-    
-    # Run all four analyses with SHARED ASSUMPTIONS TESTING (eliminates duplication)
     cat("Running comprehensive analysis suite with shared assumptions...\n")
     
     # Collect all results
     all_results <- list()
     
-    # 1. Descriptive Statistics (PERFORMS ASSUMPTIONS TESTING)
+    # Run all four analyses with shared assumptions testing
     cat("  1/4: Descriptive Statistics with Assumptions Testing...\n")
     all_results$descriptive_stats <- execute_with_warning_capture({
-      generate_descriptive_stats(
-        data = medical_data, 
-        group_column = "grupa", 
-        include_plots = TRUE
-      )
+      generate_descriptive_stats(data = medical_data, group_column = "grupa", include_plots = TRUE)
     })
     
     # Extract shared assumptions from descriptive stats
     shared_assumptions <- all_results$descriptive_stats$assumptions_analysis
     cat("- Shared assumptions extracted from descriptive stats for reuse\n")
     
-    # 2. Correlation Analysis (REUSES ASSUMPTIONS)
+    # Run remaining analyses with shared assumptions
     cat("  2/4: Correlation Analysis (reusing assumptions)...\n")
     all_results$correlation_analysis <- execute_with_warning_capture({
       perform_correlation_analysis(
         data = medical_data, 
         group_column = "grupa",
-        variables = NULL,  # Will auto-detect numeric variables
+        variables = NULL,
         include_plots = TRUE,
-        shared_assumptions = shared_assumptions  # NO DUPLICATION
+        shared_assumptions = shared_assumptions
       )
     })
     
-    # 3. Comparative Analysis (REUSES ASSUMPTIONS)
     cat("  3/4: Comparative Analysis (reusing assumptions)...\n")
     all_results$comparative_analysis <- execute_with_warning_capture({
       perform_group_comparisons(
         data = medical_data, 
         group_column = "grupa", 
         include_plots = TRUE,
-        shared_assumptions = shared_assumptions  # NO DUPLICATION
+        shared_assumptions = shared_assumptions
       )
     })
     
-    # 4. Enhanced Inferential Analysis (REUSES ASSUMPTIONS)
     cat("  4/4: Enhanced Inferential Analysis (reusing assumptions)...\n")
     all_results$enhanced_inferential <- execute_with_warning_capture({
       perform_enhanced_inferential_analysis(
         data = medical_data, 
         group_column = "grupa", 
         include_plots = TRUE,
-        shared_assumptions = shared_assumptions  # NO DUPLICATION
+        shared_assumptions = shared_assumptions
       )
     })
     
@@ -314,30 +274,26 @@ run_analysis_with_args <- function(args) {
       cat(sprintf("  Generating %s report...\n", analysis_name))
       
       if (!is.null(all_results[[analysis_name]])) {
-        # Create simple filename directly (without timestamp) to avoid duplicates
         simple_name <- paste0(analysis_name, ".html")
         simple_filepath <- file.path(dashboard_dir, simple_name)
         
         report_file <- tryCatch({
-          # Generate HTML content manually to avoid automatic timestamp naming
           if (!exists("create_html_report_content")) {
             source("modules/reporting/generate_report.R")
           }
           
           title <- paste("Statistical Analysis Report -", stringr::str_to_title(gsub("_", " ", analysis_name)))
-          plot_base_path <- file.path("..", "..")  # For unified dashboard
+          plot_base_path <- file.path("..", "..")
           
           html_content <- create_html_report_content(
             all_results[[analysis_name]], 
             analysis_name, 
             title, 
-            TRUE,  # include_plots
+            TRUE,
             plot_base_path
           )
           
-          # Write directly to simple filename
           writeLines(html_content, simple_filepath)
-          
           cat("HTML report generated:", simple_filepath, "\n")
           simple_filepath
         }, error = function(e) {
@@ -355,313 +311,25 @@ run_analysis_with_args <- function(args) {
     # Generate navigation index.html
     cat("Creating unified dashboard navigation...\n")
     
+    # Source dashboard template
+    source("modules/reporting/dashboard_template.R")
+    
     # Generate button HTML for each analysis
-    desc_button <- if(!is.null(report_files$descriptive_stats)) {
-      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
-              report_files$descriptive_stats)
-    } else {
-      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
+    create_button <- function(report_file) {
+      if (!is.null(report_file)) {
+        sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', report_file)
+      } else {
+        '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
+      }
     }
     
-    corr_button <- if(!is.null(report_files$correlation_analysis)) {
-      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
-              report_files$correlation_analysis)
-    } else {
-      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
-    }
+    desc_button <- create_button(report_files$descriptive_stats)
+    corr_button <- create_button(report_files$correlation_analysis)
+    comp_button <- create_button(report_files$comparative_analysis)
+    infer_button <- create_button(report_files$enhanced_inferential)
     
-    comp_button <- if(!is.null(report_files$comparative_analysis)) {
-      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
-              report_files$comparative_analysis)
-    } else {
-      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
-    }
-    
-    infer_button <- if(!is.null(report_files$enhanced_inferential)) {
-      sprintf('<a href="%s" target="_blank" class="btn-analysis"><i class="fas fa-eye"></i>View Report</a>', 
-              report_files$enhanced_inferential)
-    } else {
-      '<button class="btn-analysis" disabled><i class="fas fa-exclamation-triangle"></i>Report Failed</button>'
-    }
-    
-    index_html <- sprintf('
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Statistical Analysis Dashboard</title>
-    <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
-            background: #f8f9fa;
-            min-height: 100vh;
-            color: #1d1d1f;
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 60px 20px;
-        }
-        
-        .header {
-            text-align: center;
-            margin-bottom: 80px;
-        }
-        
-        .header h1 {
-            font-size: 3.5rem;
-            font-weight: 700;
-            color: #1d1d1f;
-            margin-bottom: 16px;
-            letter-spacing: -0.05em;
-        }
-        
-        .header .subtitle {
-            font-size: 1.5rem;
-            font-weight: 400;
-            color: #6e6e73;
-            margin-bottom: 12px;
-        }
-        
-        .header .meta {
-            font-size: 1rem;
-            color: #86868b;
-            font-weight: 400;
-        }
-        
-        .analysis-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 32px;
-            margin-bottom: 60px;
-        }
-        
-        .analysis-card {
-            background: white;
-            border-radius: 18px;
-            padding: 0;
-            border: 1px solid #e5e5e7;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .analysis-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
-            border-color: #d2d2d7;
-        }
-        
-        .card-icon {
-            padding: 40px 32px 24px;
-            text-align: center;
-            border-bottom: 1px solid #f5f5f7;
-        }
-        
-        .card-icon i {
-            font-size: 2.5rem;
-            margin-bottom: 16px;
-            display: block;
-        }
-        
-        .card-icon.primary i { color: #007aff; }
-        .card-icon.success i { color: #34c759; }
-        .card-icon.warning i { color: #ff9500; }
-        .card-icon.info i { color: #5856d6; }
-        
-        .card-icon h3 {
-            font-size: 1.375rem;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 8px;
-        }
-        
-        .card-content {
-            padding: 24px 32px 32px;
-            text-align: center;
-        }
-        
-        .card-content p {
-            font-size: 1rem;
-            color: #6e6e73;
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
-        
-        .btn-analysis {
-            display: inline-block;
-            background: #1d1d1f;
-            color: white;
-            text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 50px;
-            font-size: 0.95rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            border: none;
-            cursor: pointer;
-            min-width: 140px;
-        }
-        
-        .btn-analysis:hover {
-            background: #424245;
-            color: white;
-            text-decoration: none;
-            transform: scale(1.02);
-        }
-        
-        .btn-analysis:disabled {
-            background: #d2d2d7;
-            color: #86868b;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
-        .btn-analysis i {
-            margin-right: 8px;
-        }
-        
-        .footer-note {
-            text-align: center;
-            margin-top: 40px;
-        }
-        
-        .footer-note p {
-            font-size: 1rem;
-            color: #86868b;
-            font-weight: 400;
-        }
-        
-        .footer-note i {
-            margin-right: 8px;
-            color: #007aff;
-        }
-        
-        .creator-credit {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 8px 16px;
-            border-radius: 20px;
-            border: 1px solid #e5e5e7;
-            backdrop-filter: blur(10px);
-        }
-        
-        .creator-credit p {
-            font-size: 0.85rem;
-            color: #6e6e73;
-            margin: 0;
-            font-weight: 400;
-        }
-        
-        @media (max-width: 1200px) {
-            .analysis-grid {
-                grid-template-columns: repeat(2, 1fr);
-                gap: 24px;
-            }
-        }
-        
-        @media (max-width: 768px) {
-            .container {
-                padding: 40px 16px;
-            }
-            
-            .header h1 {
-                font-size: 2.5rem;
-            }
-            
-            .header .subtitle {
-                font-size: 1.25rem;
-            }
-            
-            .analysis-grid {
-                grid-template-columns: 1fr;
-                gap: 24px;
-            }
-            
-            .creator-credit {
-                position: relative;
-                bottom: auto;
-                right: auto;
-                margin-top: 40px;
-                text-align: center;
-                background: transparent;
-                border: none;
-                padding: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>Statistical Analysis Dashboard</h1>
-            <p class="subtitle">Complete Statistical Data Analysis Suite</p>
-            <p class="meta">Generated: %s | Dataset: %d observations, %d variables</p>
-        </div>
-        
-        <div class="analysis-grid">
-            <div class="analysis-card">
-                <div class="card-icon primary">
-                    <h3>Descriptive Statistics</h3>
-                </div>
-                <div class="card-content">
-                    <p>Summary statistics, distributions, and data quality assessment</p>
-                    %s
-                </div>
-            </div>
-            
-            <div class="analysis-card">
-                <div class="card-icon success">
-                    <h3>Correlation Analysis</h3>
-                </div>
-                <div class="card-content">
-                    <p>Variable relationships and correlation matrices</p>
-                    %s
-                </div>
-            </div>
-            
-            <div class="analysis-card">
-                <div class="card-icon warning">
-                    <h3>Comparative Analysis</h3>
-                </div>
-                <div class="card-content">
-                    <p>Group comparisons and statistical tests</p>
-                    %s
-                </div>
-            </div>
-            
-            <div class="analysis-card">
-                <div class="card-icon info">
-                    <h3>Enhanced Inferential</h3>
-                </div>
-                <div class="card-content">
-                    <p>Advanced modeling with covariates and interactions</p>
-                    %s
-                </div>
-            </div>
-        </div>
-        
-
-        
-        <div class="creator-credit">
-            <p>Created by Konrad Gorzelańczyk</p>
-        </div>
-    </div>
-</body>
-</html>',
+    # Generate HTML using template
+    index_html <- generate_dashboard_html(
       format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
       nrow(medical_data),
       ncol(medical_data),
@@ -703,16 +371,13 @@ run_analysis_with_args <- function(args) {
     log_analysis_step("CSV EXPORT", "Starting CSV export of analysis results")
     cat("Exporting analysis results to CSV files...\n")
     
-    # Create output directory if it doesn't exist
     if (!dir.exists("output/tables")) {
       dir.create("output/tables", recursive = TRUE)
     }
     
-    # Generate timestamp for unique filename
     timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
     base_filename <- paste0(analysis_type, "_", timestamp)
     
-    # Export to CSV using the enhanced export infrastructure
     exported_files <- export_all_analysis_to_csv(analysis_results, base_filename)
     
     cat("CSV export completed! Files saved to output/tables/\n")
@@ -730,12 +395,10 @@ run_analysis_with_args <- function(args) {
     log_analysis_step("HTML REPORT GENERATION", "Starting HTML report generation")
     cat("Generating HTML report...\n")
     
-    # Create output directory if it doesn't exist
     if (!dir.exists("output")) {
       dir.create("output", recursive = TRUE)
     }
     
-    # Generate the HTML report
     report_file <- tryCatch({
       generate_html_report(
         analysis_results = analysis_results,
@@ -759,10 +422,6 @@ run_analysis_with_args <- function(args) {
       log_analysis_step("HTML REPORT SKIPPED", "Report generation encountered technical issues but analysis completed successfully")
     }
     
-    # Cleanup any unwanted graphics files before returning
-    cleanup_unwanted_graphics_files()
-    
-    # Return analysis results, report information, and exported files
     return(list(
       analysis_results = analysis_results,
       report_file = report_file,
@@ -790,29 +449,23 @@ run_analysis_with_args <- function(args) {
     log_analysis_step("DATA EXPORT", "Starting export of cleaned/validated data")
     cat("Exporting cleaned and validated data to CSV files...\n")
     
-    # Create output directory if it doesn't exist
     if (!dir.exists("output/tables")) {
       dir.create("output/tables", recursive = TRUE)
     }
     
-    # Generate timestamp for unique filename
     timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
     
-    # Export the cleaned data
     cleaned_data_file <- file.path("output/tables", paste0("cleaned_data_", timestamp, ".csv"))
     write.csv(medical_data, cleaned_data_file, row.names = FALSE)
     cat("Cleaned data exported to:", cleaned_data_file, "\n")
     
-    # Export original data for comparison if available
     if (exists("data_prep_result") && !is.null(data_prep_result$original_data)) {
       original_data_file <- file.path("output/tables", paste0("original_data_", timestamp, ".csv"))
       write.csv(data_prep_result$original_data, original_data_file, row.names = FALSE)
       cat("Original data exported to:", original_data_file, "\n")
     }
     
-    # Export data preparation summary
     if (exists("data_prep_result") && !is.null(data_prep_result$repair_log)) {
-      # Create a summary of data preparation steps
       prep_summary <- data.frame(
         step = c("original_rows", "original_cols", "cleaned_rows", "cleaned_cols", 
                 "missing_values_before", "missing_values_after", "readiness_status"),

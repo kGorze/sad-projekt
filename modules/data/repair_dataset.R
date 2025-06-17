@@ -30,7 +30,6 @@ repair_dataset <- function(data, missing_threshold = 0.1, outlier_method = "iqr"
   if (any(missing_analysis$missing_percentages > missing_threshold * 100) || 
       (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0)) {
     
-    # Task G: If missing_threshold is 0, perform sensitivity analysis
     if (missing_threshold == 0 && sum(missing_analysis$missing_counts) > 0) {
       cat("\n2. TASK G: MISSING DATA SENSITIVITY ANALYSIS\n")
       cat("===========================================\n")

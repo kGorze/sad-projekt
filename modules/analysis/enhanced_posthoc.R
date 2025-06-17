@@ -706,7 +706,6 @@ calculate_method_agreement <- function(var_results) {
   return(round(agreement, 3))
 }
 
-# TASK 6: Compare adjustment methods across post-hoc tests
 compare_adjustment_methods <- function(posthoc_results) {
   
   # Extract significant comparisons from each method

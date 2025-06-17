@@ -1,3 +1,4 @@
 1. make the analysis cross information before any report is created. example with inferential analysis and the group effect on the variables.
 2. make it more suitable for chemical drug report analysis based on organic dataset from the other project
 3. create documentation with roxygen2 for the functions
+4. make the analysis less hardcoded. all the variables should be set in the config file.
