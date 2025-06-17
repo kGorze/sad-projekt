@@ -877,6 +877,7 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
     library(ggplot2)
     library(ggpubr)
     library(gridExtra)
+    if (requireNamespace("scales", quietly = TRUE)) library(scales)
   })
   
   # Prevent unwanted Rplots.pdf creation by ensuring no graphics device is open
@@ -898,27 +899,42 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
   plots <- list()
   plot_files <- list()
   
-  # Model comparison plots
+  # Debug output
+  cat("Creating inferential plots...\n")
+  cat("- Variables to plot:", paste(numeric_vars, collapse = ", "), "\n")
+  cat("- Output path:", output_path, "\n")
+  
+  # 1. Model comparison plots (ENHANCED - works with any number of models)
   if (!is.null(results$model_comparison)) {
+    cat("- Creating model comparison plots for", length(results$model_comparison), "variables\n")
+    
     for (var in names(results$model_comparison)) {
       result <- results$model_comparison[[var]]
-      if (!is.null(result$comparison_table)) {
+      if (!is.null(result$comparison_table) && nrow(result$comparison_table) > 0) {
+        cat("  Creating plots for", var, "with", nrow(result$comparison_table), "models\n")
+        
         # Create model comparison plot
         comp_table <- result$comparison_table
         
+        # Ensure Model is a factor for proper ordering
+        comp_table$Model <- factor(comp_table$Model, levels = comp_table$Model)
+        
         p1 <- ggplot(comp_table, aes(x = Model, y = AIC)) +
-          geom_col(fill = "steelblue", alpha = 0.7) +
-          geom_text(aes(label = round(AIC, 1)), vjust = -0.5) +
-          labs(title = paste("Model Comparison for", var), subtitle = "AIC values (lower is better)") +
+          geom_col(fill = "steelblue", alpha = 0.7, width = 0.6) +
+          geom_text(aes(label = round(AIC, 1)), vjust = -0.5, size = 3) +
+          labs(title = paste("Model Comparison for", var), 
+               subtitle = "AIC values (lower is better)") +
           theme_minimal() +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1))
+          theme(axis.text.x = element_text(angle = 45, hjust = 1),
+                plot.title = element_text(size = 12, face = "bold"))
         
         p2 <- ggplot(comp_table, aes(x = Model, y = Adj_R_squared)) +
-          geom_col(fill = "darkgreen", alpha = 0.7) +
-          geom_text(aes(label = round(Adj_R_squared, 3)), vjust = -0.5) +
+          geom_col(fill = "darkgreen", alpha = 0.7, width = 0.6) +
+          geom_text(aes(label = round(Adj_R_squared, 3)), vjust = -0.5, size = 3) +
           labs(title = "Adjusted R²", subtitle = "Higher is better") +
           theme_minimal() +
-          theme(axis.text.x = element_text(angle = 45, hjust = 1))
+          theme(axis.text.x = element_text(angle = 45, hjust = 1),
+                plot.title = element_text(size = 12, face = "bold"))
         
         # Combine plots without auto-display to prevent unwanted Rplots.pdf creation
         combined_plot <- gridExtra::arrangeGrob(p1, p2, ncol = 2)
@@ -928,9 +944,193 @@ create_inferential_plots <- function(data, results, numeric_vars, group_column, 
         
         plots[[paste0("model_comparison_", var)]] <- combined_plot
         plot_files[[paste0("model_comparison_", var)]] <- plot_filename
+        cat("    Saved:", plot_filename, "\n")
+      } else {
+        cat("  Skipping", var, "- no comparison table available\n")
+      }
+    }
+  } else {
+    cat("- No model comparison results available\n")
+  }
+  
+  # 2. Effect sizes visualization
+  if (!is.null(results$effect_sizes)) {
+    cat("- Creating effect sizes visualization\n")
+    
+    # Extract R-squared values for plotting
+    effect_data <- data.frame(
+      Variable = character(),
+      R_squared = numeric(),
+      Effect_Size = character(),
+      stringsAsFactors = FALSE
+    )
+    
+    for (var in names(results$effect_sizes)) {
+      if (!is.null(results$effect_sizes[[var]]$regression)) {
+        r_sq <- results$effect_sizes[[var]]$regression$r_squared
+        interpretation <- results$effect_sizes[[var]]$regression$interpretation
+        
+        effect_data <- rbind(effect_data, data.frame(
+          Variable = var,
+          R_squared = r_sq,
+          Effect_Size = interpretation,
+          stringsAsFactors = FALSE
+        ))
+      }
+    }
+    
+    if (nrow(effect_data) > 0) {
+      # Order by R-squared
+      effect_data <- effect_data[order(effect_data$R_squared, decreasing = TRUE), ]
+      effect_data$Variable <- factor(effect_data$Variable, levels = effect_data$Variable)
+      
+      p_effects <- ggplot(effect_data, aes(x = Variable, y = R_squared, fill = Effect_Size)) +
+        geom_col(alpha = 0.8, width = 0.7) +
+        geom_text(aes(label = paste0(round(R_squared * 100, 1), "%")), 
+                  vjust = -0.5, size = 3) +
+        labs(title = "Effect Sizes (R² values) by Variable",
+             subtitle = "Proportion of variance explained by group membership",
+             x = "Variables", y = "R² (Proportion of Variance Explained)",
+             fill = "Effect Size") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1),
+              plot.title = element_text(size = 14, face = "bold"),
+              legend.position = "bottom") +
+                 scale_fill_brewer(type = "qual", palette = "Set2") +
+         scale_y_continuous(labels = if(requireNamespace("scales", quietly = TRUE)) scales::percent_format() else function(x) paste0(round(x*100, 1), "%"))
+      
+      plot_filename <- file.path(output_path, "effect_sizes_summary.png")
+      ggsave(plot_filename, p_effects, width = 10, height = 6, dpi = 300)
+      
+      plots[["effect_sizes"]] <- p_effects
+      plot_files[["effect_sizes"]] <- plot_filename
+      cat("    Saved:", plot_filename, "\n")
+    }
+  }
+  
+  # 3. Group differences visualization (boxplots with effect sizes)
+  if (length(numeric_vars) > 0) {
+    cat("- Creating group differences plots\n")
+    
+    # Create boxplots for top variables (by effect size if available)
+    vars_to_plot <- numeric_vars[1:min(4, length(numeric_vars))]
+    
+    # Reorder by effect size if available
+    if (!is.null(results$effect_sizes)) {
+      effect_order <- names(results$effect_sizes)[order(sapply(names(results$effect_sizes), function(v) {
+        if (!is.null(results$effect_sizes[[v]]$regression)) {
+          results$effect_sizes[[v]]$regression$r_squared
+        } else {
+          0
+        }
+      }), decreasing = TRUE)]
+      vars_to_plot <- intersect(effect_order, numeric_vars)[1:min(4, length(intersect(effect_order, numeric_vars)))]
+    }
+    
+    for (var in vars_to_plot) {
+      tryCatch({
+        # Get effect size for subtitle
+        effect_info <- ""
+        if (!is.null(results$effect_sizes) && !is.null(results$effect_sizes[[var]]$regression)) {
+          r_sq <- results$effect_sizes[[var]]$regression$r_squared
+          interpretation <- results$effect_sizes[[var]]$regression$interpretation
+          effect_info <- paste0(" (R² = ", round(r_sq, 3), ", ", interpretation, " effect)")
+        }
+        
+        p_box <- ggplot(data, aes(x = .data[[group_column]], y = .data[[var]], fill = .data[[group_column]])) +
+          geom_boxplot(alpha = 0.7, outlier.alpha = 0.6) +
+          geom_point(position = position_jitter(width = 0.2), alpha = 0.5, size = 1) +
+          stat_summary(fun = mean, geom = "point", shape = 23, size = 3, fill = "red") +
+          labs(title = paste("Group Differences:", var),
+               subtitle = paste0("Boxplots with individual data points", effect_info),
+               x = group_column, y = var) +
+          theme_minimal() +
+          theme(plot.title = element_text(size = 12, face = "bold"),
+                legend.position = "none") +
+          scale_fill_brewer(type = "qual", palette = "Set2")
+        
+        # Add statistical comparison if possible
+        if (requireNamespace("ggpubr", quietly = TRUE)) {
+          groups <- unique(data[[group_column]])
+          groups <- groups[!is.na(groups)]
+          if (length(groups) > 1) {
+            p_box <- p_box + ggpubr::stat_compare_means(method = if(length(groups) > 2) "anova" else "t.test",
+                                                        label.y = max(data[[var]], na.rm = TRUE) * 1.1)
+          }
+        }
+        
+        plot_filename <- file.path(output_path, paste0("group_differences_", var, ".png"))
+        ggsave(plot_filename, p_box, width = 8, height = 6, dpi = 300)
+        
+        plots[[paste0("group_differences_", var)]] <- p_box
+        plot_files[[paste0("group_differences_", var)]] <- plot_filename
+        cat("    Saved:", plot_filename, "\n")
+        
+      }, error = function(e) {
+        cat("    Error creating plot for", var, ":", e$message, "\n")
+      })
+    }
+  }
+  
+  # 4. Model diagnostics plots (for best models)
+  if (!is.null(results$multiple_regression)) {
+    cat("- Creating model diagnostics plots\n")
+    
+    # Select top 2 variables for diagnostics
+    vars_for_diagnostics <- names(results$multiple_regression)[1:min(2, length(results$multiple_regression))]
+    
+    for (var in vars_for_diagnostics) {
+      reg_result <- results$multiple_regression[[var]]
+      
+      # Use the available model (full_model or baseline_model)
+      model <- NULL
+      if (!is.null(reg_result$full_model)) {
+        model <- reg_result$full_model$model
+      } else if (!is.null(reg_result$baseline_model)) {
+        model <- reg_result$baseline_model$model
+      }
+      
+      if (!is.null(model)) {
+        tryCatch({
+          # Create diagnostic plots
+          residuals_val <- residuals(model)
+          fitted_val <- fitted(model)
+          
+          # Residuals vs Fitted
+          p1 <- ggplot(data.frame(fitted = fitted_val, residuals = residuals_val), 
+                       aes(x = fitted, y = residuals)) +
+            geom_point(alpha = 0.6) +
+            geom_hline(yintercept = 0, color = "red", linetype = "dashed") +
+            geom_smooth(se = FALSE, color = "blue") +
+            labs(title = "Residuals vs Fitted", x = "Fitted Values", y = "Residuals") +
+            theme_minimal()
+          
+          # Q-Q plot
+          p2 <- ggplot(data.frame(residuals = residuals_val), aes(sample = residuals)) +
+            stat_qq(alpha = 0.6) +
+            stat_qq_line(color = "red") +
+            labs(title = "Q-Q Plot", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+            theme_minimal()
+          
+          # Combine diagnostic plots
+          combined_diagnostics <- gridExtra::arrangeGrob(p1, p2, ncol = 2)
+          
+          plot_filename <- file.path(output_path, paste0("diagnostics_", var, ".png"))
+          ggsave(plot_filename, combined_diagnostics, width = 12, height = 5, dpi = 300)
+          
+          plots[[paste0("diagnostics_", var)]] <- combined_diagnostics
+          plot_files[[paste0("diagnostics_", var)]] <- plot_filename
+          cat("    Saved:", plot_filename, "\n")
+          
+        }, error = function(e) {
+          cat("    Error creating diagnostics for", var, ":", e$message, "\n")
+        })
       }
     }
   }
+  
+  total_plots <- length(plots)
+  cat("Enhanced inferential plots completed:", total_plots, "plots generated\n")
   
   return(list(plots = plots, plot_files = plot_files))
 }
