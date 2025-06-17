@@ -78,7 +78,7 @@ generate_master_descriptive_summary <- function(data, group_column = NULL, varia
   
   # Sub-step 1.5: Data quality assessment
   cat("\n--- Step 1.5: Data Quality Assessment ---\n")
-  master_summary$data_quality <- assess_comprehensive_data_quality(data, numeric_vars, categorical_vars, group_column)
+  master_summary$data_quality <- assess_simple_data_quality(data, numeric_vars, categorical_vars, group_column)
   
   cat("Master descriptive summary completed.\n")
   return(master_summary)
@@ -109,14 +109,11 @@ generate_comprehensive_numeric_summary <- function(data, numeric_vars, group_col
       next
     }
     
-    # Basic descriptive statistics
-    basic_stats <- calculate_basic_statistics(var_data)
-    
-    # Distribution characteristics
-    distribution_stats <- calculate_distribution_characteristics(var_data)
+    # Comprehensive statistics (basic + distribution)
+    comprehensive_stats <- calculate_comprehensive_statistics(var_data)
     
     # Outlier detection
-    outlier_info <- detect_outliers_comprehensive(var_data)
+    outlier_info <- detect_outliers_simple(var_data)
     
     # Group-wise statistics (if group column specified)
     group_stats <- NULL
@@ -130,8 +127,7 @@ generate_comprehensive_numeric_summary <- function(data, numeric_vars, group_col
       n_total = n_total,
       n_missing = n_missing,
       missing_percentage = round((n_missing / nrow(data)) * 100, 2),
-      basic_statistics = basic_stats,
-      distribution_characteristics = distribution_stats,
+      comprehensive_statistics = comprehensive_stats,
       outlier_information = outlier_info,
       group_statistics = group_stats
     )
@@ -146,29 +142,37 @@ generate_comprehensive_numeric_summary <- function(data, numeric_vars, group_col
   ))
 }
 
-# Calculate basic descriptive statistics
-calculate_basic_statistics <- function(data_vector) {
+# Simplified comprehensive statistics (combines basic + distribution characteristics)
+calculate_comprehensive_statistics <- function(data_vector) {
   
   if (length(data_vector) == 0) {
     return(NULL)
   }
   
+  # Basic descriptive statistics
   stats <- list(
     n = length(data_vector),
     mean = mean(data_vector, na.rm = TRUE),
     median = median(data_vector, na.rm = TRUE),
     sd = sd(data_vector, na.rm = TRUE),
-    var = var(data_vector, na.rm = TRUE),
     min = min(data_vector, na.rm = TRUE),
     max = max(data_vector, na.rm = TRUE),
     q25 = quantile(data_vector, 0.25, na.rm = TRUE),
     q75 = quantile(data_vector, 0.75, na.rm = TRUE),
     iqr = IQR(data_vector, na.rm = TRUE),
-    range = max(data_vector, na.rm = TRUE) - min(data_vector, na.rm = TRUE),
     cv = ifelse(mean(data_vector, na.rm = TRUE) != 0, 
                 sd(data_vector, na.rm = TRUE) / mean(data_vector, na.rm = TRUE) * 100, 
                 NA)
   )
+  
+  # Distribution characteristics (only if sufficient data)
+  if (length(data_vector) >= 3) {
+    stats$skewness <- calculate_skewness(data_vector)
+    stats$kurtosis <- calculate_kurtosis(data_vector)
+  } else {
+    stats$skewness <- NA
+    stats$kurtosis <- NA
+  }
   
   # Round numeric values
   stats <- lapply(stats, function(x) if (is.numeric(x)) round(x, 4) else x)
@@ -176,83 +180,22 @@ calculate_basic_statistics <- function(data_vector) {
   return(stats)
 }
 
-# Calculate distribution characteristics
-calculate_distribution_characteristics <- function(data_vector) {
-  
-  if (length(data_vector) < 3) {
-    return(NULL)
-  }
-  
-  # Skewness and kurtosis
-  skewness_val <- calculate_skewness(data_vector)
-  kurtosis_val <- calculate_kurtosis(data_vector)
-  
-  # Distribution shape assessment
-  skewness_interpretation <- ifelse(abs(skewness_val) < 0.5, "Approximately symmetric",
-                                   ifelse(abs(skewness_val) < 1.0, "Moderately skewed",
-                                          "Highly skewed"))
-  
-  kurtosis_interpretation <- ifelse(abs(kurtosis_val) < 0.5, "Approximately normal",
-                                   ifelse(abs(kurtosis_val) < 1.0, "Moderately peaked/flat",
-                                          "Highly peaked/flat"))
-  
-  # Mode estimation (for continuous data, use density peak)
-  mode_estimate <- estimate_mode(data_vector)
-  
-  return(list(
-    skewness = round(skewness_val, 4),
-    kurtosis = round(kurtosis_val, 4),
-    skewness_interpretation = skewness_interpretation,
-    kurtosis_interpretation = kurtosis_interpretation,
-    estimated_mode = round(mode_estimate, 4)
-  ))
-}
-
-# Comprehensive outlier detection
-detect_outliers_comprehensive <- function(data_vector) {
+# Simplified outlier detection (IQR method only)
+detect_outliers_simple <- function(data_vector) {
   
   if (length(data_vector) < 4) {
-    return(list(
-      method = "insufficient_data",
-      outlier_count = 0,
-      outlier_percentage = 0
-    ))
+    return(list(outlier_count = 0, outlier_percentage = 0))
   }
   
-  # IQR method
+  # Use IQR method (most commonly used and reliable)
   Q1 <- quantile(data_vector, 0.25)
   Q3 <- quantile(data_vector, 0.75)
   IQR_val <- Q3 - Q1
-  lower_bound <- Q1 - 1.5 * IQR_val
-  upper_bound <- Q3 + 1.5 * IQR_val
-  
-  iqr_outliers <- sum(data_vector < lower_bound | data_vector > upper_bound)
-  
-  # Z-score method (|z| > 2.5 for moderate outliers, |z| > 3 for extreme)
-  z_scores <- abs(scale(data_vector))
-  moderate_z_outliers <- sum(z_scores > 2.5, na.rm = TRUE)
-  extreme_z_outliers <- sum(z_scores > 3, na.rm = TRUE)
-  
-  # Modified Z-score method
-  median_val <- median(data_vector)
-  mad_val <- mad(data_vector)
-  if (mad_val > 0) {
-    modified_z_scores <- 0.6745 * (data_vector - median_val) / mad_val
-    modified_z_outliers <- sum(abs(modified_z_scores) > 3.5)
-  } else {
-    modified_z_outliers <- 0
-  }
+  outliers <- sum(data_vector < (Q1 - 1.5 * IQR_val) | data_vector > (Q3 + 1.5 * IQR_val))
   
   return(list(
-    iqr_outliers = iqr_outliers,
-    iqr_percentage = round((iqr_outliers / length(data_vector)) * 100, 2),
-    z_moderate_outliers = moderate_z_outliers,
-    z_extreme_outliers = extreme_z_outliers,
-    modified_z_outliers = modified_z_outliers,
-    iqr_bounds = list(lower = round(lower_bound, 4), upper = round(upper_bound, 4)),
-    recommendation = ifelse(iqr_outliers / length(data_vector) > 0.1, 
-                           "High outlier percentage - investigate data quality",
-                           "Acceptable outlier levels")
+    outlier_count = outliers,
+    outlier_percentage = round((outliers / length(data_vector)) * 100, 2)
   ))
 }
 
@@ -269,15 +212,13 @@ calculate_group_wise_statistics <- function(data, variable, group_column) {
     group_data <- group_data[!is.na(group_data)]
     
     if (length(group_data) > 0) {
-      basic_stats <- calculate_basic_statistics(group_data)
-      distribution_stats <- calculate_distribution_characteristics(group_data)
-      outlier_info <- detect_outliers_comprehensive(group_data)
+      comprehensive_stats <- calculate_comprehensive_statistics(group_data)
+      outlier_info <- detect_outliers_simple(group_data)
       
       group_summaries[[as.character(group)]] <- list(
         group = group,
         n = length(group_data),
-        basic_statistics = basic_stats,
-        distribution_characteristics = distribution_stats,
+        comprehensive_statistics = comprehensive_stats,
         outlier_information = outlier_info
       )
     }
@@ -299,31 +240,30 @@ create_master_numeric_table <- function(summary_list) {
   for (var_name in names(summary_list)) {
     var_summary <- summary_list[[var_name]]
     
-    if (is.null(var_summary$basic_statistics)) {
+    if (is.null(var_summary$comprehensive_statistics)) {
       next
     }
     
-    basic <- var_summary$basic_statistics
-    dist <- var_summary$distribution_characteristics
+    stats <- var_summary$comprehensive_statistics
     outliers <- var_summary$outlier_information
     
     table_rows[[var_name]] <- data.frame(
       Variable = var_name,
-      N = basic$n,
+      N = stats$n,
       Missing = var_summary$n_missing,
       Missing_Pct = var_summary$missing_percentage,
-      Mean = basic$mean,
-      SD = basic$sd,
-      Median = basic$median,
-      Q25 = basic$q25,
-      Q75 = basic$q75,
-      Min = basic$min,
-      Max = basic$max,
-      CV_Pct = basic$cv,
-      Skewness = if (!is.null(dist)) dist$skewness else NA,
-      Kurtosis = if (!is.null(dist)) dist$kurtosis else NA,
-      Outliers_IQR = outliers$iqr_outliers,
-      Outliers_Pct = outliers$iqr_percentage,
+      Mean = stats$mean,
+      SD = stats$sd,
+      Median = stats$median,
+      Q25 = stats$q25,
+      Q75 = stats$q75,
+      Min = stats$min,
+      Max = stats$max,
+      CV_Pct = stats$cv,
+      Skewness = stats$skewness,
+      Kurtosis = stats$kurtosis,
+      Outliers_IQR = outliers$outlier_count,
+      Outliers_Pct = outliers$outlier_percentage,
       stringsAsFactors = FALSE
     )
   }
@@ -503,119 +443,41 @@ generate_overall_dataset_summary <- function(data, group_column = NULL) {
   return(overall_summary)
 }
 
-# Assess comprehensive data quality for analysis
-assess_comprehensive_data_quality <- function(data, numeric_vars, categorical_vars, group_column) {
+# Simplified data quality assessment
+assess_simple_data_quality <- function(data, numeric_vars, categorical_vars, group_column) {
   
-  quality_issues <- list()
-  quality_score <- 100  # Start with perfect score and deduct points
+  quality_issues <- c()
   
-  # Missing data assessment
-  missing_by_variable <- sapply(data, function(x) sum(is.na(x)))
-  high_missing_vars <- names(missing_by_variable)[missing_by_variable / nrow(data) > 0.05]
-  
-  if (length(high_missing_vars) > 0) {
-    quality_issues$high_missing <- paste("Variables with >5% missing data:", paste(high_missing_vars, collapse = ", "))
-    quality_score <- quality_score - (length(high_missing_vars) * 5)
+  # Check missing data (>5% threshold)
+  missing_by_var <- sapply(data, function(x) sum(is.na(x)) / length(x) * 100)
+  high_missing <- names(missing_by_var)[missing_by_var > 5]
+  if (length(high_missing) > 0) {
+    quality_issues <- c(quality_issues, paste("High missing data in:", paste(high_missing, collapse = ", ")))
   }
   
-  # Outlier assessment for numeric variables
-  high_outlier_vars <- c()
-  for (var in numeric_vars) {
-    var_data <- data[[var]][!is.na(data[[var]])]
-    if (length(var_data) > 4) {
-      outlier_info <- detect_outliers_comprehensive(var_data)
-      if (outlier_info$iqr_percentage > 10) {
-        high_outlier_vars <- c(high_outlier_vars, var)
-      }
-    }
-  }
-  
-  if (length(high_outlier_vars) > 0) {
-    quality_issues$high_outliers <- paste("Variables with >10% outliers:", paste(high_outlier_vars, collapse = ", "))
-    quality_score <- quality_score - (length(high_outlier_vars) * 3)
-  }
-  
-  # Sample size assessment
+  # Check sample size
   if (nrow(data) < 30) {
-    quality_issues$small_sample <- "Small sample size (n < 30) may limit statistical power"
-    quality_score <- quality_score - 10
+    quality_issues <- c(quality_issues, "Small sample size (n < 30)")
   }
   
-  # Group balance assessment (if applicable)
+  # Check group balance (if applicable)
   if (!is.null(group_column)) {
     group_sizes <- table(data[[group_column]])
-    min_group_size <- min(group_sizes)
-    max_group_size <- max(group_sizes)
-    
-    if (min_group_size < 10) {
-      quality_issues$small_groups <- paste("Some groups have <10 observations:", paste(names(group_sizes)[group_sizes < 10], collapse = ", "))
-      quality_score <- quality_score - 5
+    if (min(group_sizes) < 10) {
+      quality_issues <- c(quality_issues, "Some groups have < 10 observations")
     }
-    
-    if (max_group_size / min_group_size > 3) {
-      quality_issues$unbalanced_groups <- "Groups are highly unbalanced (ratio > 3:1)"
-      quality_score <- quality_score - 5
+    if (max(group_sizes) / min(group_sizes) > 3) {
+      quality_issues <- c(quality_issues, "Groups are unbalanced (ratio > 3:1)")
     }
   }
   
-  # Overall quality rating
-  quality_rating <- ifelse(quality_score >= 90, "Excellent",
-                          ifelse(quality_score >= 80, "Good",
-                                ifelse(quality_score >= 70, "Fair", "Poor")))
+  # Simple quality rating
+  quality_rating <- if (length(quality_issues) == 0) "Good" else if (length(quality_issues) <= 2) "Fair" else "Poor"
   
   return(list(
-    quality_score = max(quality_score, 0),
     quality_rating = quality_rating,
-    quality_issues = quality_issues,
-    recommendations = generate_quality_recommendations(quality_issues)
+    quality_issues = if (length(quality_issues) > 0) quality_issues else "No major issues identified"
   ))
 }
 
-# Generate quality improvement recommendations
-generate_quality_recommendations <- function(quality_issues) {
-  
-  recommendations <- c()
-  
-  if ("high_missing" %in% names(quality_issues)) {
-    recommendations <- c(recommendations, "Consider imputation methods for variables with high missing data")
-  }
-  
-  if ("high_outliers" %in% names(quality_issues)) {
-    recommendations <- c(recommendations, "Consider outlier treatment (removal, transformation, or robust methods)")
-  }
-  
-  if ("small_sample" %in% names(quality_issues)) {
-    recommendations <- c(recommendations, "Consider collecting more data or using appropriate small-sample methods")
-  }
-  
-  if ("small_groups" %in% names(quality_issues)) {
-    recommendations <- c(recommendations, "Consider combining small groups or using appropriate small-sample tests")
-  }
-  
-  if ("unbalanced_groups" %in% names(quality_issues)) {
-    recommendations <- c(recommendations, "Consider stratified analysis or appropriate unbalanced design methods")
-  }
-  
-  if (length(recommendations) == 0) {
-    recommendations <- "Data quality is good - no major issues identified"
-  }
-  
-  return(recommendations)
-}
-
-# Helper function to estimate mode for continuous data
-estimate_mode <- function(x) {
-  if (length(x) < 3) return(NA)
-  
-  # Use density estimation to find peak
-  tryCatch({
-    density_result <- density(x, na.rm = TRUE)
-    mode_estimate <- density_result$x[which.max(density_result$y)]
-    return(mode_estimate)
-  }, error = function(e) {
-    # Fallback to median if density estimation fails
-    return(median(x, na.rm = TRUE))
-  })
-}
-
-# Helper functions now loaded from modules/utils/statistical_helpers.R
+# Helper functions loaded from modules/utils/statistical_helpers.R
