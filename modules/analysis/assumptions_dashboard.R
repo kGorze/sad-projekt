@@ -50,26 +50,26 @@ perform_assumptions_testing <- function(data, variables, group_column = NULL) {
     )
   )
   
-  # Step 1: Comprehensive normality testing
-  cat("\n--- Step 1: Normality Testing ---\n")
+  # Sub-step 2.1: Comprehensive normality testing
+  cat("\n--- Step 2.1: Normality Testing ---\n")
   assumptions_results$normality_tests <- perform_comprehensive_normality_tests(data, numeric_vars, group_column)
   
-  # Step 2: Homogeneity of variance testing (only if group column specified)
+  # Sub-step 2.2: Homogeneity of variance testing (only if group column specified)
   if (!is.null(group_column)) {
-    cat("\n--- Step 2: Homogeneity of Variance Testing ---\n")
+    cat("\n--- Step 2.2: Homogeneity of Variance Testing ---\n")
     assumptions_results$homogeneity_tests <- perform_comprehensive_homogeneity_tests(data, numeric_vars, group_column)
   }
   
-  # Step 3: Create assumptions summary table
-  cat("\n--- Step 3: Generating Assumptions Summary ---\n")
+  # Sub-step 2.3: Create assumptions summary table
+  cat("\n--- Step 2.3: Generating Assumptions Summary ---\n")
   assumptions_results$assumptions_summary <- create_assumptions_summary_table(
     assumptions_results$normality_tests, 
     assumptions_results$homogeneity_tests,
     data, numeric_vars, group_column
   )
   
-  # Step 4: Generate test recommendations
-  cat("\n--- Step 4: Statistical Test Recommendations ---\n")
+  # Sub-step 2.4: Generate test recommendations
+  cat("\n--- Step 2.4: Statistical Test Recommendations ---\n")
   assumptions_results$test_recommendations <- generate_test_recommendations(
     assumptions_results$normality_tests,
     assumptions_results$homogeneity_tests,

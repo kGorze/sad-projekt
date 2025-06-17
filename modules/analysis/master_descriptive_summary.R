@@ -54,30 +54,30 @@ generate_master_descriptive_summary <- function(data, group_column = NULL, varia
     )
   )
   
-  # Step 1: Comprehensive numeric variable summary
+  # Sub-step 1.1: Comprehensive numeric variable summary
   if (length(numeric_vars) > 0) {
-    cat("\n--- Step 1: Numeric Variables Summary ---\n")
+    cat("\n--- Step 1.1: Numeric Variables Summary ---\n")
     master_summary$numeric_summary <- generate_comprehensive_numeric_summary(data, numeric_vars, group_column)
   }
   
-  # Step 2: Comprehensive categorical variable summary
+  # Sub-step 1.2: Comprehensive categorical variable summary
   if (length(categorical_vars) > 0) {
-    cat("\n--- Step 2: Categorical Variables Summary ---\n")
+    cat("\n--- Step 1.2: Categorical Variables Summary ---\n")
     master_summary$categorical_summary <- generate_comprehensive_categorical_summary(data, categorical_vars, group_column)
   }
   
-  # Step 3: Generate group comparison summary (if groups exist)
+  # Sub-step 1.3: Generate group comparison summary (if groups exist)
   if (!is.null(group_column) && length(numeric_vars) > 0) {
-    cat("\n--- Step 3: Group Comparisons Summary ---\n")
+    cat("\n--- Step 1.3: Group Comparisons Summary ---\n")
     master_summary$group_comparisons <- generate_group_comparison_summary(data, numeric_vars, group_column)
   }
   
-  # Step 4: Overall dataset summary
-  cat("\n--- Step 4: Overall Dataset Summary ---\n")
+  # Sub-step 1.4: Overall dataset summary
+  cat("\n--- Step 1.4: Overall Dataset Summary ---\n")
   master_summary$overall_summary <- generate_overall_dataset_summary(data, group_column)
   
-  # Step 5: Data quality assessment
-  cat("\n--- Step 5: Data Quality Assessment ---\n")
+  # Sub-step 1.5: Data quality assessment
+  cat("\n--- Step 1.5: Data Quality Assessment ---\n")
   master_summary$data_quality <- assess_comprehensive_data_quality(data, numeric_vars, categorical_vars, group_column)
   
   cat("Master descriptive summary completed.\n")
