@@ -370,9 +370,9 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
   if (!is.null(results$residual_fixes) && !is.null(results$residual_fixes$results)) {
     tryCatch({
       content <- paste0(content, '
-          <h3>Task F: Model Residual Diagnostics and Fixes</h3>
+          <h3>Model Residual Diagnostics and Solutions</h3>
           <div class="alert alert-info">
-              <strong>Objective:</strong> Identify and fix models with non-normal residuals through data transformations or robust regression methods.
+              <strong>Objective:</strong> Identify and correct models with non-normal residuals through data transformations or robust regression methods.
           </div>')
       
       residual_data <- results$residual_fixes
@@ -394,6 +394,11 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
     if (!is.null(residual_data$results)) {
       for (var_name in names(residual_data$results)) {
         var_result <- residual_data$results[[var_name]]
+        
+        # Skip incomplete entries
+        if (is.null(var_result$original) && is.null(var_result$final_recommendation)) {
+          next
+        }
         
         # Determine overall status
         original_normal <- if (!is.null(var_result$original) && !is.null(var_result$original$residuals_normal)) {
@@ -421,92 +426,90 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
                         <strong>Original Model</strong><br>
                         <strong>Residual Normality:</strong> ', 
                         ifelse(orig$residuals_normal, 
-                               paste0("OK: Normal (p = ", round(orig$normality_p, 4), ")"),
-                               paste0("WARNING: Non-normal (p = ", round(orig$normality_p, 4), ")")), '<br>
+                               paste0('<span class="badge bg-success">Normal</span> (p = ', round(orig$normality_p, 4), ')'),
+                               paste0('<span class="badge bg-warning">Non-normal</span> (p = ', ifelse(orig$normality_p < 0.001, "< 0.001", round(orig$normality_p, 4)), ')')), '<br>
                         <strong>R²:</strong> ', round(orig$r_squared, 4), '
                     </div>
                 </div>')
-        }
-        
-        # Final recommendation
-        if (!is.null(var_result$final_recommendation)) {
-          final <- var_result$final_recommendation
           
-          recommendation_text <- ""
-          recommendation_class <- "alert-secondary"
-          
-          if (final$transformation == "original") {
-            recommendation_text <- "OK: Use original model (residuals are normal)"
-            recommendation_class <- "alert-success"
-          } else if (!is.null(final$robust) && final$robust) {
-            recommendation_text <- paste0("ROBUST: Use ", final$method_name, " (robust regression)")
-            recommendation_class <- "alert-primary"
-          } else {
-            recommendation_text <- paste0("TRANSFORM: Use ", final$transformation, " transformation")
-            recommendation_class <- "alert-info"
-          }
-          
-          content <- paste0(content, '
+          # Final recommendation
+          if (!is.null(var_result$final_recommendation)) {
+            final <- var_result$final_recommendation
+            
+            recommendation_text <- ""
+            recommendation_class <- "alert-secondary"
+            
+                         if (final$transformation == "original") {
+               recommendation_text <- '<span class="badge bg-success me-2">KEEP</span>Use original model (residuals are normal)'
+               recommendation_class <- "alert-success"
+             } else if (!is.null(final$robust) && final$robust) {
+               recommendation_text <- paste0('<span class="badge bg-primary me-2">ROBUST</span>Use ', final$method_name, ' (robust regression)')
+               recommendation_class <- "alert-primary"
+             } else {
+               recommendation_text <- paste0('<span class="badge bg-info me-2">TRANSFORM</span>Use ', final$transformation, ' transformation')
+               recommendation_class <- "alert-info"
+             }
+            
+            content <- paste0(content, '
                 <div class="col-md-6">
                     <div class="alert ', recommendation_class, '" style="margin: 5px;">
                         <strong>Recommended Solution:</strong><br>
                         ', recommendation_text, '
                     </div>
                 </div>')
-        }
-        
-        content <- paste0(content, '
-            </div>')
-        
-        # Transformation details if available
-        transformations_tested <- c()
-        if (!is.null(var_result$log_transformed)) transformations_tested <- c(transformations_tested, "log")
-        if (!is.null(var_result$sqrt_transformed)) transformations_tested <- c(transformations_tested, "sqrt")
-        if (!is.null(var_result$boxcox_transformed)) transformations_tested <- c(transformations_tested, "box-cox")
-        
-        robust_methods_tested <- c()
-        if (!is.null(var_result$robust_huber)) robust_methods_tested <- c(robust_methods_tested, "Huber M-estimator")
-        if (!is.null(var_result$robust_mm)) robust_methods_tested <- c(robust_methods_tested, "MM-estimator")
-        
-        if (length(transformations_tested) > 0 || length(robust_methods_tested) > 0) {
+          }
+          
           content <- paste0(content, '
+            </div>')
+          
+          # Transformation details if available
+          transformations_tested <- c()
+          if (!is.null(var_result$log_transformed)) transformations_tested <- c(transformations_tested, "log")
+          if (!is.null(var_result$sqrt_transformed)) transformations_tested <- c(transformations_tested, "sqrt")
+          if (!is.null(var_result$boxcox_transformed)) transformations_tested <- c(transformations_tested, "box-cox")
+          
+          robust_methods_tested <- c()
+          if (!is.null(var_result$robust_huber)) robust_methods_tested <- c(robust_methods_tested, "Huber M-estimator")
+          if (!is.null(var_result$robust_mm)) robust_methods_tested <- c(robust_methods_tested, "MM-estimator")
+          
+          if (length(transformations_tested) > 0 || length(robust_methods_tested) > 0) {
+            content <- paste0(content, '
             <div class="mt-2">
                 <small class="text-muted">
                     <strong>Methods tested:</strong> ')
-          
-          if (length(transformations_tested) > 0) {
-            content <- paste0(content, 'Transformations: ', paste(transformations_tested, collapse = ", "))
-          }
-          
-          if (length(robust_methods_tested) > 0) {
-            if (length(transformations_tested) > 0) content <- paste0(content, '; ')
-            content <- paste0(content, 'Robust methods: ', paste(robust_methods_tested, collapse = ", "))
-          }
-          
-          content <- paste0(content, '
+            
+            if (length(transformations_tested) > 0) {
+              content <- paste0(content, 'Transformations: ', paste(transformations_tested, collapse = ", "))
+            }
+            
+            if (length(robust_methods_tested) > 0) {
+              if (length(transformations_tested) > 0) content <- paste0(content, '; ')
+              content <- paste0(content, 'Robust methods: ', paste(robust_methods_tested, collapse = ", "))
+            }
+            
+            content <- paste0(content, '
                 </small>
             </div>')
+          }
         }
         
         content <- paste0(content, '</div>')
       }
     }
     
-    # Methodology explanation
+    # Methodology explanation - simplified
     content <- paste0(content, '
-                 <div class="interpretation">
-             <strong>Methodology:</strong><br>
-             1. <strong>Residual normality testing:</strong> Shapiro-Wilk test on regression residuals<br>
-             2. <strong>Transformation attempts:</strong> Log, square root, and Box-Cox transformations<br>
-             3. <strong>Robust regression fallback:</strong> Huber M-estimator and MM-estimator for persistent issues<br>
-             4. <strong>Solution selection:</strong> Best method based on residual normality and model fit
+         <div class="interpretation">
+             <strong>Methodology:</strong> Models with non-normal residuals (Shapiro-Wilk p < 0.05) were corrected using 
+             data transformations (log, square root, Box-Cox) or robust regression methods (Huber M-estimator, MM-estimator) 
+             to ensure valid statistical inferences.
          </div>')
     }, error = function(e) {
       cat("Warning: Could not generate residual transformation section in report:", e$message, "\n")
       content <- paste0(content, '
-          <h3>Task F: Model Residual Diagnostics and Fixes</h3>
+          <h3>Model Residual Diagnostics and Solutions</h3>
           <div class="alert alert-warning">
-              <strong>Note:</strong> Residual transformation analysis was completed but could not be displayed in report.
+              <strong>Note:</strong> Residual diagnostics analysis was completed but could not be displayed in report.
           </div>')
     })
   }
@@ -618,29 +621,56 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
     }
   }
   
-  # Include plots if available
+  # Include plots if available - SIMPLIFIED AND ORGANIZED
   if (include_plots && !is.null(results$plot_files) && length(results$plot_files) > 0) {
     content <- paste0(content, '
-        <h3>Visualizations</h3>
-        <p>The following plots illustrate the group comparisons:</p>')
+        <h3>Statistical Visualizations</h3>
+        <p>Key plots illustrating group comparisons and data distributions:</p>')
     
-    for (plot_name in names(results$plot_files)) {
-      plot_file <- results$plot_files[[plot_name]]
-      
-      # Convert absolute path to relative path for HTML
-      if (file.exists(plot_file)) {
-        # Get relative path from the report location
-        relative_plot_path <- file.path(plot_base_path, "plots", "comparative_analysis", basename(plot_file))
-        
-        # Create a nice title for the plot
-        plot_title <- gsub("_", " ", gsub("boxplot_|barplot_", "", plot_name))
-        plot_title <- stringr::str_to_title(plot_title)
-        
+    # Organize plots by type
+    plot_types <- list(
+      "Box Plots" = grep("boxplot_|barplot_", names(results$plot_files), value = TRUE),
+      "Distribution Plots" = grep("density_plot|qq_plot|violin_plot", names(results$plot_files), value = TRUE),
+      "Correlation Plots" = grep("scatter_", names(results$plot_files), value = TRUE)
+    )
+    
+    for (plot_type in names(plot_types)) {
+      plot_names <- plot_types[[plot_type]]
+      if (length(plot_names) > 0) {
         content <- paste0(content, '
-        <div class="plot-container">
-            <h4>', plot_title, '</h4>
-            <img src="', relative_plot_path, '" alt="', plot_title, '" class="img-fluid" style="max-width: 100%; height: auto;">
-        </div>')
+        <h4>', plot_type, '</h4>
+        <div class="row">')
+        
+        for (plot_name in plot_names) {
+          plot_file <- results$plot_files[[plot_name]]
+          
+          # Convert absolute path to relative path for HTML
+          if (file.exists(plot_file)) {
+            # Get relative path from the report location
+            relative_plot_path <- file.path(plot_base_path, "plots", "comparative_analysis", basename(plot_file))
+            
+            # Create a cleaner title for the plot
+            clean_title <- gsub("boxplot_|barplot_|density_plot_|qq_plot_|violin_plot_|scatter_", "", plot_name)
+            clean_title <- gsub("_vs_", " vs ", clean_title)
+            clean_title <- gsub("_", " ", clean_title)
+            clean_title <- stringr::str_to_title(clean_title)
+            
+            # Determine grid size based on plot type
+            col_class <- if (plot_type == "Correlation Plots") "col-lg-6" else "col-lg-4"
+            
+            content <- paste0(content, '
+            <div class="', col_class, ' mb-3">
+                <div class="card">
+                    <div class="card-body">
+                        <h6 class="card-title">', clean_title, '</h6>
+                        <img src="', relative_plot_path, '" alt="', clean_title, '" class="img-fluid">
+                    </div>
+                </div>
+            </div>')
+          }
+        }
+        
+        content <- paste0(content, '</div>')
       }
     }
   }
@@ -1181,14 +1211,14 @@ create_descriptive_stats_content <- function(results, include_plots, plot_base_p
         </div>')
   }
   
-  # TASK 3: CENTRALIZED ASSUMPTIONS SECTION - consolidate all assumption diagnostics
-  content <- paste0(content, generate_centralized_assumptions_section(results))
+  # Additional technical sections (only include if they provide value)
+  if (!is.null(results$assumptions_analysis) && length(results$assumptions_analysis) > 0) {
+    content <- paste0(content, generate_centralized_assumptions_section(results))
+  }
   
-  # TASK 9: TRANSFORMATION WORKFLOW VERIFICATION - verify non-normal variables trigger appropriate tests
-  content <- paste0(content, generate_transformation_verification(results))
-  
-  # TASK 10: DYNAMIC MISSING DATA STATEMENTS - update based on current data
-  content <- paste0(content, generate_dynamic_missing_data_section(results))
+  if (!is.null(results$missing_data_analysis) && length(results$missing_data_analysis) > 0) {
+    content <- paste0(content, generate_dynamic_missing_data_section(results))
+  }
   
   # Variable Properties Analysis - Comprehensive table for each group
   if (!is.null(results$variable_properties)) {
@@ -1577,13 +1607,14 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
     }
   }
   
-  # TASK 8: DETAILED INTERACTION DOCUMENTATION - replace brief summary with comprehensive analysis
-  content <- paste0(content, generate_interaction_documentation(results))
+  # Include interaction analysis if available
+  if (!is.null(results$interaction_analysis) && length(results$interaction_analysis) > 0) {
+    content <- paste0(content, generate_interaction_documentation(results))
+  }
   
-  # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
-  # Only include power analysis if explicitly requested in the analysis
+  # Include power analysis if explicitly requested and available
   if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
-  content <- paste0(content, generate_power_sensitivity_analysis(results))
+    content <- paste0(content, generate_power_sensitivity_analysis(results))
   }
   
   # Effect Sizes Summary
@@ -3195,8 +3226,8 @@ generate_dynamic_missing_data_section <- function(results) {
 generate_power_sensitivity_analysis <- function(results) {
   
   content <- '
-    <h2 id="power-sensitivity-analysis">Power and Sensitivity Analysis</h2>
-    <p>Post-hoc power analysis and minimal detectable effect calculations for significant findings to assess statistical robustness.</p>'
+    <h2 id="statistical-robustness">Statistical Robustness Assessment</h2>
+    <p>Power analysis for significant findings to evaluate result reliability and replicability.</p>'
   
   # Collect significant findings from test results
   significant_findings <- list()
@@ -3376,16 +3407,14 @@ generate_power_sensitivity_analysis <- function(results) {
   if (length(significant_findings) == 0) {
     content <- paste0(content, '
       <div class="alert alert-warning">
-          <h4>No Significant Findings for Power Analysis</h4>
-          <p>No statistically significant results were identified for post-hoc power analysis. 
-          This may indicate that the current study is underpowered to detect meaningful effects.</p>
+          <h4>No Significant Findings</h4>
+          <p>No statistically significant results were identified (all p ≥ 0.05). This may indicate insufficient power to detect meaningful effects.</p>
           
           <h5>Recommendations:</h5>
           <ul>
-              <li>Consider prospective power analysis for future studies</li>
-              <li>Evaluate whether effect sizes of clinical interest are detectable with current sample size</li>
-              <li>Assess whether Type II error (false negative) may explain null findings</li>
-              <li>Consider analyzing effect sizes for non-significant results (may still have meaningful effects)</li>
+              <li>Consider larger sample sizes for future studies</li>
+              <li>Examine effect sizes even for non-significant results</li>
+              <li>Review whether meaningful effect sizes are detectable with current design</li>
           </ul>
       </div>')
     return(content)

@@ -1184,9 +1184,9 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   plots <- list()
   plot_files <- list()
   
-  cat("Creating advanced statistical visualizations...\n")
+  cat("Creating statistical visualizations...\n")
   
-  # 1. Enhanced Box plots with statistical annotations
+  # 1. Box plots with statistical annotations
   for (var in numeric_vars[1:min(6, length(numeric_vars))]) {
     tryCatch({
       # Calculate Cohen's D for effect sizes
@@ -1224,8 +1224,8 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
       }
       
       p <- p +
-        labs(title = paste("Enhanced Comparison of", var, "across groups"),
-             subtitle = "With statistical significance tests and effect sizes",
+        labs(title = paste("Group Comparison:", var),
+             subtitle = "Box plots with statistical significance tests",
              x = group_column, y = var) +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
@@ -1233,15 +1233,15 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
               legend.position = "none")
       
       # Save plot
-      plot_filename <- file.path(output_path, paste0("enhanced_boxplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+      plot_filename <- file.path(output_path, paste0("boxplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
       ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
       
-      plots[[paste0("enhanced_boxplot_", var)]] <- p
-      plot_files[[paste0("enhanced_boxplot_", var)]] <- plot_filename
-      cat("Created enhanced boxplot for", var, "\n")
+      plots[[paste0("boxplot_", var)]] <- p
+      plot_files[[paste0("boxplot_", var)]] <- plot_filename
+      cat("Created boxplot for", var, "\n")
       
     }, error = function(e) {
-      cat("Error creating enhanced boxplot for", var, ":", e$message, "\n")
+      cat("Error creating boxplot for", var, ":", e$message, "\n")
     })
   }
   
@@ -1373,7 +1373,7 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
   
   # Note: Correlation heatmap moved to correlation_analysis.R module to avoid redundancy
   
-  # 7. Enhanced bar plots for categorical variables
+  # 7. Bar plots for categorical variables
   for (var in categorical_vars) {
     if (length(unique(data[[var]])) <= 10) {
       tryCatch({
@@ -1404,16 +1404,16 @@ create_comparative_plots <- function(data, numeric_vars, categorical_vars, group
                 axis.text.x = element_text(angle = 45, hjust = 1)) +
           scale_fill_brewer(type = "qual", palette = "Set2")
         
-        plot_filename <- file.path(output_path, paste0("enhanced_barplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
+        plot_filename <- file.path(output_path, paste0("barplot_", var, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
         ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
         
-        plots[[paste0("enhanced_barplot_", var)]] <- p
-        plot_files[[paste0("enhanced_barplot_", var)]] <- plot_filename
-        cat("Created enhanced barplot for", var, "\n")
+        plots[[paste0("barplot_", var)]] <- p
+        plot_files[[paste0("barplot_", var)]] <- plot_filename
+        cat("Created barplot for", var, "\n")
         
-      }, error = function(e) {
-        cat("Error creating enhanced barplot for", var, ":", e$message, "\n")
-      })
+              }, error = function(e) {
+          cat("Error creating barplot for", var, ":", e$message, "\n")
+        })
     }
   }
   
