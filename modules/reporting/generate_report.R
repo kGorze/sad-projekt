@@ -145,7 +145,7 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
   content <- paste0(content, '
     <div class="result-section">
         <h2>Comparative Analysis Summary</h2>
-        <p>This analysis compared groups across multiple variables using appropriate statistical tests based on distribution and homogeneity assumptions.</p>
+        <p>This analysis compared groups across multiple variables using appropriate statistical tests. The statistical assumptions were tested in the descriptive analysis module.</p>
         
     </div>')
   
@@ -162,89 +162,7 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
         </div>')
   }
   
-  # TASK 3: CENTRALIZED ASSUMPTIONS SECTION - consolidate all assumption diagnostics
-  content <- paste0(content, generate_centralized_assumptions_section(results))
-  
-  # TASK 9: TRANSFORMATION WORKFLOW VERIFICATION - verify non-normal variables trigger appropriate tests
-  content <- paste0(content, generate_transformation_verification(results))
-  
-  # TASK 10: DYNAMIC MISSING DATA STATEMENTS - update based on current data
-  content <- paste0(content, generate_dynamic_missing_data_section(results))
-  
-  # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
-  # Only include power analysis if explicitly requested in the analysis
-  if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
-  content <- paste0(content, generate_power_sensitivity_analysis(results))
-  }
-  
-  # Distribution Analysis Results
-  if (!is.null(results$distribution_analysis)) {
-    content <- paste0(content, '
-        <h3>Distribution Analysis</h3>
-        <p>Assessment of normality for each variable overall and by group:</p>')
-    
-    for (var_name in names(results$distribution_analysis)) {
-      var_data <- results$distribution_analysis[[var_name]]
-      content <- paste0(content, '
-        <h4>', var_name, '</h4>
-        <div class="test-result">
-            <strong>Overall Normality:</strong> ', var_data$overall_normality$interpretation, '<br>')
-      
-      # Group-wise normality
-      if (!is.null(var_data$group_normality)) {
-        content <- paste0(content, '<strong>Group-wise Normality:</strong><br>')
-        for (group_name in names(var_data$group_normality)) {
-          group_result <- var_data$group_normality[[group_name]]
-          content <- paste0(content, '&nbsp;&nbsp;• ', group_name, ': ', group_result$interpretation, '<br>')
-        }
-      }
-      
-      content <- paste0(content, '</div>')
-    }
-  }
-  
-  # Homogeneity Analysis Results
-  if (!is.null(results$homogeneity_analysis)) {
-    content <- paste0(content, '
-        <h3>Homogeneity of Variances</h3>
-        <p>Assessment of variance homogeneity across groups:</p>')
-    
-    for (var_name in names(results$homogeneity_analysis)) {
-      var_data <- results$homogeneity_analysis[[var_name]]
-      # Use levene test result as the primary homogeneity indicator
-      homogeneous <- if (!is.null(var_data$levene_test) && !is.null(var_data$levene_test$homogeneous)) {
-        var_data$levene_test$homogeneous
-      } else {
-        FALSE
-      }
-      homo_class <- if (!is.na(homogeneous) && homogeneous) "significant" else "not-significant"
-      
-      content <- paste0(content, '
-        <div class="test-result ', homo_class, '">
-            <h4>', var_name, '</h4>
-            <strong>Test:</strong> ', ifelse(!is.null(var_data$levene_test), var_data$levene_test$test, "Levene"), '<br>
-            <strong>Result:</strong> ', ifelse(!is.null(var_data$recommendation), var_data$recommendation, "Not available"), '
-        </div>')
-    }
-  }
-  
-  # Test Recommendations
-  if (!is.null(results$test_recommendations)) {
-    content <- paste0(content, '
-        <h3>Statistical Test Recommendations</h3>
-        <p>Based on distribution and homogeneity analysis, the following tests were selected:</p>')
-    
-    for (var_name in names(results$test_recommendations)) {
-      recommendation <- results$test_recommendations[[var_name]]
-      content <- paste0(content, '
-        <div class="interpretation">
-            <strong>', var_name, ':</strong> ', recommendation$test_type, '<br>
-            <em>Reasoning:</em> ', recommendation$reasoning, '
-        </div>')
-    }
-  }
-  
-  # Statistical Test Results
+  # Statistical Test Results - specific to comparative analysis
   if (!is.null(results$test_results)) {
     content <- paste0(content, '
         <h3>Statistical Test Results</h3>
@@ -306,6 +224,17 @@ create_comparative_analysis_content <- function(results, include_plots, plot_bas
       content <- paste0(content, '</div>')
     }
   }
+  
+  # TASK 11: POWER AND SENSITIVITY ANALYSIS - assess robustness of significant findings
+  # Only include power analysis if explicitly requested in the analysis
+  if (!is.null(results$metadata$include_power_analysis) && results$metadata$include_power_analysis) {
+  content <- paste0(content, generate_power_sensitivity_analysis(results))
+  }
+  
+  # REMOVED: Distribution Analysis Results - now only in descriptive_stats to eliminate duplication
+  # REMOVED: Homogeneity Analysis Results - now only in descriptive_stats to eliminate duplication  
+  # REMOVED: Test Recommendations - now only in descriptive_stats to eliminate duplication
+  # Statistical assumptions analysis and test recommendations are handled in descriptive_stats module
   
   # Cohen's D Effect Size Analysis
   if (!is.null(results$effect_sizes)) {

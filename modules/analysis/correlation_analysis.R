@@ -7,7 +7,7 @@ source("modules/analysis/assumptions_dashboard.R")
 
 # Main correlation analysis function
 perform_correlation_analysis <- function(data, group_column = NULL, variables = NULL, include_plots = TRUE, 
-                                       check_assumptions = TRUE) {
+                                       shared_assumptions = NULL) {
   
   result <- create_analysis_result("correlation_analysis")
   cat("Starting correlation analysis...\n")
@@ -30,20 +30,17 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
   
   cat("- Analyzing correlations for", length(numeric_vars), "variables\n")
   
-  # Step 1: Assumptions testing (if enabled)
-  if (check_assumptions) {
-    cat("\n=== STEP 1: ASSUMPTIONS TESTING ===\n")
-    assumptions_results <- tryCatch({
-      perform_assumptions_testing(data, numeric_vars, group_column)
-    }, error = function(e) {
-      cat("Warning: Assumptions testing failed:", e$message, "\n")
-      NULL
-    })
+  # Step 1: Use shared assumptions analysis (no duplication)
+  if (!is.null(shared_assumptions)) {
+    cat("\n=== STEP 1: USING SHARED ASSUMPTIONS ANALYSIS ===\n")
+    cat("- Reusing assumptions testing from descriptive stats (eliminates duplication)\n")
+    assumptions_results <- shared_assumptions
     result$assumptions_analysis <- assumptions_results
-    
-    if (!is.null(assumptions_results)) {
-      display_method_recommendations(assumptions_results)
-    }
+    display_method_recommendations(assumptions_results)
+  } else {
+    cat("\n=== STEP 1: ASSUMPTIONS TESTING SKIPPED ===\n")
+    cat("- No shared assumptions provided - proceeding with correlation analysis\n")
+    cat("- Recommendation: Run descriptive stats first for comprehensive assumptions testing\n")
   }
   
   # Step 2: Overall correlations
@@ -516,9 +513,9 @@ display_method_recommendations <- function(assumptions_results) {
 
 # Quick analysis wrapper (simplified)
 quick_correlation_analysis <- function(data, group_column = NULL, variables = NULL, generate_report = TRUE, 
-                                     check_assumptions = TRUE) {
+                                     shared_assumptions = NULL) {
   result <- perform_correlation_analysis(data, group_column, variables, include_plots = TRUE, 
-                                       check_assumptions = check_assumptions)
+                                       shared_assumptions = shared_assumptions)
   
   if (generate_report) {
     report_file <- quick_report(result)

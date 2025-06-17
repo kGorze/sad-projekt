@@ -18,51 +18,38 @@ source("modules/analysis/assumptions_dashboard.R")
 source("modules/utils/statistical_helpers.R")
 
 # Main function: Enhanced inferential analysis with covariates
-perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", include_plots = TRUE, 
-                                                include_interactions = "auto", 
-                                                check_assumptions = TRUE) {
+perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", dependent_vars = NULL, 
+                                                 covariates = NULL, include_interactions = "auto", 
+                                                 include_plots = TRUE, shared_assumptions = NULL) {
   
   # Create analysis result object
   result <- create_analysis_result("enhanced_inferential")
   
-  cat("Starting enhanced inferential framework analysis...\n")
+  cat("Starting enhanced inferential analysis...\n")
   
-  # Identify variable types and potential covariates
-  numeric_vars <- names(data)[sapply(data, is.numeric)]
-  categorical_vars <- names(data)[sapply(data, function(x) is.factor(x) || is.character(x))]
+  # Identify dependent variables (continuous/numeric only)
+  if (is.null(dependent_vars)) {
+    numeric_vars <- names(data)[sapply(data, is.numeric)]
+    dependent_vars <- numeric_vars[numeric_vars != group_column]
+  } else {
+    dependent_vars <- dependent_vars[sapply(data[dependent_vars], is.numeric)]
+  }
   
-  # Remove group column from dependent variables
-  numeric_vars <- numeric_vars[numeric_vars != group_column]
-  categorical_vars <- categorical_vars[categorical_vars != group_column]
+  if (length(dependent_vars) == 0) {
+    cat("Error: No numeric dependent variables found for inferential analysis\n")
+    return(NULL)
+  }
   
-  # Identify potential covariates
-  potential_covariates <- tryCatch({
-    identify_covariates(data, numeric_vars, group_column)
-  }, error = function(e) {
-    cat("Warning: Could not identify covariates automatically. Using simple variance-based identification.\n")
-    # Fallback: identify variables with highest variance as potential covariates
-    numeric_vars_clean <- numeric_vars[numeric_vars != group_column]
-    if (length(numeric_vars_clean) > 0) {
-      variances <- sapply(numeric_vars_clean, function(var) {
-        if (var %in% names(data) && is.numeric(data[[var]])) {
-          var(data[[var]], na.rm = TRUE)
-        } else {
-          0
-        }
-      })
-      # Take top 2-3 variables with highest variance (likely meaningful covariates)
-      top_vars <- names(sort(variances, decreasing = TRUE))[1:min(3, length(variances))]
-      return(top_vars[!is.na(top_vars)])
-    } else {
-      return(c())
-    }
-  })
+  # Identify potential covariates automatically if not specified
+  if (is.null(covariates)) {
+    cat("Identifying potential covariates...\n")
+    potential_covariates <- identify_covariates(data, dependent_vars, group_column)
+  } else {
+    potential_covariates <- covariates[covariates %in% names(data)]
+    potential_covariates <- potential_covariates[sapply(data[potential_covariates], is.numeric)]
+  }
   
-  # CRITICAL FIX: Remove identified covariates from dependent variables list
-  # to avoid analyzing covariates as both dependent variables AND covariates
-  dependent_vars <- numeric_vars[!numeric_vars %in% potential_covariates]
-  
-  # Center continuous covariates for better interpretation of interactions
+  # Center continuous variables around their means to improve interpretation
   centered_data <- data
   covariate_centering_info <- list()
   
@@ -82,21 +69,16 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   cat("- Identified", length(potential_covariates), "potential covariates:", paste(potential_covariates, collapse = ", "), "\n")
   cat("- Dependent variables:", paste(dependent_vars, collapse = ", "), "\n")
   
-  # NOWY KROK: Comprehensive Assumptions Testing
-  if (check_assumptions) {
-    cat("\n=== STEP 0: COMPREHENSIVE ASSUMPTIONS TESTING ===\n")
-    assumptions_results <- tryCatch({
-      perform_assumptions_testing(centered_data, dependent_vars, group_column)
-    }, error = function(e) {
-      cat("Warning: Assumptions testing failed:", e$message, "\n")
-      NULL
-    })
-    result$assumptions_analysis <- assumptions_results
-    
-    # Display key assumption violations and recommendations
-    if (!is.null(assumptions_results)) {
-      display_assumption_summary(assumptions_results)
-    }
+  # Use shared assumptions analysis (no duplication)
+  if (!is.null(shared_assumptions)) {
+    cat("\n=== STEP 0: USING SHARED ASSUMPTIONS ANALYSIS ===\n")
+    cat("- Reusing comprehensive assumptions testing (eliminates duplication)\n")
+    result$assumptions_analysis <- shared_assumptions
+    display_assumption_summary(shared_assumptions)
+  } else {
+    cat("\n=== STEP 0: ASSUMPTIONS TESTING SKIPPED ===\n")
+    cat("- No shared assumptions provided - proceeding with inferential analysis\n")
+    cat("- Recommendation: Run descriptive stats first for comprehensive assumptions testing\n")
   }
   
   # Step 1: Multiple Linear Regression with Covariates

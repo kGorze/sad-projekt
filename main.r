@@ -244,14 +244,14 @@ run_analysis_with_args <- function(args) {
     # Source the enhanced inferential framework for the complete analysis
     source("modules/analysis/enhanced_inferential_framework.R")
     
-    # Run all four analyses
-    cat("Running comprehensive analysis suite...\n")
+    # Run all four analyses with SHARED ASSUMPTIONS TESTING (eliminates duplication)
+    cat("Running comprehensive analysis suite with shared assumptions...\n")
     
     # Collect all results
     all_results <- list()
     
-    # 1. Descriptive Statistics
-    cat("  1/4: Descriptive Statistics...\n")
+    # 1. Descriptive Statistics (PERFORMS ASSUMPTIONS TESTING)
+    cat("  1/4: Descriptive Statistics with Assumptions Testing...\n")
     all_results$descriptive_stats <- execute_with_warning_capture({
       generate_descriptive_stats(
         data = medical_data, 
@@ -260,34 +260,41 @@ run_analysis_with_args <- function(args) {
       )
     })
     
-    # 2. Correlation Analysis  
-    cat("  2/4: Correlation Analysis...\n")
+    # Extract shared assumptions from descriptive stats
+    shared_assumptions <- all_results$descriptive_stats$assumptions_analysis
+    cat("- Shared assumptions extracted from descriptive stats for reuse\n")
+    
+    # 2. Correlation Analysis (REUSES ASSUMPTIONS)
+    cat("  2/4: Correlation Analysis (reusing assumptions)...\n")
     all_results$correlation_analysis <- execute_with_warning_capture({
       perform_correlation_analysis(
         data = medical_data, 
         group_column = "grupa",
         variables = NULL,  # Will auto-detect numeric variables
-        include_plots = TRUE
+        include_plots = TRUE,
+        shared_assumptions = shared_assumptions  # NO DUPLICATION
       )
     })
     
-    # 3. Comparative Analysis
-    cat("  3/4: Comparative Analysis...\n")
+    # 3. Comparative Analysis (REUSES ASSUMPTIONS)
+    cat("  3/4: Comparative Analysis (reusing assumptions)...\n")
     all_results$comparative_analysis <- execute_with_warning_capture({
       perform_group_comparisons(
         data = medical_data, 
         group_column = "grupa", 
-        include_plots = TRUE
+        include_plots = TRUE,
+        shared_assumptions = shared_assumptions  # NO DUPLICATION
       )
     })
     
-    # 4. Enhanced Inferential Analysis
-    cat("  4/4: Enhanced Inferential Analysis...\n")
+    # 4. Enhanced Inferential Analysis (REUSES ASSUMPTIONS)
+    cat("  4/4: Enhanced Inferential Analysis (reusing assumptions)...\n")
     all_results$enhanced_inferential <- execute_with_warning_capture({
       perform_enhanced_inferential_analysis(
         data = medical_data, 
         group_column = "grupa", 
-        include_plots = TRUE
+        include_plots = TRUE,
+        shared_assumptions = shared_assumptions  # NO DUPLICATION
       )
     })
     
