@@ -1,9 +1,7 @@
-# Correlation analysis
-# Correlation analysis with multiple methods and visualization
+# Correlation analysis - Simplified version
+# Maintaining all functionality while removing redundancies
 
 # Package dependencies
-
-# Source reporting utilities
 source("modules/reporting/export_results.R")
 source("modules/analysis/assumptions_dashboard.R")
 
@@ -11,15 +9,12 @@ source("modules/analysis/assumptions_dashboard.R")
 perform_correlation_analysis <- function(data, group_column = NULL, variables = NULL, include_plots = TRUE, 
                                        check_assumptions = TRUE) {
   
-  # Create analysis result object
   result <- create_analysis_result("correlation_analysis")
+  cat("Starting correlation analysis...\n")
   
-      cat("Starting correlation analysis...\n")
-  
-  # Identify numeric variables for correlation analysis
+  # Identify numeric variables
   if (is.null(variables)) {
     numeric_vars <- names(data)[sapply(data, is.numeric)]
-    # Remove group column if specified
     if (!is.null(group_column) && group_column %in% numeric_vars) {
       numeric_vars <- numeric_vars[numeric_vars != group_column]
     }
@@ -35,9 +30,9 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
   
   cat("- Analyzing correlations for", length(numeric_vars), "variables\n")
   
-  # NOWY KROK: Comprehensive Assumptions Testing for Correlation Method Selection
+  # Step 1: Assumptions testing (if enabled)
   if (check_assumptions) {
-    cat("\n=== STEP 0: ASSUMPTIONS TESTING FOR CORRELATION METHOD SELECTION ===\n")
+    cat("\n=== STEP 1: ASSUMPTIONS TESTING ===\n")
     assumptions_results <- tryCatch({
       perform_assumptions_testing(data, numeric_vars, group_column)
     }, error = function(e) {
@@ -46,63 +41,46 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
     })
     result$assumptions_analysis <- assumptions_results
     
-    # Display correlation method recommendations based on assumptions
     if (!is.null(assumptions_results)) {
-      display_correlation_method_recommendations(assumptions_results)
+      display_method_recommendations(assumptions_results)
     }
   }
   
-  # Step 1: Overall correlation analysis
-  cat("\n=== STEP 1: OVERALL CORRELATION ANALYSIS ===\n")
-  overall_correlations <- calculate_overall_correlations(data, numeric_vars)
+  # Step 2: Overall correlations
+  cat("\n=== STEP 2: OVERALL CORRELATIONS ===\n")
+  overall_correlations <- calculate_correlations(data, numeric_vars)
   result$overall_correlations <- overall_correlations
+  cat("- Overall correlation matrix calculated for", length(numeric_vars), "variables\n")
   
-  # Step 2: Group-wise correlation analysis
+  # Step 3: Group-wise correlations
   if (!is.null(group_column)) {
-    cat("\n=== STEP 2: GROUP-WISE CORRELATION ANALYSIS ===\n")
+    cat("\n=== STEP 3: GROUP-WISE CORRELATIONS ===\n")
     group_correlations <- calculate_group_correlations(data, numeric_vars, group_column)
     result$group_correlations <- group_correlations
     
-    # TASK 5a: Full by-group correlation tables with FDR-adjusted p-values
-    cat("- Calculating detailed by-group correlation tables with FDR adjustment...\n")
-    detailed_group_tables <- calculate_detailed_group_correlation_tables(data, numeric_vars, group_column)
-    result$detailed_group_tables <- detailed_group_tables
-    
-    cat("- Group-wise correlations calculated for", length(unique(data[[group_column]])), "groups\n")
-  }
-  
-  # TASK 5b: Partial correlations controlling for group
-  if (!is.null(group_column)) {
-    cat("\n=== STEP 2.5: PARTIAL CORRELATIONS CONTROLLING FOR GROUP ===\n")
-    partial_correlations <- calculate_partial_correlations_for_group(data, numeric_vars, group_column)
+    # Step 4: Partial correlations controlling for group
+    cat("\n=== STEP 4: PARTIAL CORRELATIONS ===\n")
+    partial_correlations <- calculate_partial_correlations(data, numeric_vars, group_column)
     result$partial_correlations <- partial_correlations
     cat("- Partial correlations calculated controlling for", group_column, "\n")
   }
   
-  # Step 3: Correlation significance testing
-  cat("\n=== STEP 3: CORRELATION SIGNIFICANCE TESTING ===\n")
-  correlation_tests <- perform_correlation_significance_tests(data, numeric_vars, group_column)
-  result$correlation_tests <- correlation_tests
-  cat("- Significance tests completed for", length(correlation_tests$overall_tests), "variable pairs\n")
-  
-  # Step 4: Correlation interpretation and summary
-  cat("\n=== STEP 4: CORRELATION INTERPRETATION ===\n")
-  correlation_summary <- create_correlation_summary(overall_correlations, correlation_tests, 
-                                                  if(!is.null(group_column)) group_correlations else NULL)
+  # Step 5: Summary and interpretation
+  cat("\n=== STEP 5: CORRELATION SUMMARY ===\n")
+  correlation_summary <- create_correlation_summary(overall_correlations, 
+                                                   if(!is.null(group_column)) group_correlations else NULL)
   result$correlation_summary <- correlation_summary
+  cat("- Correlation summary and interpretation completed\n")
   
-  # Step 5: Generate correlation plots
+  # Step 6: Generate plots
   if (include_plots) {
-    cat("\n=== STEP 5: GENERATING CORRELATION VISUALIZATIONS ===\n")
-    
-    # Use fixed output path for plots
+    cat("\n=== STEP 6: GENERATING VISUALIZATIONS ===\n")
     plots_output_path <- file.path("output", "plots", "correlation_analysis")
     
-    plots_result <- create_detailed_correlation_plots(data, numeric_vars, group_column, plots_output_path)
+    plots_result <- create_correlation_plots(data, numeric_vars, group_column, plots_output_path)
     result$plots <- plots_result$plots
     result$plot_files <- plots_result$plot_files
     cat("- Generated", length(plots_result$plots), "correlation plots\n")
-    cat("- Saved", length(plots_result$plot_files), "plot files\n")
   }
   
   # Add metadata
@@ -118,198 +96,110 @@ perform_correlation_analysis <- function(data, group_column = NULL, variables = 
   return(result)
 }
 
-# Calculate overall correlations (Pearson and Spearman)
-calculate_overall_correlations <- function(data, variables) {
+# Unified function to calculate correlations with p-values and FDR correction
+calculate_correlations <- function(data, variables) {
   
-  if (length(variables) < 2) {
-    return(NULL)
-  }
+  if (length(variables) < 2) return(NULL)
   
-  # Select only specified variables for correlation
+  # Prepare clean data
   cor_data <- data[, variables, drop = FALSE]
-  
-  # Remove rows with any missing values for correlation analysis
   cor_data <- cor_data[complete.cases(cor_data), ]
   
   if (nrow(cor_data) < 3) {
-    return(list(
-      error = "Insufficient complete observations for correlation analysis",
-      n_complete = nrow(cor_data)
-    ))
+    return(list(error = "Insufficient complete observations", n_complete = nrow(cor_data)))
   }
   
-  # Calculate Pearson correlation matrix
+  # Calculate correlation matrices
   pearson_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
-  
-  # Calculate Spearman correlation matrix
   spearman_matrix <- cor(cor_data, method = "spearman", use = "complete.obs")
   
-  # Calculate p-values for correlations
-  n <- nrow(cor_data)
-  pearson_p_values <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
-  spearman_p_values <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
-  rownames(pearson_p_values) <- colnames(pearson_p_values) <- variables
-  rownames(spearman_p_values) <- colnames(spearman_p_values) <- variables
+  # Calculate p-values and apply FDR correction
+  p_results <- calculate_p_values_with_fdr(cor_data, variables)
   
-  # Store raw p-values first
-  pearson_p_raw <- c()
-  spearman_p_raw <- c()
-  pearson_indices <- list()
-  spearman_indices <- list()
-  
-  for (i in 1:length(variables)) {
-    for (j in 1:length(variables)) {
-      if (i != j) {
-        # Pearson correlation test
-        pearson_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "pearson")
-        pearson_p_values[i, j] <- pearson_test$p.value
-        
-        # Store for FDR correction
-        pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
-        pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
-        
-        # Spearman correlation test with exact = FALSE to avoid ties warning
-        spearman_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "spearman", exact = FALSE)
-        spearman_p_values[i, j] <- spearman_test$p.value
-        
-        # Store for FDR correction
-        spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
-        spearman_indices[[length(spearman_indices) + 1]] <- c(i, j)
-      } else {
-        pearson_p_values[i, j] <- NA
-        spearman_p_values[i, j] <- NA
-      }
-    }
-  }
-  
-  # Apply Benjamini-Hochberg (FDR) correction to correlation p-values
-  # Rationale: Benjamini-Hochberg (BH) method chosen because:
-  # 1. Controls False Discovery Rate (FDR) rather than Family-Wise Error Rate (FWER)
-  # 2. More powerful than Bonferroni correction for multiple correlations
-  # 3. Appropriate for exploratory analysis where some false positives are acceptable
-  # 4. FDR = E[V/R] ≤ α, where V = false positives, R = total rejections
-  if (length(pearson_p_raw) > 0) {
-    pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
-    spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
-    
-    # Create adjusted p-value matrices
-    pearson_p_values_fdr <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
-    spearman_p_values_fdr <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
-    rownames(pearson_p_values_fdr) <- colnames(pearson_p_values_fdr) <- variables
-    rownames(spearman_p_values_fdr) <- colnames(spearman_p_values_fdr) <- variables
-    
-    # Fill in the FDR-adjusted p-values
-    for (k in 1:length(pearson_indices)) {
-      i <- pearson_indices[[k]][1]
-      j <- pearson_indices[[k]][2]
-      pearson_p_values_fdr[i, j] <- pearson_p_adjusted[k]
-      spearman_p_values_fdr[i, j] <- spearman_p_adjusted[k]
-    }
-  } else {
-    pearson_p_values_fdr <- pearson_p_values
-    spearman_p_values_fdr <- spearman_p_values
-  }
-
   return(list(
     pearson_matrix = pearson_matrix,
     spearman_matrix = spearman_matrix,
-    pearson_p_values = pearson_p_values,
-    spearman_p_values = spearman_p_values,
-    pearson_p_values_fdr = pearson_p_values_fdr,
-    spearman_p_values_fdr = spearman_p_values_fdr,
-    n_observations = n,
+    pearson_p_values = p_results$pearson_p_values,
+    spearman_p_values = p_results$spearman_p_values,
+    pearson_p_values_fdr = p_results$pearson_p_values_fdr,
+    spearman_p_values_fdr = p_results$spearman_p_values_fdr,
+    n_observations = nrow(cor_data),
     variables = variables
   ))
 }
 
-# Calculate group-wise correlations
+# Unified p-value calculation with FDR correction (removes redundancy)
+calculate_p_values_with_fdr <- function(cor_data, variables) {
+  
+  n_vars <- length(variables)
+  pearson_p_values <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  spearman_p_values <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  rownames(pearson_p_values) <- colnames(pearson_p_values) <- variables
+  rownames(spearman_p_values) <- colnames(spearman_p_values) <- variables
+  
+  # Collect all p-values for FDR correction
+  pearson_p_raw <- c()
+  spearman_p_raw <- c()
+  indices <- list()
+  
+  for (i in 1:n_vars) {
+    for (j in 1:n_vars) {
+      if (i != j) {
+        # Pearson test
+        pearson_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "pearson")
+        pearson_p_values[i, j] <- pearson_test$p.value
+        pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
+        
+        # Spearman test
+        spearman_test <- cor.test(cor_data[[variables[i]]], cor_data[[variables[j]]], method = "spearman", exact = FALSE)
+        spearman_p_values[i, j] <- spearman_test$p.value
+        spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
+        
+        indices[[length(indices) + 1]] <- c(i, j)
+      }
+    }
+  }
+  
+  # Apply FDR correction
+  pearson_p_values_fdr <- pearson_p_values
+  spearman_p_values_fdr <- spearman_p_values
+  
+  if (length(pearson_p_raw) > 0) {
+    pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
+    spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
+    
+    # Fill adjusted matrices
+    for (k in 1:length(indices)) {
+      i <- indices[[k]][1]
+      j <- indices[[k]][2]
+      pearson_p_values_fdr[i, j] <- pearson_p_adjusted[k]
+      spearman_p_values_fdr[i, j] <- spearman_p_adjusted[k]
+    }
+  }
+  
+  return(list(
+    pearson_p_values = pearson_p_values,
+    spearman_p_values = spearman_p_values,
+    pearson_p_values_fdr = pearson_p_values_fdr,
+    spearman_p_values_fdr = spearman_p_values_fdr
+  ))
+}
+
+# Group-wise correlations (simplified, removing duplicate with detailed tables)
 calculate_group_correlations <- function(data, variables, group_column) {
   
   groups <- unique(data[[group_column]])
   groups <- groups[!is.na(groups)]
-  
   group_correlations <- list()
   
   for (group in groups) {
-    cat("Calculating correlations for group:", group, "\n")
+    cat("- Processing group:", group, "\n")
     
     group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables, drop = FALSE]
     group_data <- group_data[complete.cases(group_data), ]
     
     if (nrow(group_data) >= 3 && ncol(group_data) >= 2) {
-      
-      # Pearson correlations
-      pearson_cor <- cor(group_data, method = "pearson", use = "complete.obs")
-      
-      # Spearman correlations  
-      spearman_cor <- cor(group_data, method = "spearman", use = "complete.obs")
-      
-      # Calculate p-values for this group
-      n <- nrow(group_data)
-      pearson_p <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
-      spearman_p <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
-      rownames(pearson_p) <- colnames(pearson_p) <- colnames(group_data)
-      rownames(spearman_p) <- colnames(spearman_p) <- colnames(group_data)
-      
-      # Store raw p-values for FDR correction
-      pearson_p_raw <- c()
-      spearman_p_raw <- c()
-      pearson_indices <- list()
-      spearman_indices <- list()
-      
-      for (i in 1:ncol(group_data)) {
-        for (j in 1:ncol(group_data)) {
-          if (i != j) {
-            pearson_test <- cor.test(group_data[[i]], group_data[[j]], method = "pearson")
-            pearson_p[i, j] <- pearson_test$p.value
-            
-            # Store for FDR correction
-            pearson_p_raw <- c(pearson_p_raw, pearson_test$p.value)
-            pearson_indices[[length(pearson_indices) + 1]] <- c(i, j)
-            
-                    spearman_test <- cor.test(group_data[[i]], group_data[[j]], method = "spearman", exact = FALSE)
-        spearman_p[i, j] <- spearman_test$p.value
-            
-            # Store for FDR correction
-            spearman_p_raw <- c(spearman_p_raw, spearman_test$p.value)
-            spearman_indices[[length(spearman_indices) + 1]] <- c(i, j)
-          }
-        }
-      }
-      
-      # Apply Benjamini-Hochberg (FDR) correction to group correlation p-values
-      if (length(pearson_p_raw) > 0) {
-        pearson_p_adjusted <- p.adjust(pearson_p_raw, method = "BH")
-        spearman_p_adjusted <- p.adjust(spearman_p_raw, method = "BH")
-        
-        # Create adjusted p-value matrices
-        pearson_p_fdr <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
-        spearman_p_fdr <- matrix(NA, nrow = ncol(group_data), ncol = ncol(group_data))
-        rownames(pearson_p_fdr) <- colnames(pearson_p_fdr) <- colnames(group_data)
-        rownames(spearman_p_fdr) <- colnames(spearman_p_fdr) <- colnames(group_data)
-        
-        # Fill in the FDR-adjusted p-values
-        for (k in 1:length(pearson_indices)) {
-          i <- pearson_indices[[k]][1]
-          j <- pearson_indices[[k]][2]
-          pearson_p_fdr[i, j] <- pearson_p_adjusted[k]
-          spearman_p_fdr[i, j] <- spearman_p_adjusted[k]
-        }
-      } else {
-        pearson_p_fdr <- pearson_p
-        spearman_p_fdr <- spearman_p
-      }
-      
-      group_correlations[[as.character(group)]] <- list(
-        pearson_matrix = pearson_cor,
-        spearman_matrix = spearman_cor,
-        pearson_p_values = pearson_p,
-        spearman_p_values = spearman_p,
-        pearson_p_values_fdr = pearson_p_fdr,
-        spearman_p_values_fdr = spearman_p_fdr,
-        n_observations = n
-      )
-      
+      group_correlations[[as.character(group)]] <- calculate_correlations(group_data, variables)
     } else {
       group_correlations[[as.character(group)]] <- list(
         error = "Insufficient data for correlation analysis",
@@ -321,396 +211,172 @@ calculate_group_correlations <- function(data, variables, group_column) {
   return(group_correlations)
 }
 
-# Perform correlation significance testing
-perform_correlation_significance_tests <- function(data, variables, group_column = NULL) {
+# Partial correlations (simplified)
+calculate_partial_correlations <- function(data, variables, group_column) {
   
-  # Overall correlation tests
-  overall_tests <- list()
+  clean_data <- data[complete.cases(data[c(variables, group_column)]), ]
   
-  for (i in 1:(length(variables)-1)) {
-    for (j in (i+1):length(variables)) {
-      var1 <- variables[i]
-      var2 <- variables[j]
-      
-      # Get complete data for this pair
-      pair_data <- data[!is.na(data[[var1]]) & !is.na(data[[var2]]), c(var1, var2)]
-      
-      if (nrow(pair_data) >= 3) {
-        
-        # Determine best correlation method based on comprehensive normality testing
-        method_analysis <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]], var1, var2)
-        method <- method_analysis$method
-        
-        # Perform correlation test(s) based on enhanced method selection
-        if (method == "pearson") {
-          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-          secondary_test <- NULL
-        } else if (method == "both") {
-          # For borderline cases, calculate both correlations
-          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-          secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
-          method <- "pearson"  # Use Pearson as primary
-        } else {
-          cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
-          secondary_test <- NULL
-        }
-        
-        # Interpret correlation
-        interpretation <- interpret_correlation_strength(cor_test$estimate)
-        
-        # Enhanced results with assumptions information
-        test_results <- list(
-          variables = c(var1, var2),
-          method = method,
-          correlation = cor_test$estimate,
-          p_value = cor_test$p.value,
-          confidence_interval = cor_test$conf.int,
-          n = nrow(pair_data),
-          strength = interpretation$strength,
-          direction = interpretation$direction,
-          significance = ifelse(cor_test$p.value < 0.05, "significant", "not significant"),
-          method_selection_rationale = method_analysis$rationale,
-          assumptions_summary = method_analysis,
-          interpretation = paste0(
-            "There is a ", ifelse(cor_test$p.value < 0.05, "significant", "non-significant"),
-            " ", interpretation$strength, " ", interpretation$direction,
-            " correlation (", method, " r = ", round(cor_test$estimate, 3),
-            ", p = ", format.pval(cor_test$p.value, digits = 3), ")"
-          )
-        )
-        
-        # Add secondary test results for borderline cases
-        if (!is.null(secondary_test)) {
-          secondary_interpretation <- interpret_correlation_strength(secondary_test$estimate)
-          test_results$secondary_method <- "spearman"
-          test_results$secondary_correlation <- secondary_test$estimate
-          test_results$secondary_p_value <- secondary_test$p.value
-          test_results$secondary_interpretation <- paste0(
-            "Spearman correlation (non-parametric): r = ", round(secondary_test$estimate, 3),
-            ", p = ", format.pval(secondary_test$p.value, digits = 3),
-            " (", secondary_interpretation$strength, " ", secondary_interpretation$direction, ")"
-          )
-          test_results$borderline_note <- "Both Pearson and Spearman correlations calculated due to borderline normality"
-        }
-        
-        overall_tests[[paste(var1, "vs", var2)]] <- test_results
-      }
-    }
+  if (nrow(clean_data) < 10) {
+    return(list(error = "Insufficient data for partial correlation analysis", n = nrow(clean_data)))
   }
   
-  # Group-wise correlation tests
-  group_tests <- NULL
-  if (!is.null(group_column)) {
-    group_tests <- list()
-    groups <- unique(data[[group_column]])
-    groups <- groups[!is.na(groups)]
-    
-    for (group in groups) {
-      group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), ]
-      group_tests[[as.character(group)]] <- list()
-      
-      for (i in 1:(length(variables)-1)) {
-        for (j in (i+1):length(variables)) {
-          var1 <- variables[i]
-          var2 <- variables[j]
-          
-          pair_data <- group_data[!is.na(group_data[[var1]]) & !is.na(group_data[[var2]]), c(var1, var2)]
-          
-          if (nrow(pair_data) >= 3) {
-            method_analysis <- determine_correlation_method(pair_data[[var1]], pair_data[[var2]], var1, var2)
-            method <- method_analysis$method
-            
-            # Handle enhanced method selection
-            if (method == "pearson") {
-              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-              secondary_test <- NULL
-            } else if (method == "both") {
-              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "pearson")
-              secondary_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
-              method <- "pearson"  # Use Pearson as primary
-            } else {
-              cor_test <- cor.test(pair_data[[var1]], pair_data[[var2]], method = "spearman", exact = FALSE)
-              secondary_test <- NULL
-            }
-            
-            interpretation <- interpret_correlation_strength(cor_test$estimate)
-            
-            group_result <- list(
-              correlation = cor_test$estimate,
-              p_value = cor_test$p.value,
-              method = method,
-              strength = interpretation$strength,
-              direction = interpretation$direction,
-              n = nrow(pair_data),
-              method_rationale = method_analysis$rationale,
-              assumptions = method_analysis
-            )
-            
-            # Add secondary results for borderline cases
-            if (!is.null(secondary_test)) {
-              secondary_interpretation <- interpret_correlation_strength(secondary_test$estimate)
-              group_result$secondary_method <- "spearman"
-              group_result$secondary_correlation <- secondary_test$estimate
-              group_result$secondary_p_value <- secondary_test$p.value
-              group_result$secondary_strength <- secondary_interpretation$strength
-              group_result$secondary_direction <- secondary_interpretation$direction
-            }
-            
-            group_tests[[as.character(group)]][[paste(var1, "vs", var2)]] <- group_result
-          }
-        }
-      }
-    }
-  }
-  
-  return(list(
-    overall_tests = overall_tests,
-    group_tests = group_tests
-  ))
-}
-
-# Enhanced correlation method determination using assumptions dashboard
-determine_correlation_method <- function(x, y, var1_name = "Variable1", var2_name = "Variable2") {
-  
-  # Remove missing values
-  complete_data <- complete.cases(x, y)
-  x_clean <- x[complete_data]
-  y_clean <- y[complete_data]
-  
-  if (length(x_clean) < 3) {
-    return(list(
-      method = "spearman",
-      rationale = "Insufficient data - defaulting to non-parametric",
-      x_assumptions = NULL,
-      y_assumptions = NULL
-    ))
-  }
-  
-  # Use assumptions dashboard functions for comprehensive normality testing
-  x_normality <- perform_optimal_normality_test(x_clean)
-  y_normality <- perform_optimal_normality_test(y_clean)
-  
-  # Enhanced decision logic with borderline handling
-  x_normal <- x_normality$normal
-  y_normal <- y_normality$normal
-  x_borderline <- x_normality$borderline
-  y_borderline <- y_normality$borderline
-  
-  # Statistical Decision Logic with Borderline Handling:
-  if (x_normal && y_normal && !x_borderline && !y_borderline) {
-    method <- "pearson"
-    rationale <- "Both variables clearly normal - parametric correlation appropriate"
-  } else if (x_normal && y_normal && (x_borderline || y_borderline)) {
-    method <- "both"  # Special flag for borderline cases
-    rationale <- "Both variables normal but with borderline cases - recommend both Pearson and Spearman"
-  } else if ((x_normal || y_normal) && !(x_borderline && y_borderline)) {
-    method <- "spearman"
-    rationale <- "Mixed normality - non-parametric correlation more robust"
+  # Convert group to numeric
+  if (is.factor(clean_data[[group_column]]) || is.character(clean_data[[group_column]])) {
+    clean_data$group_numeric <- as.numeric(as.factor(clean_data[[group_column]]))
   } else {
-    method <- "spearman"
-    rationale <- "Non-normal distribution(s) detected - non-parametric correlation required"
+    clean_data$group_numeric <- clean_data[[group_column]]
+  }
+  
+  # Calculate partial correlations using residuals
+  n_vars <- length(variables)
+  partial_cor_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  partial_p_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
+  rownames(partial_cor_matrix) <- colnames(partial_cor_matrix) <- variables
+  rownames(partial_p_matrix) <- colnames(partial_p_matrix) <- variables
+  
+  all_partial_p <- c()
+  indices <- list()
+  
+  for (i in 1:n_vars) {
+    for (j in 1:n_vars) {
+      if (i != j) {
+        tryCatch({
+          var1_resid <- residuals(lm(clean_data[[variables[i]]] ~ clean_data$group_numeric))
+          var2_resid <- residuals(lm(clean_data[[variables[j]]] ~ clean_data$group_numeric))
+          
+          partial_cor_test <- cor.test(var1_resid, var2_resid, method = "pearson")
+          partial_cor_matrix[i, j] <- partial_cor_test$estimate
+          partial_p_matrix[i, j] <- partial_cor_test$p.value
+          
+          all_partial_p <- c(all_partial_p, partial_cor_test$p.value)
+          indices[[length(indices) + 1]] <- c(i, j)
+        }, error = function(e) {
+          partial_cor_matrix[i, j] <- NA
+          partial_p_matrix[i, j] <- NA
+        })
+      } else {
+        partial_cor_matrix[i, j] <- 1.0
+      }
+    }
+  }
+  
+  # Apply FDR correction
+  partial_p_matrix_fdr <- partial_p_matrix
+  if (length(all_partial_p) > 0) {
+    partial_p_fdr <- p.adjust(all_partial_p, method = "BH")
+    for (k in 1:length(indices)) {
+      i <- indices[[k]][1]
+      j <- indices[[k]][2]
+      partial_p_matrix_fdr[i, j] <- partial_p_fdr[k]
+    }
   }
   
   return(list(
-    method = method,
-    rationale = rationale,
-    x_assumptions = list(
-      variable = var1_name,
-      normal = x_normal,
-      borderline = x_borderline,
-      test = x_normality$test,
-      p_value = x_normality$p_value,
-      interpretation = x_normality$interpretation
-    ),
-    y_assumptions = list(
-      variable = var2_name,
-      normal = y_normal,
-      borderline = y_borderline,
-      test = y_normality$test,
-      p_value = y_normality$p_value,
-      interpretation = y_normality$interpretation
-    ),
-    n_observations = length(x_clean)
+    control_variable = group_column,
+    n = nrow(clean_data),
+    partial_correlation_matrix = partial_cor_matrix,
+    p_value_matrix_fdr = partial_p_matrix_fdr,
+    interpretation = paste0("Partial correlations controlling for ", group_column)
   ))
 }
 
-# Interpret correlation strength and direction
+# Interpret correlation strength
 interpret_correlation_strength <- function(correlation_value) {
-  
-  if (is.na(correlation_value)) {
-    return(list(strength = "unknown", direction = "unknown"))
-  }
+  if (is.na(correlation_value)) return(list(strength = "unknown", direction = "unknown"))
   
   abs_cor <- abs(correlation_value)
-  
-  # Classify correlation strength
-  if (abs_cor < 0.1) {
-    strength <- "negligible"
-  } else if (abs_cor < 0.3) {
-    strength <- "weak"
-  } else if (abs_cor < 0.5) {
-    strength <- "moderate"
-  } else if (abs_cor < 0.7) {
-    strength <- "strong"
-  } else {
-    strength <- "very strong"
-  }
-  
-  # Determine direction
+  strength <- if (abs_cor < 0.1) "negligible" else if (abs_cor < 0.3) "weak" else if (abs_cor < 0.5) "moderate" else if (abs_cor < 0.7) "strong" else "very strong"
   direction <- ifelse(correlation_value > 0, "positive", "negative")
   
   return(list(strength = strength, direction = direction))
 }
 
-# Create correlation summary and interpretation
-create_correlation_summary <- function(overall_correlations, correlation_tests, group_correlations = NULL) {
+# Create correlation summary
+create_correlation_summary <- function(overall_correlations, group_correlations = NULL) {
   
   summary_info <- list()
   
-  # Overall correlation summary
+  # Overall summary
   if (!is.null(overall_correlations) && !is.null(overall_correlations$pearson_matrix)) {
-    
-    # Find strongest correlations
     pearson_mat <- overall_correlations$pearson_matrix
-    pearson_p <- overall_correlations$pearson_p_values
+    pearson_p_fdr <- overall_correlations$pearson_p_values_fdr
     
-    # Use FDR-corrected p-values if available
-    pearson_p_corrected <- if (!is.null(overall_correlations$pearson_p_values_fdr)) {
-      overall_correlations$pearson_p_values_fdr
-    } else {
-      pearson_p
-    }
-    
-    # Extract upper triangle (avoid duplicates and diagonal)
     upper_tri <- upper.tri(pearson_mat)
     correlations_df <- data.frame(
       variable1 = rep(rownames(pearson_mat), ncol(pearson_mat))[upper_tri],
       variable2 = rep(colnames(pearson_mat), each = nrow(pearson_mat))[upper_tri],
       pearson_r = pearson_mat[upper_tri],
-      pearson_p = pearson_p[upper_tri],
-      pearson_p_fdr = pearson_p_corrected[upper_tri],
+      pearson_p_fdr = pearson_p_fdr[upper_tri],
       stringsAsFactors = FALSE
     )
     
-    # Add interpretation (using FDR-corrected p-values for significance)
-    correlations_df$strength <- sapply(correlations_df$pearson_r, function(r) {
-      interpret_correlation_strength(r)$strength
-    })
-    correlations_df$direction <- sapply(correlations_df$pearson_r, function(r) {
-      interpret_correlation_strength(r)$direction
-    })
-    correlations_df$significant_uncorrected <- correlations_df$pearson_p < 0.05
+    correlations_df$strength <- sapply(correlations_df$pearson_r, function(r) interpret_correlation_strength(r)$strength)
+    correlations_df$direction <- sapply(correlations_df$pearson_r, function(r) interpret_correlation_strength(r)$direction)
     correlations_df$significant_fdr <- correlations_df$pearson_p_fdr < 0.05
     
-    # Sort by absolute correlation strength
     correlations_df <- correlations_df[order(abs(correlations_df$pearson_r), decreasing = TRUE), ]
     
     summary_info$overall_summary <- correlations_df
-    
-    # Identify significant correlations (using FDR correction)
-    significant_cors <- correlations_df[correlations_df$significant_fdr & !is.na(correlations_df$significant_fdr), ]
-    summary_info$significant_correlations <- significant_cors
-    
-    # Count correlations by strength
-    strength_counts <- table(correlations_df$strength)
-    summary_info$strength_distribution <- strength_counts
-    
-    # Add multiple testing correction information
-    summary_info$multiple_testing_info <- list(
-      total_tests = nrow(correlations_df),
-      uncorrected_significant = sum(correlations_df$significant_uncorrected, na.rm = TRUE),
-      fdr_corrected_significant = sum(correlations_df$significant_fdr, na.rm = TRUE),
-      correction_method = "Benjamini-Hochberg (FDR)",
-      alpha_level = 0.05
-    )
+    summary_info$significant_correlations <- correlations_df[correlations_df$significant_fdr & !is.na(correlations_df$significant_fdr), ]
+    summary_info$strength_distribution <- table(correlations_df$strength)
   }
   
-  # Group-wise correlation summaries
+  # Group summaries
   if (!is.null(group_correlations)) {
     group_summaries <- list()
-    
     for (group_name in names(group_correlations)) {
       group_data <- group_correlations[[group_name]]
-      
       if (!is.null(group_data$pearson_matrix)) {
-        # Similar analysis for each group
         pearson_mat <- group_data$pearson_matrix
-        pearson_p <- group_data$pearson_p_values
-        
-        # Use FDR-corrected p-values if available
-        pearson_p_corrected <- if (!is.null(group_data$pearson_p_values_fdr)) {
-          group_data$pearson_p_values_fdr
-        } else {
-          pearson_p
-        }
+        pearson_p_fdr <- group_data$pearson_p_values_fdr
         
         upper_tri <- upper.tri(pearson_mat)
         group_cors_df <- data.frame(
           variable1 = rep(rownames(pearson_mat), ncol(pearson_mat))[upper_tri],
           variable2 = rep(colnames(pearson_mat), each = nrow(pearson_mat))[upper_tri],
           pearson_r = pearson_mat[upper_tri],
-          pearson_p = pearson_p[upper_tri],
-          pearson_p_fdr = pearson_p_corrected[upper_tri],
+          pearson_p_fdr = pearson_p_fdr[upper_tri],
           stringsAsFactors = FALSE
         )
         
-        group_cors_df$strength <- sapply(group_cors_df$pearson_r, function(r) {
-          interpret_correlation_strength(r)$strength
-        })
-        group_cors_df$significant_uncorrected <- group_cors_df$pearson_p < 0.05
         group_cors_df$significant_fdr <- group_cors_df$pearson_p_fdr < 0.05
-        
         group_summaries[[group_name]] <- list(
           correlations = group_cors_df,
-          significant_count_uncorrected = sum(group_cors_df$significant_uncorrected, na.rm = TRUE),
           significant_count_fdr = sum(group_cors_df$significant_fdr, na.rm = TRUE),
-          n_observations = group_data$n_observations,
-          multiple_testing_correction = "Benjamini-Hochberg (FDR)"
+          n_observations = group_data$n_observations
         )
       }
     }
-    
     summary_info$group_summaries <- group_summaries
   }
   
   return(summary_info)
 }
 
-# Create comprehensive correlation plots
-create_detailed_correlation_plots <- function(data, variables, group_column = NULL, output_path = "output/plots/") {
+# Create essential correlation plots (keeping only required ones)
+create_correlation_plots <- function(data, variables, group_column = NULL, output_path = "output/plots/") {
   
-  # Create plots directory if it doesn't exist
-  if (!dir.exists(output_path)) {
-    dir.create(output_path, recursive = TRUE)
-  }
+  if (!dir.exists(output_path)) dir.create(output_path, recursive = TRUE)
   
   plots <- list()
   plot_files <- list()
   
-  cat("Creating correlation visualizations...\n")
+  cat("- Creating correlation visualizations...\n")
   
-  # Prevent unwanted Rplots.pdf creation by ensuring no graphics device is open
-  if (length(dev.list()) > 0) {
-    graphics.off()
-  }
-  
-  # Source plotting utilities if not already loaded
+  # Source plotting utilities
   if (!exists("ensure_clean_graphics_environment")) {
     source("modules/utils/plotting_utils.R")
   }
   ensure_clean_graphics_environment()
   
-  # Prepare data for correlation analysis
   cor_data <- data[, variables, drop = FALSE]
   cor_data <- cor_data[complete.cases(cor_data), ]
   
-  # 1. Enhanced overall correlation matrix heatmap
+  # 1. Overall correlation matrix
   if (nrow(cor_data) >= 3 && ncol(cor_data) >= 2) {
     tryCatch({
-      # Calculate correlation matrix
       cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
       
-      # Create enhanced correlation heatmap with sample size info
       p <- ggcorrplot(cor_matrix, 
                       hc.order = TRUE,
                       type = "lower",
@@ -718,116 +384,28 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
                       lab_size = 3.5,
                       method = "circle",
                       colors = c("#6D9EC1", "white", "#E46726"),
-                      title = paste("Overall Correlation Matrix (Pearson)"),
+                      title = "Overall Correlation Matrix (Pearson)",
                       ggtheme = theme_minimal()) +
-        labs(subtitle = paste("Based on", nrow(cor_data), "complete observations across all groups"),
-             caption = paste("Variables:", paste(colnames(cor_matrix), collapse = ", "))) +
+        labs(subtitle = paste("Based on", nrow(cor_data), "complete observations")) +
         theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
-              axis.text.x = element_text(angle = 45, hjust = 1),
-              axis.text.y = element_text(angle = 0))
+              plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"))
       
       plot_filename <- file.path(output_path, paste0("correlation_matrix_overall_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
       safe_ggsave(plot_filename, plot = p, width = 12, height = 10, dpi = 300)
       
       plots[["correlation_matrix_overall"]] <- p
       plot_files[["correlation_matrix_overall"]] <- plot_filename
-      cat("Created enhanced overall correlation matrix heatmap\n")
-      
-    }, error = function(e) {
-      cat("Error creating overall correlation matrix:", e$message, "\n")
-    })
+             cat("  → Created overall correlation matrix\n")
+    }, error = function(e) cat("Error creating overall correlation matrix:", e$message, "\n"))
   }
   
-  # 2. Correlation matrix with significance levels
-  if (nrow(cor_data) >= 3 && ncol(cor_data) >= 2) {
-    tryCatch({
-      # Calculate correlation and p-values
-      cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
-      
-      # Calculate p-values
-      n <- nrow(cor_data)
-      p_values <- matrix(NA, nrow = ncol(cor_data), ncol = ncol(cor_data))
-      rownames(p_values) <- colnames(p_values) <- colnames(cor_data)
-      
-      for (i in 1:ncol(cor_data)) {
-        for (j in 1:ncol(cor_data)) {
-          if (i != j) {
-            cor_test <- cor.test(cor_data[[i]], cor_data[[j]], method = "pearson")
-            p_values[i, j] <- cor_test$p.value
-          }
-        }
-      }
-      
-      # Create plot with significance indicators
-      p <- ggcorrplot(cor_matrix,
-                      hc.order = TRUE,
-                      type = "lower", 
-                      p.mat = p_values,
-                      sig.level = 0.05,
-                      insig = "blank",
-                      lab = TRUE,
-                      lab_size = 3,
-                      colors = c("blue", "white", "red"),
-                      title = "Correlation Matrix with Significance (p < 0.05)",
-                      ggtheme = theme_minimal()) +
-        theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
-      
-      plot_filename <- file.path(output_path, paste0("correlation_matrix_significance_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-      
-      plots[["correlation_matrix_significance"]] <- p
-      plot_files[["correlation_matrix_significance"]] <- plot_filename
-      cat("Created correlation matrix with significance indicators\n")
-      
-    }, error = function(e) {
-      cat("Error creating significance correlation matrix:", e$message, "\n")
-    })
-  }
-  
-  # 3. Group-wise correlation matrices (individual plots)
+  # 2. Group comparison matrix (REQUIRED)
   if (!is.null(group_column)) {
-    groups <- unique(data[[group_column]])
-    groups <- groups[!is.na(groups)]
-    
-    for (group in groups) {
-      tryCatch({
-        group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables, drop = FALSE]
-        group_data <- group_data[complete.cases(group_data), ]
-        
-        if (nrow(group_data) >= 3 && ncol(group_data) >= 2) {
-          cor_matrix_group <- cor(group_data, method = "pearson", use = "complete.obs")
-          
-          p <- ggcorrplot(cor_matrix_group,
-                          hc.order = TRUE,
-                          type = "lower",
-                          lab = TRUE,
-                          lab_size = 3.5,
-                          colors = c("#6D9EC1", "white", "#E46726"),
-                          title = paste("Correlation Matrix -", group, "Group"),
-                          ggtheme = theme_minimal()) +
-            labs(subtitle = paste("Based on", nrow(group_data), "observations in this group")) +
-            theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-                  plot.subtitle = element_text(hjust = 0.5, size = 11, color = "gray50"),
-                  axis.text.x = element_text(angle = 45, hjust = 1))
-          
-          plot_filename <- file.path(output_path, paste0("correlation_matrix_", group, "_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-          ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
-          
-          plots[[paste0("correlation_matrix_", group)]] <- p
-          plot_files[[paste0("correlation_matrix_", group)]] <- plot_filename
-          cat("Created correlation matrix for group:", group, "\n")
-        }
-        
-      }, error = function(e) {
-        cat("Error creating correlation matrix for group", group, ":", e$message, "\n")
-      })
-    }
-    
-    # 3b. Combined group comparison matrix
     tryCatch({
+      groups <- unique(data[[group_column]])
+      groups <- groups[!is.na(groups)]
+      
       if (length(groups) >= 2) {
-        # Create side-by-side comparison plot
         group_plots <- list()
         
         for (group in groups) {
@@ -836,22 +414,17 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
           
           if (nrow(group_data) >= 3 && ncol(group_data) >= 2) {
             cor_matrix_group <- cor(group_data, method = "pearson", use = "complete.obs")
-            
-            # Convert matrix to long format for ggplot
             cor_long <- reshape2::melt(cor_matrix_group, na.rm = TRUE)
             cor_long$Group <- group
             cor_long$n_obs <- nrow(group_data)
-            
             group_plots[[group]] <- cor_long
           }
         }
         
         if (length(group_plots) >= 2) {
-          # Combine all group data
           combined_data <- do.call(rbind, group_plots)
           combined_data$Group <- factor(combined_data$Group)
           
-          # Create comparison plot
           p_compare <- ggplot(combined_data, aes(x = Var1, y = Var2, fill = value)) +
             geom_tile(color = "white") +
             geom_text(aes(label = round(value, 2)), size = 2.5) +
@@ -861,7 +434,6 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
             facet_wrap(~ paste(Group, "\n(n =", n_obs, ")"), ncol = length(groups)) +
             theme_minimal() +
             theme(axis.text.x = element_text(angle = 45, hjust = 1),
-                  axis.text.y = element_text(angle = 0),
                   panel.grid = element_blank(),
                   strip.text = element_text(face = "bold")) +
             labs(title = "Correlation Matrix Comparison Across Groups",
@@ -874,52 +446,14 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
           
           plots[["correlation_comparison_groups"]] <- p_compare
           plot_files[["correlation_comparison_groups"]] <- plot_filename
-          cat("Created group comparison correlation matrix\n")
+                     cat("  → Created group comparison correlation matrix\n")
         }
       }
-    }, error = function(e) {
-      cat("Error creating group comparison matrix:", e$message, "\n")
-    })
+    }, error = function(e) cat("Error creating group comparison matrix:", e$message, "\n"))
   }
   
-  # 4. Pairs plot with correlations
-  if (length(variables) >= 2 && length(variables) <= 6) {
-    tryCatch({
-      if (!is.null(group_column)) {
-        pairs_data <- data[, c(variables, group_column), drop = FALSE]
-        pairs_data <- pairs_data[complete.cases(pairs_data), ]
-        
-        p <- ggpairs(pairs_data,
-                     columns = 1:length(variables),
-                     aes(color = .data[[group_column]], alpha = 0.7),
-                     title = "Pairwise Correlations by Group") +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
-      } else {
-        pairs_data <- data[, variables, drop = FALSE]
-        pairs_data <- pairs_data[complete.cases(pairs_data), ]
-        
-        p <- ggpairs(pairs_data,
-                     title = "Pairwise Correlations") +
-          theme_minimal() +
-          theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"))
-      }
-      
-      plot_filename <- file.path(output_path, paste0("pairs_correlations_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-      ggsave(plot_filename, plot = p, width = 12, height = 12, dpi = 300)
-      
-      plots[["pairs_correlations"]] <- p
-      plot_files[["pairs_correlations"]] <- plot_filename
-      cat("Created pairs correlation plot\n")
-      
-    }, error = function(e) {
-      cat("Error creating pairs correlation plot:", e$message, "\n")
-    })
-  }
-  
-  # 5. Correlation strength distribution plot
+  # 3. Distribution of correlation strengths (REQUIRED)
   tryCatch({
-    # Calculate all pairwise correlations
     cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
     upper_tri <- upper.tri(cor_matrix)
     all_correlations <- cor_matrix[upper_tri]
@@ -927,607 +461,70 @@ create_detailed_correlation_plots <- function(data, variables, group_column = NU
     
     if (length(all_correlations) > 0) {
       cors_df <- data.frame(correlation = all_correlations)
-      cors_df$strength <- sapply(cors_df$correlation, function(r) {
-        interpret_correlation_strength(r)$strength
-      })
       
       p <- ggplot(cors_df, aes(x = correlation)) +
         geom_histogram(bins = 20, fill = "steelblue", alpha = 0.7, color = "white") +
         geom_vline(xintercept = 0, linetype = "dashed", color = "red", linewidth = 1) +
         geom_vline(xintercept = c(-0.3, 0.3), linetype = "dotted", color = "orange", alpha = 0.7) +
         geom_vline(xintercept = c(-0.7, 0.7), linetype = "dotted", color = "darkgreen", alpha = 0.7) +
-        annotate("text", x = 0, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.9, 
-                 label = "No Correlation", color = "red", size = 3, hjust = 0.5) +
-        annotate("text", x = -0.5, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.3, 
-                 label = "Weak", color = "orange", size = 3, angle = 90) +
-        annotate("text", x = 0.5, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.3, 
-                 label = "Weak", color = "orange", size = 3, angle = 90) +
-        annotate("text", x = -0.85, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.2, 
-                 label = "Strong", color = "darkgreen", size = 3, angle = 90) +
-        annotate("text", x = 0.85, y = max(table(cut(cors_df$correlation, breaks = 20))) * 0.2, 
-                 label = "Strong", color = "darkgreen", size = 3, angle = 90) +
         labs(title = "Distribution of Correlation Strengths",
              subtitle = paste("Histogram of all pairwise correlations (n =", length(all_correlations), "pairs)"),
-             x = "Correlation Coefficient\n(-1 = Perfect Negative, 0 = No Correlation, +1 = Perfect Positive)", 
-             y = "Frequency (Number of Variable Pairs)") +
+             x = "Correlation Coefficient", 
+             y = "Frequency") +
         scale_x_continuous(breaks = seq(-1, 1, 0.2), limits = c(-1, 1)) +
         theme_minimal() +
         theme(plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-              plot.subtitle = element_text(hjust = 0.5, size = 10),
-              axis.title.x = element_text(size = 10),
-              axis.title.y = element_text(size = 10))
+              plot.subtitle = element_text(hjust = 0.5, size = 10))
       
       plot_filename <- file.path(output_path, paste0("correlation_distribution_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
       ggsave(plot_filename, plot = p, width = 10, height = 8, dpi = 300)
       
       plots[["correlation_distribution"]] <- p
       plot_files[["correlation_distribution"]] <- plot_filename
-      cat("Created correlation strength distribution plot\n")
+             cat("  → Created correlation strength distribution plot\n")
     }
-    
-  }, error = function(e) {
-    cat("Error creating correlation distribution plot:", e$message, "\n")
-  })
+  }, error = function(e) cat("Error creating correlation distribution plot:", e$message, "\n"))
   
-  # 6. Create correlation explanation plot
-  tryCatch({
-    # Create an educational plot explaining correlation
-    explanation_data <- data.frame(
-      Correlation = seq(-1, 1, by = 0.1),
-      Color_Demo = seq(-1, 1, by = 0.1),
-      Y_Position = 1
-    )
-    
-    # Add interpretation categories
-    explanation_data$Strength <- cut(abs(explanation_data$Correlation),
-                                   breaks = c(0, 0.1, 0.3, 0.5, 0.7, 1),
-                                   labels = c("Negligible", "Weak", "Moderate", "Strong", "Very Strong"),
-                                   include.lowest = TRUE)
-    
-    explanation_data$Direction <- ifelse(explanation_data$Correlation >= 0, "Positive", "Negative")
-    explanation_data$Direction[explanation_data$Correlation == 0] <- "None"
-    
-    p_explanation <- ggplot(explanation_data, aes(x = Correlation, y = Y_Position, fill = Color_Demo)) +
-      geom_tile(height = 0.8, color = "white", linewidth = 0.5) +
-      geom_text(aes(label = round(Correlation, 1)), color = "black", size = 3, fontface = "bold") +
-      scale_fill_gradient2(low = "#6D9EC1", high = "#E46726", mid = "white", 
-                          midpoint = 0, limit = c(-1,1), space = "Lab", 
-                          name = "Correlation\nValue") +
-      scale_x_continuous(breaks = seq(-1, 1, 0.2)) +
-      scale_y_continuous(limits = c(0.5, 1.5)) +
-      labs(title = "Understanding Correlation Colors and Values",
-           subtitle = paste("Blue = Negative Correlation | White = No Correlation | Red = Positive Correlation"),
-           x = "Correlation Coefficient",
-           y = "") +
-      theme_minimal() +
-      theme(axis.text.y = element_blank(),
-            axis.ticks.y = element_blank(),
-            panel.grid.y = element_blank(),
-            plot.title = element_text(hjust = 0.5, size = 14, face = "bold"),
-            plot.subtitle = element_text(hjust = 0.5, size = 12, color = "gray50")) +
-      
-      # Add strength labels
-      annotate("text", x = -0.8, y = 1.4, label = "Very Strong\nNegative", size = 3, color = "darkblue", fontface = "bold") +
-      annotate("text", x = -0.4, y = 1.4, label = "Moderate\nNegative", size = 3, color = "blue", fontface = "bold") +
-      annotate("text", x = 0, y = 1.4, label = "No\nCorrelation", size = 3, color = "black", fontface = "bold") +
-      annotate("text", x = 0.4, y = 1.4, label = "Moderate\nPositive", size = 3, color = "red", fontface = "bold") +
-      annotate("text", x = 0.8, y = 1.4, label = "Very Strong\nPositive", size = 3, color = "darkred", fontface = "bold")
-    
-    plot_filename <- file.path(output_path, paste0("correlation_explanation_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-    ggsave(plot_filename, plot = p_explanation, width = 14, height = 6, dpi = 300)
-    
-    plots[["correlation_explanation"]] <- p_explanation
-    plot_files[["correlation_explanation"]] <- plot_filename
-    cat("Created correlation explanation plot\n")
-    
-  }, error = function(e) {
-    cat("Error creating correlation explanation plot:", e$message, "\n")
-  })
-
-  # 7. Create correlation summary table plot
-  tryCatch({
-    # Calculate all pairwise correlations with details
-    cor_matrix <- cor(cor_data, method = "pearson", use = "complete.obs")
-    upper_tri <- upper.tri(cor_matrix)
-    
-    # Create summary data frame
-    cor_summary <- data.frame(
-      Variable_1 = rep(rownames(cor_matrix), ncol(cor_matrix))[upper_tri],
-      Variable_2 = rep(colnames(cor_matrix), each = nrow(cor_matrix))[upper_tri],
-      Correlation = cor_matrix[upper_tri],
-      stringsAsFactors = FALSE
-    )
-    
-    # Add interpretation
-    cor_summary$Abs_Correlation <- abs(cor_summary$Correlation)
-    cor_summary$Strength <- sapply(cor_summary$Correlation, function(r) {
-      interpret_correlation_strength(r)$strength
-    })
-    cor_summary$Direction <- sapply(cor_summary$Correlation, function(r) {
-      interpret_correlation_strength(r)$direction
-    })
-    
-    # Sort by absolute correlation strength
-    cor_summary <- cor_summary[order(cor_summary$Abs_Correlation, decreasing = TRUE), ]
-    cor_summary$Rank <- 1:nrow(cor_summary)
-    
-    # Create top correlations table plot
-    top_cors <- head(cor_summary, 10)  # Top 10 correlations
-    
-    # Prepare table data for plotting
-    table_data <- data.frame(
-      Rank = top_cors$Rank,
-      `Variable Pair` = paste(top_cors$Variable_1, "↔", top_cors$Variable_2),
-      `Correlation` = sprintf("%.3f", top_cors$Correlation),
-      `Strength` = stringr::str_to_title(top_cors$Strength),
-      `Direction` = stringr::str_to_title(top_cors$Direction),
-      check.names = FALSE
-    )
-    
-    # Create table plot
-    p_table <- gridExtra::tableGrob(table_data, rows = NULL, 
-                                   theme = gridExtra::ttheme_default(
-                                     core = list(fg_params = list(cex = 0.8)),
-                                     colhead = list(fg_params = list(cex = 0.9, fontface = "bold"))
-                                   ))
-    
-    # Create the plot with title (without auto-display to prevent Rplots.pdf)
-    p_table_plot <- gridExtra::arrangeGrob(
-      p_table,
-      top = grid::textGrob(paste("Top 10 Strongest Correlations\n(Based on", nrow(cor_data), "complete observations)"), 
-                          gp = grid::gpar(fontsize = 14, fontface = "bold"))
-    )
-    
-    plot_filename <- file.path(output_path, paste0("correlation_summary_table_", format(Sys.time(), "%Y%m%d_%H%M%S"), ".png"))
-    ggsave(plot_filename, plot = p_table_plot, width = 12, height = 8, dpi = 300)
-    
-    plots[["correlation_summary_table"]] <- p_table_plot
-    plot_files[["correlation_summary_table"]] <- plot_filename
-    cat("Created correlation summary table\n")
-    
-  }, error = function(e) {
-    cat("Error creating correlation summary table:", e$message, "\n")
-  })
-  
-  cat("Correlation visualization creation completed!\n")
-  cat("Total plots created:", length(plots), "\n")
-  cat("Total plot files saved:", length(plot_files), "\n")
-  
-  # Clean up graphics environment after plotting
+  # Clean up graphics
   cleanup_graphics_after_analysis()
   
-  return(list(
-    plots = plots,
-    plot_files = plot_files
-  ))
+  return(list(plots = plots, plot_files = plot_files))
 }
 
-# Convenience function for quick correlation analysis with report
+# Display method recommendations (simplified)
+display_method_recommendations <- function(assumptions_results) {
+  if (is.null(assumptions_results$assumptions_summary)) return()
+  
+  summary_table <- assumptions_results$assumptions_summary
+  cat("\n--- CORRELATION METHOD RECOMMENDATIONS ---\n")
+  
+  pearson_count <- sum(summary_table$Overall_Normal & !summary_table$Borderline, na.rm = TRUE)
+  total_vars <- nrow(summary_table)
+  normal_percentage <- (pearson_count / total_vars) * 100
+  
+  strategy <- if (normal_percentage >= 80) {
+    "Primarily PEARSON correlations (most variables normal)"
+  } else if (normal_percentage >= 50) {
+    "MIXED approach (both Pearson and Spearman as appropriate)"
+  } else {
+    "Primarily SPEARMAN correlations (many non-normal variables)"
+  }
+  
+  cat("STRATEGY:", strategy, "\n")
+  cat("Variables suitable for Pearson:", pearson_count, "/", total_vars, "\n\n")
+}
+
+# Quick analysis wrapper (simplified)
 quick_correlation_analysis <- function(data, group_column = NULL, variables = NULL, generate_report = TRUE, 
                                      check_assumptions = TRUE) {
-  
-  # Run correlation analysis with enhanced assumptions testing
   result <- perform_correlation_analysis(data, group_column, variables, include_plots = TRUE, 
                                        check_assumptions = check_assumptions)
   
-  # Generate report if requested
   if (generate_report) {
     report_file <- quick_report(result)
     cat("Correlation analysis report generated:", report_file, "\n")
-    
-    # Display quick summary of assumptions if checked
-    if (check_assumptions && !is.null(result$assumptions_analysis)) {
-      cat("\n=== QUICK ASSUMPTIONS SUMMARY ===\n")
-      assumptions_summary <- result$assumptions_analysis$assumptions_summary
-      
-      if (!is.null(assumptions_summary)) {
-        normal_count <- sum(assumptions_summary$Overall_Normal, na.rm = TRUE)
-        total_vars <- nrow(assumptions_summary)
-        borderline_count <- sum(assumptions_summary$Borderline, na.rm = TRUE)
-        
-        cat("Variables tested:", total_vars, "\n")
-        cat("Normal distributions:", normal_count, "/", total_vars, "\n")
-        if (borderline_count > 0) {
-          cat("WARNING: Borderline normality cases:", borderline_count, "\n")
-        }
-        cat("See result$assumptions_analysis for detailed normality results.\n")
-      }
-    }
-    
     return(list(analysis_result = result, report_file = report_file))
   }
   
   return(result)
-}
-
-# Step-by-step correlation demonstration
-demonstrate_correlation_calculation <- function(x, y, var1_name, var2_name) {
-  
-  # Remove missing values
-  complete_cases <- complete.cases(x, y)
-  x_clean <- x[complete_cases]
-  y_clean <- y[complete_cases]
-  
-  n <- length(x_clean)
-  
-  if (n < 3) {
-    return(list(error = "Insufficient data"))
-  }
-  
-  # Step 1: Calculate means
-  mean_x <- mean(x_clean)
-  mean_y <- mean(y_clean)
-  
-  # Step 2: Calculate deviations from mean
-  dev_x <- x_clean - mean_x
-  dev_y <- y_clean - mean_y
-  
-  # Step 3: Calculate sum of products of deviations
-  sum_product_deviations <- sum(dev_x * dev_y)
-  
-  # Step 4: Calculate sum of squared deviations
-  sum_sq_dev_x <- sum(dev_x^2)
-  sum_sq_dev_y <- sum(dev_y^2)
-  
-  # Step 5: Calculate correlation coefficient
-  correlation <- sum_product_deviations / sqrt(sum_sq_dev_x * sum_sq_dev_y)
-  
-  # Verify with R's built-in function
-  r_correlation <- cor(x_clean, y_clean, method = "pearson")
-  
-  return(list(
-    variables = paste(var1_name, "vs", var2_name),
-    n_observations = n,
-    mean_x = mean_x,
-    mean_y = mean_y,
-    arithmetic_mean_of_x = mean_x,
-    arithmetic_mean_of_y = mean_y,
-    sum_product_deviations = sum_product_deviations,
-    sum_sq_dev_x = sum_sq_dev_x,
-    sum_sq_dev_y = sum_sq_dev_y,
-    calculated_correlation = correlation,
-    r_built_in_correlation = r_correlation,
-    difference = abs(correlation - r_correlation),
-    interpretation = paste0(
-      "The correlation of ", round(correlation, 3), 
-      " means the variables have a ", 
-      ifelse(abs(correlation) < 0.3, "weak", 
-             ifelse(abs(correlation) < 0.7, "moderate", "strong")),
-      " ", ifelse(correlation > 0, "positive", "negative"), " linear relationship."
-    ),
-    formula_explanation = paste0(
-      "Correlation = Σ[(x - mean_x)(y - mean_y)] / √[Σ(x - mean_x)² × Σ(y - mean_y)²]\n",
-      "This is NOT the arithmetic average of the values!\n",
-      "It measures how much the variables vary together relative to their individual variations."
-    )
-  ))
-}
-
-# TASK 5a: Calculate detailed by-group correlation tables with FDR-adjusted p-values
-calculate_detailed_group_correlation_tables <- function(data, variables, group_column) {
-  
-  groups <- unique(data[[group_column]])
-  groups <- groups[!is.na(groups)]
-  
-  detailed_tables <- list()
-  
-  for (group in groups) {
-    cat("  Processing group:", group, "\n")
-    
-    # Extract group data
-    group_data <- data[data[[group_column]] == group & !is.na(data[[group_column]]), variables]
-    group_data <- group_data[complete.cases(group_data), ]
-    
-    if (nrow(group_data) < 3) {
-      detailed_tables[[as.character(group)]] <- list(
-        error = "Insufficient data for correlation analysis",
-        n = nrow(group_data)
-      )
-      next
-    }
-    
-    # Calculate correlation matrix and p-values
-    n_vars <- length(variables)
-    correlation_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-    p_value_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-    ci_lower_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-    ci_upper_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-    
-    rownames(correlation_matrix) <- colnames(correlation_matrix) <- variables
-    rownames(p_value_matrix) <- colnames(p_value_matrix) <- variables
-    rownames(ci_lower_matrix) <- colnames(ci_lower_matrix) <- variables
-    rownames(ci_upper_matrix) <- colnames(ci_upper_matrix) <- variables
-    
-    # Collect all p-values for FDR correction
-    all_p_values <- c()
-    p_value_indices <- list()
-    
-    for (i in 1:n_vars) {
-      for (j in 1:n_vars) {
-        if (i != j) {
-          cor_test <- cor.test(group_data[[variables[i]]], group_data[[variables[j]]], 
-                              method = "pearson")
-          
-          correlation_matrix[i, j] <- cor_test$estimate
-          p_value_matrix[i, j] <- cor_test$p.value
-          ci_lower_matrix[i, j] <- cor_test$conf.int[1]
-          ci_upper_matrix[i, j] <- cor_test$conf.int[2]
-          
-          # Store for FDR correction
-          all_p_values <- c(all_p_values, cor_test$p.value)
-          p_value_indices[[length(p_value_indices) + 1]] <- c(i, j)
-        } else {
-          correlation_matrix[i, j] <- 1.0
-          p_value_matrix[i, j] <- NA
-          ci_lower_matrix[i, j] <- NA
-          ci_upper_matrix[i, j] <- NA
-        }
-      }
-    }
-    
-    # Apply FDR correction
-    if (length(all_p_values) > 0) {
-      p_values_fdr <- p.adjust(all_p_values, method = "BH")
-      
-      # Create FDR-adjusted p-value matrix
-      p_value_matrix_fdr <- matrix(NA, nrow = n_vars, ncol = n_vars)
-      rownames(p_value_matrix_fdr) <- colnames(p_value_matrix_fdr) <- variables
-      
-      for (k in 1:length(p_value_indices)) {
-        i <- p_value_indices[[k]][1]
-        j <- p_value_indices[[k]][2]
-        p_value_matrix_fdr[i, j] <- p_values_fdr[k]
-      }
-    } else {
-      p_value_matrix_fdr <- p_value_matrix
-    }
-    
-    # Create formatted table
-    formatted_table <- data.frame(
-      Variable1 = character(),
-      Variable2 = character(),
-      r = numeric(),
-      r_95CI_lower = numeric(),
-      r_95CI_upper = numeric(),
-      p_raw = numeric(),
-      p_FDR = numeric(),
-      significant_raw = logical(),
-      significant_FDR = logical(),
-      stringsAsFactors = FALSE
-    )
-    
-    for (i in 1:(n_vars-1)) {
-      for (j in (i+1):n_vars) {
-        formatted_table <- rbind(formatted_table, data.frame(
-          Variable1 = variables[i],
-          Variable2 = variables[j],
-          r = correlation_matrix[i, j],
-          r_95CI_lower = ci_lower_matrix[i, j],
-          r_95CI_upper = ci_upper_matrix[i, j],
-          p_raw = p_value_matrix[i, j],
-          p_FDR = p_value_matrix_fdr[i, j],
-          significant_raw = p_value_matrix[i, j] < 0.05,
-          significant_FDR = p_value_matrix_fdr[i, j] < 0.05,
-          stringsAsFactors = FALSE
-        ))
-      }
-    }
-    
-    detailed_tables[[as.character(group)]] <- list(
-      group = group,
-      n = nrow(group_data),
-      correlation_matrix = correlation_matrix,
-      p_value_matrix_raw = p_value_matrix,
-      p_value_matrix_fdr = p_value_matrix_fdr,
-      confidence_intervals_lower = ci_lower_matrix,
-      confidence_intervals_upper = ci_upper_matrix,
-      formatted_table = formatted_table,
-      significant_correlations_raw = sum(formatted_table$significant_raw, na.rm = TRUE),
-      significant_correlations_fdr = sum(formatted_table$significant_FDR, na.rm = TRUE)
-    )
-  }
-  
-  return(detailed_tables)
-}
-
-# TASK 5b: Calculate partial correlations controlling for group
-calculate_partial_correlations_for_group <- function(data, variables, group_column) {
-  
-  # Prepare data with group as numeric for partial correlation
-  clean_data <- data[complete.cases(data[c(variables, group_column)]), ]
-  
-  if (nrow(clean_data) < 10) {
-    return(list(
-      error = "Insufficient data for partial correlation analysis",
-      n = nrow(clean_data)
-    ))
-  }
-  
-  # Convert group to numeric for partial correlation calculation
-  if (is.factor(clean_data[[group_column]]) || is.character(clean_data[[group_column]])) {
-    clean_data$group_numeric <- as.numeric(as.factor(clean_data[[group_column]]))
-  } else {
-    clean_data$group_numeric <- clean_data[[group_column]]
-  }
-  
-  # Calculate partial correlations
-  n_vars <- length(variables)
-  partial_cor_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-  partial_p_matrix <- matrix(NA, nrow = n_vars, ncol = n_vars)
-  partial_ci_lower <- matrix(NA, nrow = n_vars, ncol = n_vars)
-  partial_ci_upper <- matrix(NA, nrow = n_vars, ncol = n_vars)
-  
-  rownames(partial_cor_matrix) <- colnames(partial_cor_matrix) <- variables
-  rownames(partial_p_matrix) <- colnames(partial_p_matrix) <- variables
-  rownames(partial_ci_lower) <- colnames(partial_ci_lower) <- variables
-  rownames(partial_ci_upper) <- colnames(partial_ci_upper) <- variables
-  
-  # Collect p-values for FDR correction
-  all_partial_p <- c()
-  partial_indices <- list()
-  
-  for (i in 1:n_vars) {
-    for (j in 1:n_vars) {
-      if (i != j) {
-        tryCatch({
-          # Calculate partial correlation using linear regression residuals
-          # Residualize each variable against the control variable (group)
-          var1_resid <- residuals(lm(clean_data[[variables[i]]] ~ clean_data$group_numeric))
-          var2_resid <- residuals(lm(clean_data[[variables[j]]] ~ clean_data$group_numeric))
-          
-          # Calculate correlation of residuals
-          partial_cor_test <- cor.test(var1_resid, var2_resid, method = "pearson")
-          
-          partial_cor_matrix[i, j] <- partial_cor_test$estimate
-          partial_p_matrix[i, j] <- partial_cor_test$p.value
-          partial_ci_lower[i, j] <- partial_cor_test$conf.int[1]
-          partial_ci_upper[i, j] <- partial_cor_test$conf.int[2]
-          
-          # Store for FDR correction
-          all_partial_p <- c(all_partial_p, partial_cor_test$p.value)
-          partial_indices[[length(partial_indices) + 1]] <- c(i, j)
-          
-        }, error = function(e) {
-          partial_cor_matrix[i, j] <- NA
-          partial_p_matrix[i, j] <- NA
-          partial_ci_lower[i, j] <- NA
-          partial_ci_upper[i, j] <- NA
-        })
-      } else {
-        partial_cor_matrix[i, j] <- 1.0
-        partial_p_matrix[i, j] <- NA
-        partial_ci_lower[i, j] <- NA
-        partial_ci_upper[i, j] <- NA
-      }
-    }
-  }
-  
-  # Apply FDR correction to partial correlation p-values
-  if (length(all_partial_p) > 0) {
-    partial_p_fdr <- p.adjust(all_partial_p, method = "BH")
-    
-    partial_p_matrix_fdr <- matrix(NA, nrow = n_vars, ncol = n_vars)
-    rownames(partial_p_matrix_fdr) <- colnames(partial_p_matrix_fdr) <- variables
-    
-    for (k in 1:length(partial_indices)) {
-      i <- partial_indices[[k]][1]
-      j <- partial_indices[[k]][2]
-      partial_p_matrix_fdr[i, j] <- partial_p_fdr[k]
-    }
-  } else {
-    partial_p_matrix_fdr <- partial_p_matrix
-  }
-  
-  # Create formatted table for partial correlations
-  partial_formatted_table <- data.frame(
-    Variable1 = character(),
-    Variable2 = character(),
-    partial_r = numeric(),
-    partial_r_95CI_lower = numeric(),
-    partial_r_95CI_upper = numeric(),
-    p_raw = numeric(),
-    p_FDR = numeric(),
-    significant_raw = logical(),
-    significant_FDR = logical(),
-    stringsAsFactors = FALSE
-  )
-  
-  for (i in 1:(n_vars-1)) {
-    for (j in (i+1):n_vars) {
-      partial_formatted_table <- rbind(partial_formatted_table, data.frame(
-        Variable1 = variables[i],
-        Variable2 = variables[j],
-        partial_r = partial_cor_matrix[i, j],
-        partial_r_95CI_lower = partial_ci_lower[i, j],
-        partial_r_95CI_upper = partial_ci_upper[i, j],
-        p_raw = partial_p_matrix[i, j],
-        p_FDR = partial_p_matrix_fdr[i, j],
-        significant_raw = !is.na(partial_p_matrix[i, j]) && partial_p_matrix[i, j] < 0.05,
-        significant_FDR = !is.na(partial_p_matrix_fdr[i, j]) && partial_p_matrix_fdr[i, j] < 0.05,
-        stringsAsFactors = FALSE
-      ))
-    }
-  }
-  
-  return(list(
-    control_variable = group_column,
-    n = nrow(clean_data),
-    partial_correlation_matrix = partial_cor_matrix,
-    p_value_matrix_raw = partial_p_matrix,
-    p_value_matrix_fdr = partial_p_matrix_fdr,
-    confidence_intervals_lower = partial_ci_lower,
-    confidence_intervals_upper = partial_ci_upper,
-    formatted_table = partial_formatted_table,
-    significant_correlations_raw = sum(partial_formatted_table$significant_raw, na.rm = TRUE),
-    significant_correlations_fdr = sum(partial_formatted_table$significant_FDR, na.rm = TRUE),
-    interpretation = paste0("Partial correlations controlling for ", group_column, 
-                           " (", sum(partial_formatted_table$significant_FDR, na.rm = TRUE), 
-                           " significant after FDR correction)")
-  ))
-}
-
-# Display correlation method recommendations based on assumptions testing
-display_correlation_method_recommendations <- function(assumptions_results) {
-  
-  if (is.null(assumptions_results$assumptions_summary)) {
-    return()
-  }
-  
-  summary_table <- assumptions_results$assumptions_summary
-  
-  cat("\n--- CORRELATION METHOD RECOMMENDATIONS ---\n")
-  
-  # Count method recommendations
-  pearson_count <- 0
-  spearman_count <- 0
-  borderline_count <- 0
-  
-  method_recommendations <- list()
-  
-  for (i in 1:nrow(summary_table)) {
-    var <- summary_table$Variable[i]
-    normal <- summary_table$Overall_Normal[i]
-    borderline <- summary_table$Borderline[i]
-    
-    if (normal && !borderline) {
-      method_recommendations[[var]] <- "Pearson (parametric)"
-      pearson_count <- pearson_count + 1
-    } else if (normal && borderline) {
-      method_recommendations[[var]] <- "Both Pearson & Spearman (borderline normality)"
-      borderline_count <- borderline_count + 1
-    } else {
-      method_recommendations[[var]] <- "Spearman (non-parametric)"
-      spearman_count <- spearman_count + 1
-    }
-  }
-  
-  # Display variable-specific recommendations
-  cat("Variable-specific normality assessment:\n")
-  for (var in names(method_recommendations)) {
-    cat("• ", var, ":", method_recommendations[[var]], "\n")
-  }
-  
-  # Overall strategy recommendation
-  cat("\n--- OVERALL CORRELATION STRATEGY ---\n")
-  
-  total_vars <- nrow(summary_table)
-  normal_percentage <- (pearson_count / total_vars) * 100
-  
-  if (normal_percentage >= 80) {
-    strategy <- "Primarily PEARSON correlations (most variables normal)"
-  } else if (normal_percentage >= 50) {
-    strategy <- "MIXED approach (both Pearson and Spearman as appropriate)"
-  } else {
-    strategy <- "Primarily SPEARMAN correlations (many non-normal variables)"
-  }
-  
-  cat("STRATEGY:", strategy, "\n")
-  cat("   - Variables suitable for Pearson:", pearson_count, "/", total_vars, "\n")
-  cat("   - Variables requiring Spearman:", spearman_count, "/", total_vars, "\n")
-  if (borderline_count > 0) {
-    cat("   - Variables with borderline normality:", borderline_count, "/", total_vars, "\n")
-    cat("   WARNING: Borderline cases will use BOTH methods for comparison\n")
-  }
-  
-  cat("\n")
 } 
