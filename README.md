@@ -35,7 +35,7 @@ Czwarty moduł bada wzajemne relacje między zmiennymi. Program automatycznie wy
 
 
 
-### Moduł zaawansowanej analizy inferencjalnej 
+**Moduł zaawansowanej analizy inferencjalnej** 
 ```bash
 # Zaawansowana analiza inferential z raportem
 Rscript main.R --enhanced_inferential --input dane.csv --report --export
