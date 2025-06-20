@@ -1223,4 +1223,135 @@ generate_statistical_robustness_assessment <- function(var_name, power_analysis)
   } else {
     "Limited statistical power - interpret with caution and consider replication."
   }
-} 
+}
+
+# Bias-Variance Decomposition Utility Functions
+# Additional helper functions for bias-variance analysis
+
+# Interpret bias-variance decomposition results
+interpret_bias_variance_decomposition <- function(bias_percent, variance_percent) {
+  
+  # Based on common machine learning interpretation guidelines
+  if (bias_percent > 70) {
+    interpretation <- "High bias model - underfitting likely, consider more complex model"
+    recommendation <- "Increase model complexity, add features, or reduce regularization"
+  } else if (variance_percent > 70) {
+    interpretation <- "High variance model - overfitting likely, consider simpler model"
+    recommendation <- "Reduce model complexity, add regularization, or increase sample size"
+  } else if (bias_percent > 40 && variance_percent > 40) {
+    interpretation <- "Balanced bias-variance - model complexity appears appropriate"
+    recommendation <- "Current model complexity is reasonable, focus on data quality"
+  } else {
+    interpretation <- "Low total error - model performing well"
+    recommendation <- "Model appears well-calibrated for the given data"
+  }
+  
+  return(list(
+    interpretation = interpretation,
+    recommendation = recommendation,
+    bias_dominance = bias_percent > variance_percent,
+    variance_dominance = variance_percent > bias_percent
+  ))
+}
+
+# Calculate bias-variance tradeoff metrics
+calculate_bias_variance_tradeoff_metrics <- function(decomposition_results) {
+  
+  metrics <- list()
+  
+  for (var in names(decomposition_results)) {
+    result <- decomposition_results[[var]]
+    
+    if (is.null(result$error) && !is.null(result$decomposition)) {
+      decomposition <- result$decomposition
+      
+      # Aggregate across all test points
+      total_mse <- sum(sapply(decomposition, function(x) if(is.null(x$error)) x$total_mse else 0))
+      total_variance <- sum(sapply(decomposition, function(x) if(is.null(x$error)) x$variance_component else 0))
+      total_bias_squared <- sum(sapply(decomposition, function(x) if(is.null(x$error)) x$bias_squared_component else 0))
+      
+      n_valid_points <- sum(sapply(decomposition, function(x) is.null(x$error)))
+      
+      if (n_valid_points > 0 && total_mse > 0) {
+        avg_bias_percent <- (total_bias_squared / total_mse) * 100
+        avg_variance_percent <- (total_variance / total_mse) * 100
+        
+        # Bias-variance tradeoff score (lower is better, 0 = perfect balance)
+        balance_score <- abs(avg_bias_percent - avg_variance_percent)
+        
+        # Model complexity assessment
+        complexity_assessment <- if (avg_bias_percent > avg_variance_percent + 20) {
+          "Undercomplex"
+        } else if (avg_variance_percent > avg_bias_percent + 20) {
+          "Overcomplex"  
+        } else {
+          "Appropriate"
+        }
+        
+        metrics[[var]] <- list(
+          variable = var,
+          n_test_points = n_valid_points,
+          total_mse = total_mse,
+          average_bias_percent = avg_bias_percent,
+          average_variance_percent = avg_variance_percent,
+          balance_score = balance_score,
+          complexity_assessment = complexity_assessment,
+          interpretation = interpret_bias_variance_decomposition(avg_bias_percent, avg_variance_percent)
+        )
+      }
+    }
+  }
+  
+  return(metrics)
+}
+
+# Generate bias-variance summary report
+generate_bias_variance_summary <- function(bias_variance_results) {
+  
+  cat("\n=== BIAS-VARIANCE DECOMPOSITION SUMMARY ===\n")
+  
+  if (length(bias_variance_results) == 0) {
+    cat("No bias-variance results available.\n")
+    return()
+  }
+  
+  tradeoff_metrics <- calculate_bias_variance_tradeoff_metrics(bias_variance_results)
+  
+  for (var in names(tradeoff_metrics)) {
+    metrics <- tradeoff_metrics[[var]]
+    interpretation <- metrics$interpretation
+    
+    cat("\n--- Variable:", var, "---\n")
+    cat("Test points analyzed:", metrics$n_test_points, "\n")
+    cat("Average bias contribution:", round(metrics$average_bias_percent, 1), "%\n")
+    cat("Average variance contribution:", round(metrics$average_variance_percent, 1), "%\n")
+    cat("Model complexity assessment:", metrics$complexity_assessment, "\n")
+    cat("Interpretation:", interpretation$interpretation, "\n")
+    cat("Recommendation:", interpretation$recommendation, "\n")
+    
+    # Highlight significant findings
+    if (metrics$balance_score > 40) {
+      cat("WARNING: Large bias-variance imbalance detected (", round(metrics$balance_score, 1), " points)\n")
+    }
+  }
+  
+  cat("\n=== OVERALL ASSESSMENT ===\n")
+  
+  # Overall patterns across variables
+  if (length(tradeoff_metrics) > 1) {
+    complexity_assessments <- sapply(tradeoff_metrics, function(x) x$complexity_assessment)
+    dominant_pattern <- names(sort(table(complexity_assessments), decreasing = TRUE))[1]
+    
+    cat("Dominant pattern across variables:", dominant_pattern, "\n")
+    
+    if (dominant_pattern == "Undercomplex") {
+      cat("RECOMMENDATION: Consider increasing model complexity or adding covariates\n")
+    } else if (dominant_pattern == "Overcomplex") {
+      cat("RECOMMENDATION: Consider model simplification or regularization\n")
+    } else {
+      cat("RECOMMENDATION: Current modeling approach appears appropriate\n")
+    }
+  }
+  
+  cat("\n")
+}

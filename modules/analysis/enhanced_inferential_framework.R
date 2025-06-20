@@ -140,18 +140,52 @@ perform_enhanced_inferential_analysis <- function(data, group_column = "grupa", 
   model_comparison <- perform_model_comparison(centered_data, dependent_vars, group_column, centered_covariates)
   result$model_comparison <- model_comparison
   
-  # Step 5: Effect Sizes and Confidence Intervals
-  cat("\n=== STEP 5: EFFECT SIZES AND CONFIDENCE INTERVALS ===\n")
+  # Step 5: Variance-Bias Decomposition Analysis
+  cat("\n=== STEP 5: VARIANCE-BIAS DECOMPOSITION ===\n")
+  cat("- Dependent variables:", length(dependent_vars), "\n")
+  cat("- Centered covariates available:", length(centered_covariates), "\n")
+  if (length(centered_covariates) > 0) {
+    cat("- Covariates:", paste(centered_covariates, collapse = ", "), "\n")
+  } else {
+    cat("- No covariates available - using group-only models\n")
+  }
+  
+  bias_variance_results <- tryCatch({
+    perform_bias_variance_decomposition(centered_data, dependent_vars, group_column, centered_covariates, n_simulations = 50)
+  }, error = function(e) {
+    cat("Warning: Bias-variance decomposition failed:", e$message, "\n")
+    list()
+  })
+  result$bias_variance_decomposition <- bias_variance_results
+  
+  # Display bias-variance summary
+  if (length(bias_variance_results) > 0) {
+    cat("- Bias-variance results generated for", length(bias_variance_results), "variable(s)\n")
+    generate_bias_variance_summary(bias_variance_results)
+  } else {
+    cat("- No bias-variance results generated\n")
+  }
+  
+  # Step 6: Effect Sizes and Confidence Intervals
+  cat("\n=== STEP 6: EFFECT SIZES AND CONFIDENCE INTERVALS ===\n")
   effect_sizes <- calculate_enhanced_effect_sizes(mlr_results, ancova_results)
   result$effect_sizes <- effect_sizes
   
   # Generate plots if requested
   if (include_plots) {
-    cat("\n=== STEP 6: GENERATING VISUALIZATIONS ===\n")
+    cat("\n=== STEP 7: GENERATING VISUALIZATIONS ===\n")
     plots_output_path <- file.path("output", "plots", "enhanced_inferential")
     plots_result <- create_inferential_plots(centered_data, result, dependent_vars, group_column, plots_output_path)
     result$plots <- plots_result$plots
     result$plot_files <- plots_result$plot_files
+    
+    # Add bias-variance decomposition plots
+    if (!is.null(result$bias_variance_decomposition) && length(result$bias_variance_decomposition) > 0) {
+      cat("- Creating bias-variance decomposition plots\n")
+      bv_plots_result <- create_bias_variance_plots(result$bias_variance_decomposition, plots_output_path)
+      result$plots <- c(result$plots, bv_plots_result$plots)
+      result$plot_files <- c(result$plot_files, bv_plots_result$plot_files)
+    }
   }
   
   # Add metadata
@@ -1237,4 +1271,374 @@ display_assumption_summary <- function(assumptions_results) {
   }
   
   cat("\n")
+}
+
+# Variance-Bias Decomposition Analysis
+# Implements Monte Carlo simulation to decompose prediction error into bias and variance components
+# Based on the bias-variance tradeoff: MSE = Variance + Bias² + Irreducible Error
+perform_bias_variance_decomposition <- function(data, dependent_vars, group_column, covariates, 
+                                               n_simulations = 100, test_points = NULL, 
+                                               sample_fraction = 0.8, verbose = TRUE) {
+  
+  if (verbose) cat("Performing variance-bias decomposition analysis...\n")
+  if (verbose) cat("- Monte Carlo simulations:", n_simulations, "\n")
+  if (verbose) cat("- Covariates provided:", length(covariates), "\n")
+  
+  decomposition_results <- list()
+  
+  for (var in dependent_vars) {
+    if (verbose) cat("- Analyzing", var, "...")
+    flush.console()
+    
+    # Prepare data
+    model_vars <- c(var, group_column, covariates)
+    clean_data <- data[complete.cases(data[model_vars]), ]
+    
+    if (nrow(clean_data) < 30) {
+      decomposition_results[[var]] <- list(
+        variable = var,
+        error = "Insufficient data for bias-variance decomposition (minimum 30 observations required)"
+      )
+      next
+    }
+    
+    # Define test points if not provided
+    if (is.null(test_points)) {
+      # Create representative test points from quantiles of predictor variables
+      test_points_data <- create_representative_test_points(clean_data, group_column, covariates)
+    } else {
+      test_points_data <- test_points
+    }
+    
+    # Monte Carlo simulation
+    simulation_results <- perform_monte_carlo_simulation(
+      clean_data, var, group_column, covariates, 
+      test_points_data, n_simulations, sample_fraction, verbose
+    )
+    
+    # Calculate bias-variance decomposition
+    bv_decomposition <- calculate_bias_variance_components(
+      simulation_results, clean_data, var, group_column, covariates, test_points_data
+    )
+    
+    decomposition_results[[var]] <- list(
+      variable = var,
+      test_points = test_points_data,
+      simulation_results = simulation_results,
+      decomposition = bv_decomposition,
+      n_simulations = n_simulations,
+      sample_size = nrow(clean_data),
+      effective_sample_size = floor(nrow(clean_data) * sample_fraction)
+    )
+    
+    if (verbose) cat(" completed\n")
+  }
+  
+  if (verbose) cat("Variance-bias decomposition completed.\n")
+  return(decomposition_results)
+}
+
+# Create representative test points for bias-variance analysis
+create_representative_test_points <- function(data, group_column, covariates) {
+  
+  test_points <- list()
+  
+  # For each group, create test points at different covariate levels
+  groups <- unique(data[[group_column]])
+  
+  for (group in groups) {
+    group_data <- data[data[[group_column]] == group, ]
+    
+    if (length(covariates) > 0) {
+      # Create test points at quantiles of covariates
+      quantile_levels <- c(0.25, 0.5, 0.75)  # 1st quartile, median, 3rd quartile
+      
+      for (q_level in quantile_levels) {
+        test_point <- data.frame(
+          group = group,
+          quantile_level = q_level
+        )
+        
+        # Add covariate values at this quantile
+        for (covariate in covariates) {
+          test_point[[covariate]] <- quantile(group_data[[covariate]], q_level, na.rm = TRUE)
+        }
+        
+        test_points[[paste0(group, "_q", q_level)]] <- test_point
+      }
+    } else {
+      # If no covariates, just use group membership
+      test_point <- data.frame(
+        group = group,
+        quantile_level = 0.5
+      )
+      test_points[[paste0(group, "_base")]] <- test_point
+    }
+  }
+  
+  return(test_points)
+}
+
+# Perform Monte Carlo simulation for bias-variance decomposition
+perform_monte_carlo_simulation <- function(data, dependent_var, group_column, covariates, 
+                                         test_points, n_simulations, sample_fraction, verbose) {
+  
+  predictions <- list()
+  models_fitted <- list()
+  
+  # Initialize prediction storage for each test point
+  for (test_point_name in names(test_points)) {
+    predictions[[test_point_name]] <- numeric(n_simulations)
+  }
+  
+  if (verbose && n_simulations > 100) {
+    cat("  Running", n_simulations, "Monte Carlo simulations...")
+    progress_points <- seq(1, n_simulations, by = max(1, floor(n_simulations / 10)))
+  }
+  
+  for (sim in 1:n_simulations) {
+    if (verbose && n_simulations > 100 && sim %in% progress_points) {
+      cat(".")
+    }
+    
+    # Bootstrap sample
+    n_sample <- floor(nrow(data) * sample_fraction)
+    sample_indices <- sample(1:nrow(data), n_sample, replace = TRUE)
+    sample_data <- data[sample_indices, ]
+    
+    # Fit model on bootstrap sample
+    tryCatch({
+      if (length(covariates) > 0) {
+        # Multiple regression with covariates
+        formula_str <- paste(dependent_var, "~", group_column, "+", paste(covariates, collapse = " + "))
+        model <- lm(as.formula(formula_str), data = sample_data)
+      } else {
+        # Simple group comparison
+        formula_str <- paste(dependent_var, "~", group_column)
+        model <- lm(as.formula(formula_str), data = sample_data)
+      }
+      
+      models_fitted[[sim]] <- model
+      
+      # Make predictions at test points
+      for (test_point_name in names(test_points)) {
+        test_point <- test_points[[test_point_name]]
+        
+        # Prepare prediction data
+        pred_data <- data.frame(test_point)
+        names(pred_data)[names(pred_data) == "group"] <- group_column
+        
+        # Predict
+        pred_value <- predict(model, newdata = pred_data)
+        predictions[[test_point_name]][sim] <- pred_value[1]
+      }
+      
+    }, error = function(e) {
+      # If model fitting fails, use NA for this simulation
+      for (test_point_name in names(test_points)) {
+        predictions[[test_point_name]][sim] <- NA
+      }
+    })
+  }
+  
+  if (verbose && n_simulations > 100) cat(" completed.\n")
+  
+  return(list(
+    predictions = predictions,
+    models_fitted = models_fitted
+  ))
+}
+
+# Calculate bias and variance components
+calculate_bias_variance_components <- function(simulation_results, data, dependent_var, 
+                                             group_column, covariates, test_points) {
+  
+  decomposition <- list()
+  predictions <- simulation_results$predictions
+  
+  for (test_point_name in names(test_points)) {
+    test_point <- test_points[[test_point_name]]
+    test_predictions <- predictions[[test_point_name]]
+    
+    # Remove NA predictions
+    valid_predictions <- test_predictions[!is.na(test_predictions)]
+    
+    if (length(valid_predictions) < 10) {
+      decomposition[[test_point_name]] <- list(
+        error = "Too few valid predictions for decomposition"
+      )
+      next
+    }
+    
+    # Calculate true target value (expected value given the test point)
+    true_target <- calculate_true_target_value(data, dependent_var, group_column, covariates, test_point)
+    
+    # Bias-variance decomposition components
+    mean_prediction <- mean(valid_predictions)
+    prediction_variance <- var(valid_predictions)
+    bias_squared <- (mean_prediction - true_target)^2
+    
+    # Total MSE
+    total_mse <- prediction_variance + bias_squared
+    
+    # Decomposition percentages
+    variance_percent <- (prediction_variance / total_mse) * 100
+    bias_percent <- (bias_squared / total_mse) * 100
+    
+    # Statistical significance of bias
+    bias_se <- sqrt(prediction_variance / length(valid_predictions))
+    bias_t_stat <- (mean_prediction - true_target) / bias_se
+    bias_p_value <- 2 * (1 - pt(abs(bias_t_stat), length(valid_predictions) - 1))
+    
+    decomposition[[test_point_name]] <- list(
+      test_point = test_point,
+      true_target = true_target,
+      mean_prediction = mean_prediction,
+      n_valid_predictions = length(valid_predictions),
+      
+      # Decomposition components
+      total_mse = total_mse,
+      variance_component = prediction_variance,
+      bias_squared_component = bias_squared,
+      
+      # Percentages
+      variance_percent = variance_percent,
+      bias_percent = bias_percent,
+      
+      # Bias significance test
+      bias = mean_prediction - true_target,
+      bias_se = bias_se,
+      bias_t_statistic = bias_t_stat,
+      bias_p_value = bias_p_value,
+      bias_significant = bias_p_value < 0.05,
+      
+      # Individual predictions for further analysis
+      predictions = valid_predictions
+    )
+  }
+  
+  return(decomposition)
+}
+
+# Calculate true target value for a given test point
+calculate_true_target_value <- function(data, dependent_var, group_column, covariates, test_point) {
+  
+  # Filter data to match test point characteristics
+  filtered_data <- data
+  
+  # Match group
+  if ("group" %in% names(test_point)) {
+    filtered_data <- filtered_data[filtered_data[[group_column]] == test_point$group, ]
+  }
+  
+  # For covariates, use a neighborhood approach (within 1 SD of test point value)
+  if (length(covariates) > 0) {
+    for (covariate in covariates) {
+      if (covariate %in% names(test_point)) {
+        covar_mean <- mean(data[[covariate]], na.rm = TRUE)
+        covar_sd <- sd(data[[covariate]], na.rm = TRUE)
+        
+        # Define neighborhood around test point
+        lower_bound <- test_point[[covariate]] - 0.5 * covar_sd
+        upper_bound <- test_point[[covariate]] + 0.5 * covar_sd
+        
+        filtered_data <- filtered_data[
+          filtered_data[[covariate]] >= lower_bound & 
+          filtered_data[[covariate]] <= upper_bound, 
+        ]
+      }
+    }
+  }
+  
+  # If too few observations in neighborhood, expand search
+  if (nrow(filtered_data) < 5) {
+    # Fall back to group mean
+    filtered_data <- data[data[[group_column]] == test_point$group, ]
+  }
+  
+  # Return mean of filtered data as true target
+  return(mean(filtered_data[[dependent_var]], na.rm = TRUE))
+}
+
+# Create bias-variance decomposition plots
+create_bias_variance_plots <- function(bias_variance_results, output_path) {
+  
+  # Ensure required packages
+  suppressPackageStartupMessages({
+    library(ggplot2)
+    library(gridExtra)
+  })
+  
+  plots <- list()
+  plot_files <- list()
+  
+  if (!dir.exists(output_path)) {
+    dir.create(output_path, recursive = TRUE)
+  }
+  
+  for (var in names(bias_variance_results)) {
+    result <- bias_variance_results[[var]]
+    
+    if (!is.null(result$error)) next
+    
+    decomposition <- result$decomposition
+    
+    # Prepare data for plotting
+    plot_data <- data.frame(
+      TestPoint = character(),
+      Component = character(),
+      Value = numeric(),
+      Percentage = numeric(),
+      stringsAsFactors = FALSE
+    )
+    
+    for (test_point_name in names(decomposition)) {
+      decomp <- decomposition[[test_point_name]]
+      
+      if (is.null(decomp$error)) {
+        plot_data <- rbind(plot_data, data.frame(
+          TestPoint = test_point_name,
+          Component = c("Variance", "Bias²"),
+          Value = c(decomp$variance_component, decomp$bias_squared_component),
+          Percentage = c(decomp$variance_percent, decomp$bias_percent),
+          stringsAsFactors = FALSE
+        ))
+      }
+    }
+    
+    if (nrow(plot_data) > 0) {
+      # 1. Stacked bar chart of components
+      p1 <- ggplot(plot_data, aes(x = TestPoint, y = Percentage, fill = Component)) +
+        geom_col(alpha = 0.8) +
+        labs(title = paste("Bias-Variance Decomposition:", var),
+             subtitle = "Percentage contribution to total prediction error",
+             x = "Test Points", y = "Percentage of Total MSE") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1),
+              plot.title = element_text(size = 12, face = "bold")) +
+        scale_fill_manual(values = c("Variance" = "steelblue", "Bias²" = "darkred")) +
+        scale_y_continuous(limits = c(0, 100))
+      
+      # 2. Absolute values plot
+      p2 <- ggplot(plot_data, aes(x = TestPoint, y = Value, fill = Component)) +
+        geom_col(position = "dodge", alpha = 0.8) +
+        labs(title = "Absolute Bias and Variance Components",
+             subtitle = "Raw MSE component values",
+             x = "Test Points", y = "MSE Component Value") +
+        theme_minimal() +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+        scale_fill_manual(values = c("Variance" = "steelblue", "Bias²" = "darkred"))
+      
+      # Combine plots
+      combined_plot <- gridExtra::arrangeGrob(p1, p2, ncol = 1)
+      
+      plot_filename <- file.path(output_path, paste0("bias_variance_", var, ".png"))
+      ggsave(plot_filename, combined_plot, width = 10, height = 8, dpi = 300)
+      
+      plots[[paste0("bias_variance_", var)]] <- combined_plot
+      plot_files[[paste0("bias_variance_", var)]] <- plot_filename
+    }
+  }
+  
+  return(list(plots = plots, plot_files = plot_files))
 }

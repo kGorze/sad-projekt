@@ -1,5 +1,8 @@
 # Statistical report generation and formatting
 
+# Source statistical helpers for bias-variance analysis
+source("modules/utils/statistical_helpers.R")
+
 if (!exists("%||%")) {
   `%||%` <- function(a, b) if (!is.null(a)) a else b
 }
@@ -1617,6 +1620,79 @@ create_enhanced_inferential_content <- function(results, include_plots, plot_bas
     content <- paste0(content, generate_power_sensitivity_analysis(results))
   }
   
+  # Bias-Variance Decomposition Results
+  if (!is.null(results$bias_variance_decomposition) && length(results$bias_variance_decomposition) > 0) {
+    content <- paste0(content, '
+        <h3>Bias-Variance Decomposition Analysis</h3>
+        <p>Advanced model complexity analysis using Monte Carlo simulation to decompose prediction error into bias and variance components.</p>')
+    
+    # Generate summary of bias-variance analysis
+    bias_variance_summary <- calculate_bias_variance_tradeoff_metrics(results$bias_variance_decomposition)
+    
+    if (length(bias_variance_summary) > 0) {
+      content <- paste0(content, '
+          <div class="alert alert-info">
+              <strong>Mathematical Foundation:</strong> MSE = Variance + Bias² + Irreducible Error<br>
+              This analysis helps identify whether models are underfitting (high bias) or overfitting (high variance).
+          </div>')
+      
+      for (var_name in names(bias_variance_summary)) {
+        metrics <- bias_variance_summary[[var_name]]
+        interpretation <- metrics$interpretation
+        
+        content <- paste0(content, '
+          <div class="test-result significant">
+              <h4>', var_name, '</h4>
+              <div class="row">
+                  <div class="col-md-6">
+                      <strong>Test Points Analyzed:</strong> ', metrics$n_test_points, '<br>
+                      <strong>Average Bias Contribution:</strong> ', round(metrics$average_bias_percent, 1), '%<br>
+                      <strong>Average Variance Contribution:</strong> ', round(metrics$average_variance_percent, 1), '%<br>
+                      <strong>Total MSE:</strong> ', round(metrics$total_mse, 4), '<br>
+                      <strong>Balance Score:</strong> ', round(metrics$balance_score, 1), ' (lower = better balance)
+                  </div>
+                  <div class="col-md-6">
+                      <strong>Model Complexity Assessment:</strong> ', metrics$complexity_assessment, '<br>
+                      <strong>Interpretation:</strong> ', interpretation$interpretation, '<br>
+                      <strong>Recommendation:</strong> ', interpretation$recommendation)
+        
+        # Add warning for significant imbalances
+        if (metrics$balance_score > 40) {
+          content <- paste0(content, '<br><span class="text-warning"><strong>⚠ WARNING:</strong> Large bias-variance imbalance detected (', round(metrics$balance_score, 1), ' points)</span>')
+        }
+        
+        content <- paste0(content, '
+                  </div>
+              </div>
+          </div>')
+      }
+      
+      # Overall assessment across variables
+      if (length(bias_variance_summary) > 1) {
+        complexity_assessments <- sapply(bias_variance_summary, function(x) x$complexity_assessment)
+        dominant_pattern <- names(sort(table(complexity_assessments), decreasing = TRUE))[1]
+        
+        content <- paste0(content, '
+          <div class="alert alert-success">
+              <h5>Overall Assessment Across Variables</h5>
+              <strong>Dominant Pattern:</strong> ', dominant_pattern, '<br>')
+        
+        if (dominant_pattern == "Undercomplex") {
+          content <- paste0(content, '<strong>Global Recommendation:</strong> Consider increasing model complexity or adding covariates to reduce bias')
+        } else if (dominant_pattern == "Overcomplex") {
+          content <- paste0(content, '<strong>Global Recommendation:</strong> Consider model simplification or regularization to reduce variance')
+        } else {
+          content <- paste0(content, '<strong>Global Recommendation:</strong> Current modeling approach appears appropriate across most variables')
+        }
+        
+        content <- paste0(content, '
+          </div>')
+      }
+    } else {
+      content <- paste0(content, '<p>Bias-variance decomposition analysis completed but no valid results available for display.</p>')
+    }
+  }
+
   # Effect Sizes Summary
   if (!is.null(results$effect_sizes)) {
     content <- paste0(content, '
