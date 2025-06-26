@@ -15,6 +15,8 @@ The program automatically loads the data, detects variable types and the groupin
 
 * **Descriptive-Statistics Module**
 
+![descriptive](https://github.com/user-attachments/assets/95628659-bddb-4d74-9384-bbda7170c670)
+
 ```bash
 # Generate descriptive statistics with an HTML report
 Rscript main.R --descriptive_stats --input data.csv --report --export
@@ -23,6 +25,9 @@ Rscript main.R --descriptive_stats --input data.csv --report --export
 This module produces a comprehensive profile for each study group. It automatically computes measures of central tendency (mean, median), dispersion (standard deviation, interquartile range) and distribution shape (skewness, kurtosis). Results are shown in the console and in clear HTML tables with colour-coding to aid interpretation. The program adapts the number of decimal places to each variable, and adds extra metrics such as the coefficient of variation for deeper insight.
 
 * **Comparative-Analysis Module**
+
+![comparative](https://github.com/user-attachments/assets/c911b1ee-70f8-462f-a560-cef3050fba2b)
+
 
 ```bash
 # Comparative analysis with an HTML report
@@ -33,6 +38,8 @@ First, the module checks normality (Shapiro–Wilk < 50 cases, Anderson–Darlin
 
 * **Correlation-Analysis Module**
 
+![correlation](https://github.com/user-attachments/assets/e4806e97-8ccd-4181-93f4-8f56658de9ce)
+
 ```bash
 # Correlation analysis with an HTML report
 Rscript main.R --correlation_analysis --input data.csv --report --export
@@ -41,6 +48,9 @@ Rscript main.R --correlation_analysis --input data.csv --report --export
 This module explores relationships among variables, choosing Pearson’s correlation for normal data or Spearman’s for non-normal data. It applies FDR (False Discovery Rate) correction to control Type I error under multiple testing. Results appear as a correlation matrix with colour-coded strengths and detailed tables listing significant correlations with an interpretation of effect size.
 
 * **Advanced Inferential-Analysis Module**
+
+![Inferential](https://github.com/user-attachments/assets/eddacd7e-43b4-46ff-a755-e8d5ab14ef32)
+
 
 ```bash
 # Enhanced inferential analysis with a report
